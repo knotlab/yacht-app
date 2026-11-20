@@ -1834,7 +1834,16 @@
       //   rooms/YACHT-1234/state    full game state (host writes)
       //   rooms/YACHT-1234/fx       effect messages (host pushes, guests replay)
       //   rooms/YACHT-1234/actions  guest requests (host consumes and deletes)
-      const FIREBASE_CONFIG = null; // ← paste the web-app config from the Firebase console here
+      // Firebase web config is public by design; access is limited by the database rules (rooms/YACHT-#### only)
+      const FIREBASE_CONFIG = {
+        apiKey: 'AIzaSyAVNiwT2iKETE7aZPQEcgZDO7aGnemW8ec',
+        authDomain: 'yacht-dice-e07bc.firebaseapp.com',
+        databaseURL: 'https://yacht-dice-e07bc-default-rtdb.asia-southeast1.firebasedatabase.app',
+        projectId: 'yacht-dice-e07bc',
+        storageBucket: 'yacht-dice-e07bc.firebasestorage.app',
+        messagingSenderId: '602494736188',
+        appId: '1:602494736188:web:8c2d20a4c291225371f039'
+      };
       const FB_VER = '10.12.2';
       let fbReady = null;
       let roomRef = null;
