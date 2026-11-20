@@ -561,6 +561,7 @@
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 14px; background: #0d0e11; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6); }
   .seg-btn { min-height: 38px; border-radius: 10px; font: 400 15px var(--f-display); color: var(--text-dim); transition: background 0.15s, color 0.15s; }
   .seg.seg3 { grid-template-columns: repeat(3, 1fr); }
+  .seg.seg4 { grid-template-columns: repeat(4, 1fr); }
   .seg-btn.is-on { color: var(--brass-hi); background: linear-gradient(180deg, #2c3038, #1d2026); box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.5); }
   .lobby { margin-top: 4px; padding: 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.04); display: flex; flex-direction: column; gap: 12px; }
   .room-code { font: 400 26px var(--f-game); color: var(--mint); letter-spacing: 0.04em; }
@@ -793,10 +794,11 @@
       </div>
 
       <div id="localSetup">
-        <div id="aiSeg" class="seg seg3">
+        <div id="aiSeg" class="seg seg4">
           <button type="button" class="seg-btn" data-lv="easy">쉬움</button>
           <button type="button" class="seg-btn" data-lv="normal">보통</button>
           <button type="button" class="seg-btn" data-lv="hard">어려움</button>
+          <button type="button" class="seg-btn" data-lv="cheat">치터</button>
         </div>
         <div id="countRow" class="stepper">
           <span class="stepper-label">인원</span>
@@ -1706,7 +1708,11 @@
         if (hlIndices) setHighlight(null);
         const myMatch = matchId;
         const heldSnap = held.slice();
-        const next = dice.map(function (v, i) { return heldSnap[i] ? v : 1 + Math.floor(Math.random() * 6); });
+        const roller = players[currentPlayerIdx];
+        const luck = roller && roller.isAI && AI_LEVELS[roller.level] && AI_LEVELS[roller.level].luck;
+        const next = luck
+          ? YachtAI.luckyRoll(roller.scores, CAT_IDS, dice, heldSnap, rollsLeft, luck)
+          : dice.map(function (v, i) { return heldSnap[i] ? v : 1 + Math.floor(Math.random() * 6); });
 
         broadcastFx('roll', { values: next, held: heldSnap });
         broadcastState();
@@ -1996,6 +2002,24 @@
           return { hold: hold };
         }
 
+        // loaded dice for the cheater bot: draw the free dice `tries` times (fractional = chance of
+        // one extra draw) and keep the outcome with the best expected value for its scorecard
+        function luckyRoll(scores, ids, dice, held, rollsAfter, tries) {
+          const st = stateOf(scores, ids);
+          finalValues(st.mask, st.upper);
+          let E = E0;
+          if (rollsAfter >= 1) { keepValues(E0, K1); diceValues(K1, E1); E = E1; }
+          if (rollsAfter >= 2) { keepValues(E1, K2); diceValues(K2, E2); E = E2; }
+          let n = Math.floor(tries) + (Math.random() < tries % 1 ? 1 : 0);
+          let best = null, bv = -1e9;
+          for (let t = 0; t < Math.max(1, n); t++) {
+            const cand = dice.map(function (v, i) { return held[i] ? v : 1 + Math.floor(Math.random() * 6); });
+            const v = E[diceIdx(cand)];
+            if (v > bv) { bv = v; best = cand; }
+          }
+          return best;
+        }
+
         async function load(b64) {
           if (!b64 || typeof DecompressionStream === 'undefined') return false;
           const bin = Uint8Array.from(atob(b64), function (ch) { return ch.charCodeAt(0); });
@@ -2010,12 +2034,18 @@
           return true;
         }
 
-        return { decide: decide, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
+        return { decide: decide, luckyRoll: luckyRoll, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
       })();
       /* AI-CORE:END */
       const CAT_IDS = CATEGORIES.map(function (c) { return c.id; });
-      // temp = how loose the bot plays (simulated averages: easy ~140, normal ~171, hard ~192)
-      const AI_LEVELS = { easy: { temp: 2.2, name: '초보 봇' }, normal: { temp: 1, name: 'AI 봇' }, hard: { temp: 0, name: '고수 봇' } };
+      // temp = how loose the bot plays; luck = draws per roll for loaded dice
+      // (simulated averages: easy ~140, normal ~171, hard ~192, cheat ~220)
+      const AI_LEVELS = {
+        easy: { temp: 2.2, name: '초보 봇' },
+        normal: { temp: 1, name: 'AI 봇' },
+        hard: { temp: 0, name: '고수 봇' },
+        cheat: { temp: 0, luck: 1.35, name: '치터 봇' }
+      };
       let aiLevel = 'normal';
       try { const lv = localStorage.getItem('yachtDeluxe.aiLevel'); if (AI_LEVELS[lv]) aiLevel = lv; } catch (e) {}
       function aiTemp() { const p = players[currentPlayerIdx]; return AI_LEVELS[(p && p.level) || 'hard'].temp; }
