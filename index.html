@@ -152,7 +152,72 @@
     .seats[data-count="3"] .seat-score, .seats[data-count="4"] .seat-score { font-size: 16px; }
   }
 
+  .hud { position: relative; z-index: 6; }
+  .seat { position: relative; }
   .hud-btns { display: flex; gap: 8px; flex: none; }
+  .icon-btn { position: relative; }
+  .badge {
+    position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px; padding: 0 5px;
+    display: grid; place-items: center; border-radius: 999px;
+    background: var(--ruby); color: #fff; font: 400 10px var(--f-game);
+    box-shadow: 0 0 0 2px var(--room);
+    animation: holdPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .seat-bubble {
+    position: absolute; top: calc(100% + 9px); left: 4px; z-index: 7;
+    max-width: min(220px, 70vw); padding: 7px 11px; border-radius: 13px;
+    background: var(--ivory); color: var(--ink);
+    font: 600 13px var(--f-ui); line-height: 1.35; word-break: break-word; white-space: normal;
+    box-shadow: 0 3px 0 var(--ivory-edge), 0 8px 18px rgba(0, 0, 0, 0.5);
+    animation: bubble 3.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+    pointer-events: none;
+  }
+  .seat-bubble::before {
+    content: ""; position: absolute; top: -6px; left: 16px; width: 12px; height: 12px;
+    background: var(--ivory); transform: rotate(45deg); border-radius: 2px;
+  }
+  @keyframes bubble {
+    0% { transform: translateY(-8px) scale(0.6); opacity: 0; }
+    8% { transform: translateY(0) scale(1.06); opacity: 1; }
+    14%, 86% { transform: none; opacity: 1; }
+    100% { transform: translateY(-4px); opacity: 0; }
+  }
+
+  /* chat: bottom sheet on phones, floating panel on desktop (game stays playable) */
+  .chat { position: fixed; inset: 0; z-index: 45; display: flex; align-items: flex-end; justify-content: center; background: rgba(3, 4, 5, 0.45); }
+  .chat-panel {
+    width: min(520px, 100%); height: min(64vh, 520px);
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+    border-radius: 22px 22px 0 0;
+    background: linear-gradient(180deg, #1e2128, #121418);
+    box-shadow: 0 0 0 1px rgba(224, 169, 59, 0.4), 0 -20px 50px rgba(0, 0, 0, 0.6);
+    animation: sheetUp 0.32s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+  @keyframes sheetUp { 0% { transform: translateY(40px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @media (min-width: 900px) {
+    .chat { background: transparent; pointer-events: none; justify-content: flex-end; align-items: flex-end; padding: 0 24px 24px 0; }
+    .chat-panel { pointer-events: auto; width: 360px; height: 460px; border-radius: 20px; }
+  }
+  .chat-head { display: flex; align-items: center; justify-content: space-between; }
+  .chat-title { font: 400 20px var(--f-display); }
+  .chat-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 4px; user-select: text; -webkit-user-select: text; }
+  .chat-empty { margin: auto; font: 400 12px var(--f-game); color: var(--text-dim); letter-spacing: 0.1em; }
+  .chat-msg { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: 82%; }
+  .chat-msg.me { align-self: flex-end; align-items: flex-end; }
+  .chat-name { font: 700 11px var(--f-ui); padding: 0 4px; }
+  .chat-text {
+    padding: 8px 12px; border-radius: 14px 14px 14px 4px;
+    background: #2a2e36; color: var(--text); font: 500 14px var(--f-ui); line-height: 1.4; word-break: break-word;
+  }
+  .chat-msg.me .chat-text { border-radius: 14px 14px 4px 14px; background: linear-gradient(180deg, #ffe7a6, var(--brass-hi)); color: #2a1a04; }
+  .chat-msg.new { animation: rowIn 0.35s cubic-bezier(0.2, 1, 0.3, 1); }
+  .chat-quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .chat-quick::-webkit-scrollbar { display: none; }
+  .chat-chip { flex: none; padding: 7px 12px; border-radius: 999px; background: #0d0e11; box-shadow: inset 0 0 0 1px rgba(224, 169, 59, 0.3); color: var(--brass-hi); font: 600 13px var(--f-ui); }
+  .chat-chip:active { transform: scale(0.95); }
+  .chat-form { display: flex; gap: 8px; }
+  .chat-form .btn { min-height: 46px; padding: 0 16px; font-size: 16px; }
   .icon-btn {
     width: 42px; height: 42px; border-radius: 50%;
     display: grid; place-items: center;
@@ -630,6 +695,10 @@
     <header class="hud">
       <div id="seats" class="seats"></div>
       <div class="hud-btns">
+        <button id="chatBtn" class="icon-btn" type="button" aria-label="채팅" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>
+          <span id="chatBadge" class="badge" hidden>0</span>
+        </button>
         <button id="sheetBtn" class="icon-btn" type="button" aria-label="점수표">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
         </button>
@@ -755,7 +824,10 @@
               <div class="field-label" style="margin:0">방 코드</div>
               <div id="displayRoomCode" class="room-code">-</div>
             </div>
-            <button id="copyRoomBtn" class="btn btn-brass" type="button" style="min-height:42px;font-size:15px">초대하기</button>
+            <span style="display:flex;gap:8px">
+              <button id="lobbyChatBtn" class="btn" type="button" style="min-height:42px;font-size:15px">채팅</button>
+              <button id="copyRoomBtn" class="btn btn-brass" type="button" style="min-height:42px;font-size:15px">초대하기</button>
+            </span>
           </div>
           <div id="lobbyList" class="lobby-list"></div>
           <div id="onlineStatus" class="status"></div>
@@ -765,6 +837,22 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div id="chatOv" class="chat" hidden>
+    <div class="chat-panel" role="dialog" aria-label="채팅">
+      <div class="chat-head">
+        <span class="chat-title">채팅</span>
+        <button id="chatClose" class="x-btn" type="button" aria-label="닫기">✕</button>
+      </div>
+      <div id="chatList" class="chat-list" aria-live="polite"></div>
+      <div id="chatQuick" class="chat-quick"></div>
+      <form id="chatForm" class="chat-form" autocomplete="off">
+        <input id="chatInput" class="text-in" type="text" maxlength="120" placeholder="메시지" enterkeyhint="send" />
+        <button class="btn btn-brass" type="submit">전송</button>
+      </form>
     </div>
   </div>
 
@@ -1497,6 +1585,7 @@
         renderAction();
         renderCaps();
         renderSheet();
+        updateChatUi();
       }
 
       // ================= Online sync =================
@@ -1937,6 +2026,9 @@
         hostConn = null; guestConns = []; peer = null; transport = null;
         roomRef = null; myPeerId = null; onlineRole = null; lobbyMembers = []; isOnlineMatch = false;
         fxKeys = []; knownMembers = 0;
+        lobbyList.innerHTML = '';
+        onlineStatus.textContent = '';
+        resetChat();
         onlineChoice.hidden = false;
         onlineLobby.hidden = true;
         startOnlineBtn.hidden = true;
@@ -2046,6 +2138,7 @@
           displayRoomCode.textContent = code;
           onlineStatus.textContent = '';
           renderLobby();
+          updateChatUi();
         });
         peer.on('connection', function (conn) {
           if (lobbyMembers.length >= 4 || (gameActive && isOnlineMatch)) {
@@ -2066,6 +2159,8 @@
               sfxCombo(1);
             } else if (data.type === 'ACTION') {
               handleRemoteAction(data, conn.peer);
+            } else if (data.type === 'CHAT') {
+              p2pChatFromGuest(data, conn.peer);
             }
           });
           conn.on('close', function () {
@@ -2099,6 +2194,7 @@
           hostConn = peer.connect(code, { reliable: true });
           hostConn.on('open', function () {
             onlineStatus.textContent = '방장 대기 중';
+            updateChatUi();
             try { hostConn.send({ type: 'JOIN', name: nick }); } catch (e) {}
           });
           hostConn.on('data', function (data) {
@@ -2107,13 +2203,18 @@
             else if (data.type === 'LOBBY') { lobbyMembers = data.members || []; renderLobby(); }
             else if (data.type === 'STATE') applyRemoteState(data);
             else if (data.type === 'FX') applyFx(data.kind, data.extra || {});
+            else if (data.type === 'CHAT') pushChat(data.m, false);
           });
           hostConn.on('close', function () {
+            updateChatUi();
             showToast('방장 연결 끊김');
             if (gameActive && isOnlineMatch) { gameActive = false; renderAll(); }
           });
         });
-        peer.on('error', function () { onlineStatus.textContent = '방을 찾지 못했어요'; });
+        peer.on('error', function () {
+          if (hostConn && hostConn.open) return; // signalling hiccups after we're connected don't matter
+          onlineStatus.textContent = '방을 찾지 못했어요';
+        });
       }
 
       async function createOnlineRoom() {
@@ -2147,6 +2248,8 @@
           roomRef.child('meta/hostOnline').onDisconnect().set(false);
           displayRoomCode.textContent = code;
           hostAttach();
+          attachChatFb();
+          updateChatUi();
           onlineStatus.textContent = '';
         } catch (e) {
           onlineStatus.textContent = netError(e);
@@ -2188,6 +2291,8 @@
             await roomRef.child('meta/hostOnline').set(true);
             roomRef.child('meta/hostOnline').onDisconnect().set(false);
             hostAttach();
+            attachChatFb();
+            updateChatUi();
             if (room.state && room.state.gameActive) {
               applyRemoteState(room.state);
               // anything that was mid-animation when the host dropped is settled now
@@ -2219,6 +2324,8 @@
           (await roomRef.child('fx').orderByKey().limitToLast(1).once('value')).forEach(function (c) { lastKey = c.key; });
           const fxQuery = lastKey ? roomRef.child('fx').orderByKey().startAfter(lastKey) : roomRef.child('fx').orderByKey();
           listen(fxQuery, 'child_added', function (snap) { const m = snap.val(); if (m && m.kind) applyFx(m.kind, m.extra || {}); });
+          attachChatFb();
+          updateChatUi();
           listen(roomRef.child('meta'), 'value', function (snap) {
             const m = snap.val();
             if (!m) {
@@ -2234,6 +2341,143 @@
         } catch (e) {
           onlineStatus.textContent = netError(e);
         }
+      }
+
+      // ================= Chat (online rooms) =================
+      // server rooms: rooms/YACHT-####/chat (everyone writes, everyone listens)
+      // P2P rooms: guests send to the host, the host relays to everyone (including the sender)
+      const chatOv = $('chatOv');
+      const chatList = $('chatList');
+      const chatInput = $('chatInput');
+      const chatBadge = $('chatBadge');
+      const QUICK_CHATS = ['ㅋㅋㅋ', '나이스!', '아깝다', '빨리 굴려', '야추 가즈아', 'GG', '👍', '😱'];
+      let chatUnread = 0;
+      let lastChatAt = 0;
+
+      function chatAvailable() {
+        if (!transport || !myPeerId) return false;
+        if (transport === 'fb') return !!roomRef;
+        return onlineRole === 'host' || !!(hostConn && hostConn.open);
+      }
+      function myChatName() {
+        const me = lobbyMembers.filter(function (m) { return m.peerId === myPeerId; })[0];
+        return (me && me.name) || (onlineNickname.value || '').trim().slice(0, 12) || '나';
+      }
+      function chatColor(from) {
+        let idx = players.findIndex(function (p) { return p.peerId === from; });
+        if (idx < 0) idx = lobbyMembers.findIndex(function (m) { return m.peerId === from; });
+        return PLAYER_COLORS[(idx < 0 ? 0 : idx) % 4];
+      }
+      function updateChatUi() {
+        const ok = chatAvailable();
+        $('chatBtn').hidden = !ok;
+        $('lobbyChatBtn').hidden = !ok;
+        chatBadge.hidden = chatUnread === 0;
+        chatBadge.textContent = chatUnread > 9 ? '9+' : String(chatUnread);
+        if (!ok && !chatOv.hidden) chatOv.hidden = true;
+      }
+      function resetChat() {
+        chatUnread = 0;
+        chatList.innerHTML = '<div class="chat-empty">NO MESSAGES</div>';
+        chatOv.hidden = true;
+        updateChatUi();
+      }
+      function openChat() {
+        if (!chatAvailable()) return;
+        chatOv.hidden = false;
+        chatUnread = 0;
+        updateChatUi();
+        chatList.scrollTop = chatList.scrollHeight;
+        if (matchMedia('(hover: hover)').matches) chatInput.focus();
+      }
+      function closeChat() { chatOv.hidden = true; chatInput.blur(); }
+
+      function seatBubble(from, text) {
+        const idx = players.findIndex(function (p) { return p.peerId === from; });
+        const seat = idx >= 0 && gameActive ? seatsEl.children[idx] : null;
+        if (!seat) return;
+        const old = seat.querySelector('.seat-bubble');
+        if (old) old.remove();
+        const b = document.createElement('div');
+        b.className = 'seat-bubble';
+        b.textContent = text;
+        seat.appendChild(b);
+        setTimeout(function () { b.remove(); }, 3400);
+      }
+
+      // one entry point for every incoming message (history loads pass quiet = true)
+      function pushChat(m, quiet) {
+        if (!m) return;
+        const text = String(m.text || '').trim().slice(0, 120);
+        if (!text) return;
+        const name = String(m.name || '').slice(0, 12) || '플레이어';
+        const mine = m.from === myPeerId;
+        const empty = chatList.querySelector('.chat-empty');
+        if (empty) empty.remove();
+        const row = document.createElement('div');
+        row.className = 'chat-msg' + (mine ? ' me' : '') + (quiet ? '' : ' new');
+        const nm = document.createElement('span');
+        nm.className = 'chat-name';
+        nm.style.color = chatColor(m.from);
+        nm.textContent = name;
+        const tx = document.createElement('span');
+        tx.className = 'chat-text';
+        tx.textContent = text;
+        if (!mine) row.appendChild(nm);
+        row.appendChild(tx);
+        chatList.appendChild(row);
+        while (chatList.children.length > 80) chatList.removeChild(chatList.firstChild);
+        chatList.scrollTop = chatList.scrollHeight;
+        if (quiet) return;
+        seatBubble(m.from, text);
+        if (!mine) {
+          tone(880, 0.06, 'sine', 0.05);
+          tone(1320, 0.07, 'sine', 0.04, 0, 0.05);
+          if (chatOv.hidden) { chatUnread++; updateChatUi(); }
+        }
+      }
+
+      function sendChat(raw) {
+        const text = String(raw || '').trim().slice(0, 120);
+        if (!text || !chatAvailable()) return;
+        const now = Date.now();
+        if (now - lastChatAt < 600) return;
+        lastChatAt = now;
+        const m = { from: myPeerId, name: myChatName(), text: text };
+        if (transport === 'fb') {
+          if (!roomRef) return;
+          m.t = TS();
+          roomRef.child('chat').push(m).catch(function () { showToast('전송 실패'); });
+        } else if (onlineRole === 'host') {
+          m.t = now;
+          pushChat(m);
+          p2pSend({ type: 'CHAT', m: m });
+        } else {
+          try { hostConn.send({ type: 'CHAT', text: text }); } catch (e) { showToast('전송 실패'); }
+        }
+      }
+
+      async function attachChatFb() {
+        const ref = roomRef && roomRef.child('chat');
+        if (!ref) return;
+        let lastKey = null;
+        try {
+          const snap = await withTimeout(ref.orderByKey().limitToLast(30).once('value'), 10000);
+          if (!roomRef || ref.toString() !== roomRef.child('chat').toString()) return;
+          snap.forEach(function (c) { lastKey = c.key; pushChat(c.val(), true); });
+        } catch (e) {}
+        if (!roomRef) return;
+        const q = lastKey ? ref.orderByKey().startAfter(lastKey) : ref.orderByKey();
+        listen(q, 'child_added', function (s) { pushChat(s.val(), false); });
+      }
+
+      // host relay for P2P guests
+      function p2pChatFromGuest(data, fromPeer) {
+        const member = lobbyMembers.filter(function (x) { return x.peerId === fromPeer; })[0];
+        if (!member) return;
+        const m = { from: fromPeer, name: member.name, text: String(data.text || '').slice(0, 120), t: Date.now() };
+        pushChat(m);
+        p2pSend({ type: 'CHAT', m: m });
       }
 
       // ================= Match setup =================
@@ -2390,6 +2634,23 @@
       $('tResume').addEventListener('click', function () { sfxTick(); closeOv(titleOv); });
       $('mainMenuBtn').addEventListener('click', function () { sfxTick(); openTitle(); });
       $('menuBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(menuOv); });
+      $('chatBtn').addEventListener('click', function () { sfxTick(); if (chatOv.hidden) openChat(); else closeChat(); });
+      $('lobbyChatBtn').addEventListener('click', function () { sfxTick(); openChat(); });
+      $('chatClose').addEventListener('click', closeChat);
+      chatOv.addEventListener('click', function (e) { if (e.target === chatOv) closeChat(); });
+      $('chatForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        sendChat(chatInput.value);
+        chatInput.value = '';
+      });
+      QUICK_CHATS.forEach(function (q) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chat-chip';
+        b.textContent = q;
+        b.addEventListener('click', function () { sendChat(q); });
+        $('chatQuick').appendChild(b);
+      });
       $('sheetBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(sheetOv); renderSheet(); });
       $('resumeBtn').addEventListener('click', function () { closeOv(menuOv); if (!gameActive) openMode(); });
       $('newGameBtn').addEventListener('click', openMode);
@@ -2415,6 +2676,7 @@
         lastPointer = '';
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (e.key === 'Escape') {
+          if (!chatOv.hidden) { closeChat(); return; }
           if (!rulesOv.hidden) { closeOv(rulesOv); return; }
           [sheetOv, menuOv].forEach(closeOv);
           if (!modeOv.hidden) closeMode();
@@ -2442,18 +2704,22 @@
       buildTiles();
       buildRules();
       paintModes();
+      resetChat();
       renderAll();
       openTitle();
       if (use3D()) loader.hidden = true;
 
       // opened from an invite link (…/#1234): go straight to the join screen
-      const invite = (location.hash || '').match(/^#(\d{4})$/);
-      if (invite) {
+      function handleInvite() {
+        const invite = (location.hash || '').match(/^#(\d{4})$/);
+        if (!invite) return;
         selectedMode = 'online';
         openMode();
         joinRoomInput.value = invite[1];
         try { history.replaceState(null, '', location.pathname); } catch (e) {}
       }
+      handleInvite();
+      window.addEventListener('hashchange', handleInvite);
 
       // behind the title, the dice keep tumbling into new faces
       setInterval(function () {
