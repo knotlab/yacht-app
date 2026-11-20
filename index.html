@@ -436,6 +436,27 @@
   .logo-sub { margin-top: 6px; font: 400 13px var(--f-game); letter-spacing: 0.4em; color: var(--text-dim); padding-left: 0.4em; }
 
   .btn-stack { display: flex; flex-direction: column; gap: 11px; }
+
+  /* title screen */
+  .title-ov {
+    background: radial-gradient(ellipse at 50% 35%, rgba(8, 40, 31, 0.5) 0%, rgba(3, 4, 5, 0.9) 72%);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  .title-wrap { width: min(400px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 26px; padding: 6px 2px; }
+  .title-logo { margin: 0; animation: logoIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .title-logo .logo-main { font-size: clamp(66px, 21vw, 100px); }
+  .title-logo .logo-sub { font-size: 15px; margin-top: 8px; }
+  .title-tag { margin: 14px 0 0; font: 600 13px var(--f-ui); color: var(--text-dim); }
+  .title-wrap .btn-stack > * { animation: rowIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) both; }
+  .title-wrap .btn-stack > :nth-child(2) { animation-delay: 0.12s; }
+  .title-wrap .btn-stack > :nth-child(3) { animation-delay: 0.18s; }
+  .title-wrap .btn-stack > :nth-child(4) { animation-delay: 0.24s; }
+  .title-wrap .btn-stack > :nth-child(5) { animation-delay: 0.3s; }
+  .btn.btn-xl { min-height: 78px; flex-direction: column; gap: 3px; font-size: 30px; }
+  .btn-xl small { font: 600 12px var(--f-ui); opacity: 0.85; letter-spacing: 0; }
+  .btn-xl:not(:disabled) { animation: rowIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) both, rollPulse 1.6s ease-in-out 0.8s infinite; }
+  .title-foot { margin: 0; text-align: center; min-height: 1em; font: 400 11px var(--f-game); color: var(--brass-hi); letter-spacing: 0.12em; }
+  @keyframes logoIn { 0% { transform: translateY(-30px) scale(1.5); opacity: 0; filter: blur(8px); } 100% { transform: none; opacity: 1; filter: none; } }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     min-height: 52px; padding: 10px 18px; border-radius: 16px;
@@ -664,6 +685,28 @@
     </div>
   </div>
 
+  <!-- Title screen (main menu) -->
+  <div id="titleOv" class="overlay title-ov">
+    <div class="title-wrap">
+      <div class="logo title-logo">
+        <div class="logo-main">YACHT</div>
+        <div class="logo-sub">DICE DELUXE</div>
+        <p class="title-tag">주사위 다섯 개로 겨루는 12라운드</p>
+      </div>
+      <div class="btn-stack">
+        <button id="tResume" class="btn btn-brass" type="button" hidden>이어하기</button>
+        <button id="tPlayAi" class="btn btn-ruby btn-xl" type="button">AI 대전<small>탭하면 바로 시작</small></button>
+        <button id="tLocal" class="btn" type="button">같이 하기 · 2~4인</button>
+        <button id="tOnline" class="btn" type="button">온라인 대전</button>
+        <div class="btn-row">
+          <button id="tRules" class="btn" type="button">족보 안내</button>
+          <button id="tMute" class="btn" type="button">사운드 켜짐</button>
+        </div>
+      </div>
+      <p id="tBest" class="title-foot"></p>
+    </div>
+  </div>
+
   <!-- Pause menu -->
   <div id="menuOv" class="overlay" hidden>
     <div class="panel">
@@ -673,6 +716,7 @@
         <button id="newGameBtn" class="btn" type="button">새 게임</button>
         <button id="rulesBtn" class="btn" type="button">족보 안내</button>
         <button id="muteBtn" class="btn" type="button">사운드 켜짐</button>
+        <button id="mainMenuBtn" class="btn" type="button">메인 메뉴</button>
       </div>
     </div>
   </div>
@@ -766,7 +810,7 @@
       <p id="bestLine" class="best-line"></p>
       <div class="btn-row">
         <button id="rematchBtn" class="btn btn-ruby" type="button">한 판 더</button>
-        <button id="resultMenuBtn" class="btn" type="button">모드 바꾸기</button>
+        <button id="resultMenuBtn" class="btn" type="button">메인 메뉴</button>
       </div>
     </div>
   </div>
@@ -990,12 +1034,13 @@
       const bonusFill = $('bonusFill');
       const bonusTxt = $('bonusTxt');
 
+      const titleOv = $('titleOv');
       const menuOv = $('menuOv');
       const modeOv = $('modeOv');
       const rulesOv = $('rulesOv');
       const sheetOv = $('sheetOv');
       const resultOv = $('resultOv');
-      const OVERLAYS = [menuOv, modeOv, rulesOv, sheetOv, resultOv];
+      const OVERLAYS = [titleOv, menuOv, modeOv, rulesOv, sheetOv, resultOv];
       const muteBtn = $('muteBtn');
 
       const namesEl = $('names');
@@ -1428,6 +1473,7 @@
       function renderCaps() {
         const cur = players[currentPlayerIdx];
         roundCap.textContent = 'ROUND ' + Math.min(round, 12) + '/12';
+        turnCap.hidden = roundCap.hidden = !players.length;
         if (!gameActive) {
           turnCap.textContent = '게임 종료';
           turnCap.style.color = '';
@@ -1515,7 +1561,7 @@
       // ================= Input =================
       function handleRollInput() {
         ensureAudio();
-        if (!gameActive) { openMode(); return; }
+        if (!gameActive) { openTitle(); return; }
         if (!isMyTurn() || rollsLeft <= 0 || isRolling || isScoring) return;
         if (isOnlineMatch && onlineRole === 'guest') { try { hostConn.send({ type: 'ACTION', action: 'roll' }); } catch (e) {} return; }
         rollDice();
@@ -2013,6 +2059,16 @@
         renderNames();
       }
       function openMode() { OVERLAYS.forEach(closeOv); paintModes(); openOv(modeOv); }
+      function openTitle() {
+        OVERLAYS.forEach(closeOv);
+        $('tResume').hidden = !gameActive;
+        let best = 0;
+        try { best = parseInt(localStorage.getItem('yachtDeluxe.best') || '0', 10) || 0; } catch (e) {}
+        $('tBest').textContent = best ? 'BEST ' + best : '';
+        openOv(titleOv);
+      }
+      // closing the mode picker before any game has started goes back to the title
+      function closeMode() { if (gameActive) closeOv(modeOv); else openTitle(); }
 
       // ================= Bindings =================
       document.querySelectorAll('.mode-card').forEach(function (c) {
@@ -2035,30 +2091,41 @@
       });
 
       document.querySelectorAll('[data-close]').forEach(function (b) {
-        b.addEventListener('click', function () { closeOv($(b.dataset.close)); });
+        b.addEventListener('click', function () {
+          if (b.dataset.close === 'modeOv') closeMode();
+          else closeOv($(b.dataset.close));
+        });
       });
       OVERLAYS.forEach(function (ov) {
         ov.addEventListener('click', function (e) {
-          if (e.target !== ov || ov === resultOv) return;
-          if (ov === modeOv && !gameActive) return;
-          closeOv(ov);
+          if (e.target !== ov || ov === resultOv || ov === titleOv) return;
+          if (ov === modeOv) closeMode();
+          else closeOv(ov);
         });
       });
+      $('tPlayAi').addEventListener('click', function () { ensureAudio(); selectedMode = 'ai'; startNewMatch(['나'], 'ai'); });
+      $('tLocal').addEventListener('click', function () { sfxTick(); selectedMode = 'local'; openMode(); });
+      $('tOnline').addEventListener('click', function () { sfxTick(); selectedMode = 'online'; openMode(); });
+      $('tRules').addEventListener('click', function () { sfxTick(); openOv(rulesOv); });
+      $('tResume').addEventListener('click', function () { sfxTick(); closeOv(titleOv); });
+      $('mainMenuBtn').addEventListener('click', function () { sfxTick(); openTitle(); });
       $('menuBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(menuOv); });
       $('sheetBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(sheetOv); renderSheet(); });
       $('resumeBtn').addEventListener('click', function () { closeOv(menuOv); if (!gameActive) openMode(); });
       $('newGameBtn').addEventListener('click', openMode);
       $('rulesBtn').addEventListener('click', function () { closeOv(menuOv); openOv(rulesOv); });
       $('rematchBtn').addEventListener('click', rematch);
-      $('resultMenuBtn').addEventListener('click', openMode);
+      $('resultMenuBtn').addEventListener('click', openTitle);
 
-      function paintMute() { muteBtn.textContent = isMuted ? '사운드 꺼짐' : '사운드 켜짐'; }
-      muteBtn.addEventListener('click', function () {
+      function paintMute() { [muteBtn, $('tMute')].forEach(function (b) { b.textContent = isMuted ? '사운드 꺼짐' : '사운드 켜짐'; }); }
+      function toggleMute() {
         isMuted = !isMuted;
         try { localStorage.setItem('yachtDeluxe.muted', isMuted ? '1' : '0'); } catch (e) {}
         paintMute();
         if (!isMuted) { ensureAudio(); tone(660, 0.08, 'sine', 0.08); }
-      });
+      }
+      muteBtn.addEventListener('click', toggleMute);
+      $('tMute').addEventListener('click', toggleMute);
       try { isMuted = localStorage.getItem('yachtDeluxe.muted') === '1'; } catch (e) {}
       paintMute();
 
@@ -2068,8 +2135,9 @@
         lastPointer = '';
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (e.key === 'Escape') {
-          [rulesOv, sheetOv, menuOv].forEach(closeOv);
-          if (gameActive) closeOv(modeOv);
+          if (!rulesOv.hidden) { closeOv(rulesOv); return; }
+          [sheetOv, menuOv].forEach(closeOv);
+          if (!modeOv.hidden) closeMode();
           return;
         }
         if (anyOverlay() || !gameActive) return;
@@ -2090,12 +2158,21 @@
       window.addEventListener('dice3d-layout', placeSlots);
       setTimeout(function () { if (!use3D()) { loader.hidden = true; renderDice(); } }, 7000);
 
-      // ================= Boot: straight into a game vs AI =================
+      // ================= Boot: title screen first =================
       buildTiles();
       buildRules();
       paintModes();
-      startNewMatch(['나'], 'ai');
+      renderAll();
+      openTitle();
       if (use3D()) loader.hidden = true;
+
+      // behind the title, the dice keep tumbling into new faces
+      setInterval(function () {
+        if (titleOv.hidden || gameActive || !use3D() || window.Dice3D.isAnimating() || document.hidden) return;
+        const faces = [0, 1, 2, 3, 4].map(function () { return 1 + Math.floor(Math.random() * 6); });
+        window.Dice3D.setState(faces, [false, false, false, false, false]);
+        if (Math.random() < 0.35) window.Dice3D.celebrate([0, 1, 2, 3, 4]);
+      }, 2200);
     })();
   </script>
 
