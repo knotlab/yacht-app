@@ -1041,6 +1041,47 @@
   .tile.is-swap .t-val { color: #d9c2ff; font-size: 0.8em; }
   .tile.is-dim { filter: brightness(0.45); }
 
+  /* ================= Augments v7 ================= */
+  .die2d.skin-cocoon { background: repeating-linear-gradient(35deg, #fbf8f1 0 6px, #e9e2d2 6px 9px); }
+  .die2d.skin-wing { background: linear-gradient(145deg, #dff6ff, #6cc8f5); box-shadow: 0 0 14px rgba(108, 200, 245, 0.55), 0 9px 16px rgba(0, 0, 0, 0.45); }
+  .die2d.skin-wild { background: linear-gradient(145deg, #f6eeff, #c9a6ff); box-shadow: 0 0 14px rgba(201, 166, 255, 0.6), 0 9px 16px rgba(0, 0, 0, 0.45); }
+  .die2d.skin-glue { background: linear-gradient(145deg, #d9ffe0, #6fe58a); box-shadow: 0 0 14px rgba(111, 229, 138, 0.6), 0 9px 16px rgba(0, 0, 0, 0.45); animation: glueWob 2.4s ease-in-out infinite; }
+  @keyframes glueWob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 0.96); } }
+  .seat-st { position: absolute; left: 30px; top: -9px; z-index: 3; display: flex; gap: 3px; pointer-events: none; }
+  .seats[data-count="3"] .seat-st, .seats[data-count="4"] .seat-st { left: 50%; transform: translateX(-50%); }
+  .st {
+    height: 17px; min-width: 17px; padding: 0 4px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+    font: 400 10px var(--f-game); color: #101114; background: #e8e2d4; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55);
+    animation: holdPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .st svg { width: 12px; height: 12px; }
+  .st-glue { background: #7dff9a; }
+  .st-rise { background: linear-gradient(180deg, #ffd27a, #ff7a2a); color: #2a1004; }
+  .st-bomb { background: #2a2c33; color: #ff7a5a; animation: bombTick 0.9s ease-in-out infinite; }
+  .st-bomb svg .a { fill: #ffd77a; }
+  @keyframes bombTick { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55), 0 0 10px rgba(255, 120, 80, 0.8); } }
+  .st-pupa { background: transparent; box-shadow: none; font-size: 13px; padding: 0; }
+  .st-wild { background: #3a3150; color: #9d8fbf; }
+  .st-wild.on { background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bff95, #4fd1ff, #c77dff); color: #101114; }
+  .st-lamps { gap: 2px; padding: 0 4px; background: #23262d; }
+  .st-lamps i { width: 6px; height: 6px; border-radius: 50%; background: #4a4f5a; }
+  .st-lamps i.on { background: #3fe0a9; box-shadow: 0 0 5px #3fe0a9; }
+  .st-lamps i.no { background: #ff5b72; }
+  .roll-pips i.rise:not(.off) { background: #ff8a3d; box-shadow: 0 0 8px rgba(255, 138, 61, 0.8); }
+  .bonus.fx-strike { animation: bonusStrike 0.9s ease-out; }
+  @keyframes bonusStrike { 0% { filter: none; } 30% { filter: grayscale(1) brightness(0.6); transform: translateX(-3px); } 60% { transform: translateX(3px); } 100% { filter: none; transform: none; } }
+  .slot-btn.stuck::before {
+    content: ""; position: absolute; left: 50%; bottom: 14%; width: 46%; height: 9px; transform: translateX(-50%);
+    border-radius: 50%; background: radial-gradient(ellipse, rgba(125, 255, 154, 0.75), rgba(125, 255, 154, 0)); pointer-events: none;
+  }
+  .tile.is-bust { background: linear-gradient(180deg, #4a4038, #2c2621); color: #c9b9a6; }
+  .tile.is-bust .t-val { color: #ff9a7a; }
+  .tile.is-defuse { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #4fd1ff, 0 0 14px rgba(79, 209, 255, 0.55); }
+  .tile.is-duel { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #ff5b72, 0 0 16px rgba(255, 91, 114, 0.6); }
+  .tile.is-duel .t-val { color: #ff5b72; font-size: 0.86em; }
+  .tile.is-twofer { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #ff9f5a, 0 0 14px rgba(255, 159, 90, 0.55); }
+  .aug-badge { position: relative; }
+  .aug-badge .mirror-mark { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, #4fd1ff); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6); }
   /* ================= Profiles & dice designs ================= */
   .seat-coin.has-av { background: radial-gradient(circle at 35% 28%, #3a3f49 0%, #15171c 100%); box-shadow: inset 0 0 0 2px var(--pc), 0 0 0 2px rgba(0, 0, 0, 0.5); }
   .seat-coin.has-av::after { display: none; }
@@ -2090,6 +2131,7 @@
           b.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && selectedTile !== cat.id) setHighlight(null); });
           b.addEventListener('click', function () {
             if (armedPower === 'swap') { handleSwapTap(cat.id); return; }
+            if (armedPower === 'gauntlet') { handleGauntletTap(cat.id); return; }
             if (!canScoreNow()) return;
             const cur = players[currentPlayerIdx];
             if (!cur || !tileSelectable(cat.id)) return;
@@ -2119,6 +2161,19 @@
       }
 
       // ================= Rendering =================
+      function seatStatusHtml(p, idx) {
+        let h = '';
+        if (p.glue > 0) h += '<span class="st st-glue" title="끈끈이 ' + p.glue + '">' + dieIcon(p.glue) + '</span>';
+        if (p.rise) h += '<span class="st st-rise" title="칠전팔기: 다음 턴 굴림 +2">+2</span>';
+        if (players.some(function (o) { return o.bomb === idx; })) h += '<span class="st st-bomb" title="시한폭탄">' + glyphSvg('bomb') + '</span>';
+        if (augHas(p, 'pupa')) h += '<span class="st st-pupa" title="번데기">' + (round >= (p.hatch || 99) ? '🦋' : '🐛') + '</span>';
+        if (augHas(p, 'wildOne')) h += '<span class="st st-wild' + (p.wake ? ' on' : '') + '" title="만능 1 ' + (p.wake ? '깨어남' : '잠듦') + '">1</span>';
+        if (augHas(p, 'grandSlam')) {
+          const qs = questState(p);
+          h += '<span class="st st-lamps" title="그랜드슬램 ' + qs.lit + '/5">' + qs.lamps.map(function (x) { return '<i class="' + (x > 0 ? 'on' : x < 0 ? 'no' : '') + '"></i>'; }).join('') + '</span>';
+        }
+        return h;
+      }
       function renderSeats() {
         document.body.classList.toggle('aug-on', matchAug && gameActive);
         const sig = players.map(function (p) { return (p.isAI ? 'ai:' : '') + p.name + (p.peerId || '') + (p.av || ''); }).join('|');
@@ -2129,7 +2184,7 @@
             const s = document.createElement('div');
             s.className = 'seat';
             s.style.setProperty('--pc', PLAYER_COLORS[idx % PLAYER_COLORS.length]);
-            s.innerHTML = '<div class="seat-coin"><span class="seat-ini"></span></div><div class="seat-meta"><span class="seat-name"></span><span class="seat-score" data-total-idx="' + idx + '">0</span></div><div class="seat-augs"></div>';
+            s.innerHTML = '<div class="seat-coin"><span class="seat-ini"></span></div><div class="seat-meta"><span class="seat-name"></span><span class="seat-score" data-total-idx="' + idx + '">0</span></div><div class="seat-augs"></div><div class="seat-st"></div>';
             seatsEl.appendChild(s);
           });
         }
@@ -2144,8 +2199,11 @@
           s.querySelector('.seat-ini').textContent = p.av ? p.av : (clash && !p.isAI ? (idx + 1) + 'P' : initials[idx]);
           s.querySelector('.seat-name').textContent = p.name + (isOnlineMatch && p.peerId === myPeerId ? ' (나)' : '');
           s.querySelector('.seat-score').textContent = String(displayedTotal(idx, getPlayerTotals(p).total));
+          const stEl = s.querySelector('.seat-st');
+          const sh = matchAug && gameActive ? seatStatusHtml(p, idx) : '';
+          if (stEl && stEl.dataset.sig !== sh) { stEl.dataset.sig = sh; stEl.innerHTML = sh; }
           const box = s.querySelector('.seat-augs');
-          const asig = matchAug ? (p.aug || []).join(',') : '';
+          const asig = matchAug ? (p.aug || []).join(',') + '|' + (p.mim || '') : '';
           if (box.dataset.sig !== asig) {
             const before = box.dataset.sig ? box.dataset.sig.split(',') : [];
             box.dataset.sig = asig;
@@ -2183,7 +2241,7 @@
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (canClick && armedPower ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
+            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (held[i]) btn.innerHTML = '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
@@ -2229,7 +2287,9 @@
         const sealId = showPreview ? sealCatFor(cur) : null;
         if (selectedTile && (!canSelect || !cur || !tileSelectable(selectedTile))) selectedTile = null;
         const pOpts = previewOpts(mineNow);
-        const pv = function (id) { return scoreFor(cur, id, dice, pOpts); };
+        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : 0) : scoreFor(cur, id, dice, pOpts); };
+        const duelArm = armedPower === 'gauntlet' && mineNow && !isRolling && !isScoring;
+        const bombOn = !!cur && players.some(function (o) { return o.bomb === currentPlayerIdx; });
         let bestId = null, bestPts = 0;
         if (showPreview) {
           CATEGORIES.forEach(function (c) {
@@ -2248,7 +2308,13 @@
           let cls = 'tile';
           let label = c.ko + ' (' + c.desc + ')';
           let enabled = canSelect && tileSelectable(c.id);
-          if (swapMode) {
+          if (duelArm) {
+            const gi = gauntletInfo(currentPlayerIdx, c.id);
+            cls += gi ? ' is-open is-duel is-live' : (filled ? ' is-filled is-dim' : ' is-idle is-dim');
+            vEl.textContent = gi ? 'VS ' + gi.val : (filled ? String(val) : '');
+            if (gi) label += ', 도전: ' + players[gi.q].name + ' ' + gi.val + '점';
+            enabled = !!gi;
+          } else if (swapMode) {
             const sw = filled ? swapInfo(currentPlayerIdx, c.id) : null;
             cls += filled ? ' is-filled' + (sw ? ' is-swap' : ' is-dim') : ' is-idle';
             vEl.textContent = sw ? '↔' + signed(sw.gain) : (filled ? String(val) : '');
@@ -2270,12 +2336,20 @@
             cls += ' is-open' + (canSelect && !sealed ? ' is-live' : '') + (p <= 0 ? ' is-zero' : '') + (hot ? ' is-hot' : '') +
               (c.id === bestId ? ' is-best' : '') + (selectedTile === c.id ? ' is-sel' : '') +
               (sealed ? ' is-sealed' : '') + (cur.prophecy === c.id ? ' is-prophecy' : '') + (pOpts.allin ? ' is-allin' : '') +
-              (pOpts.joker && calcCategoryScore(c.id, dice) === 0 && p > 0 ? ' is-joker' : '');
+              (pOpts.joker && calcCategoryScore(c.id, dice) === 0 && p > 0 ? ' is-joker' : '') +
+              (fuseBust ? ' is-bust' : '') + (bombOn && p >= 20 ? ' is-defuse' : '') +
+              (duel ? (duel.cat === c.id ? ' is-duel' : ' is-dim') : '') +
+              (twoferPend ? (tileSelectable(c.id) ? ' is-twofer' : ' is-dim') : (armed.twofer && mineNow && p > 0 ? ' is-twofer' : ''));
             vEl.textContent = (p > 0 ? '+' : '') + p;
+            if (duel && duel.cat === c.id) {
+              const T = duel.val;
+              vEl.textContent = p >= T ? '+' + p + ' 승' : (p > 0 ? '½→' + Math.floor(p / 2) : String(p));
+              label += ', 도전 ' + T + '점';
+            }
             label += sealed ? ', 봉인됨' : ', ' + p + '점 기록 가능';
           } else {
-            cls += ' is-idle' + (cur && cur.prophecy === c.id ? ' is-prophecy' : '');
-            vEl.textContent = '';
+            cls += ' is-idle' + (cur && cur.prophecy === c.id ? ' is-prophecy' : '') + (duel && duel.cat === c.id ? ' is-duel' : '');
+            vEl.textContent = duel && duel.cat === c.id ? 'VS ' + duel.val : '';
           }
           if (flipRecent && lastScored.catId === c.id) cls += ' is-flip';
           if (t.className !== cls) t.className = cls;
@@ -2286,14 +2360,14 @@
         const tt = cur ? getPlayerTotals(cur) : { upper: 0, bonus: 0 };
         const need = tt.need || 63;
         bonusFill.style.width = Math.max(0, Math.min(100, (tt.upper / need) * 100)) + '%';
-        bonusTxt.textContent = tt.bonus ? '+' + tt.amount : tt.upper + '/' + need;
+        bonusTxt.textContent = tt.amount === 0 ? '한 우물' : tt.bonus ? '+' + tt.amount : tt.upper + '/' + need;
         bonusEl.classList.toggle('done', tt.bonus > 0);
       }
 
       function renderAction() {
         const cur = players[currentPlayerIdx];
         const mine = isMyTurn();
-        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft;
+        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft && !twoferPend && !restTurn;
         rollBtn.disabled = gameActive ? !canRoll : false;
         rollBtn.classList.toggle('is-ready', canRoll && !hasRolledThisTurn);
 
@@ -2303,6 +2377,9 @@
         else if (cur && cur.isAI) main = 'AI TURN';
         else if (isOnlineMatch && !mine) main = 'WAIT';
         else if (turnLost) main = 'LOST';
+        else if (restTurn) main = 'REST';
+        else if (twoferPend) main = 'PICK 2';
+        else if (fuseBust && !isRolling) main = 'BUST';
         else if (isRolling) main = 'ROLLING';
         else if (isScoring) main = 'NICE';
         else if (rollsLeft > 0 && hasRolledThisTurn) main = 'REROLL';
@@ -2314,7 +2391,7 @@
         const pips = rollPips.children;
         const extraPip = augHas(cur, 'fourth');
         for (let i = 0; i < pips.length; i++) {
-          pips[i].className = (i < rollsLeft ? '' : 'off') + (i === 3 && extraPip ? ' extra' : '');
+          pips[i].className = (i < rollsLeft ? '' : 'off') + (i === 3 && extraPip ? ' extra' : '') + (riseTurn && i >= rollsMax - 2 ? ' rise' : '');
           if (rollsLeft < prevRollsLeft && i === rollsLeft) pips[i].classList.add('burst');
         }
         prevRollsLeft = rollsLeft;
@@ -2391,10 +2468,13 @@
           players: players.map(function (p) {
             return {
               name: p.name, peerId: p.peerId, av: p.av || null, dice: p.dice || 'classic', scores: p.scores, aug: p.aug || [], ch: p.ch || {}, extra: p.extra || 0, shake: p.shake || 0, boxUp: p.boxUp || 0,
-              sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null
+              sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null,
+              hatch: p.hatch || 0, hatched: p.hatched || 0, rise: p.rise || 0, wake: p.wake || 0,
+              glue: p.glue || 0, glueBy: p.glueBy != null ? p.glueBy : -1, bomb: p.bomb != null ? p.bomb : -1, bombT: p.bombT != null ? p.bombT : -1, mim: p.mim || null
             };
           }),
-          augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, lastRound: lastRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
+          stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: dice, held: held, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
@@ -2499,12 +2579,13 @@
       function handleScoreInput(catId) {
         ensureAudio();
         if (!canScoreNow()) return;
-        const flags = { joker: armed.joker, allin: armed.allin, overwrite: armed.overwrite };
-        if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'score', catId: catId, joker: flags.joker, allin: flags.allin, overwrite: flags.overwrite }); return; }
+        const flags = { joker: armed.joker, allin: armed.allin, overwrite: armed.overwrite, twofer: armed.twofer };
+        if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'score', catId: catId, joker: flags.joker, allin: flags.allin, overwrite: flags.overwrite, twofer: flags.twofer }); return; }
         commitScore(catId, flags);
       }
       function toggleHold(idx) {
         if (!gameActive || !hasRolledThisTurn || isRolling || isScoring) return;
+        if (stuck[idx]) { fx('aug', { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
         held[idx] = !held[idx];
         fx('hold', { held: held[idx] });
         buzz(6);
@@ -2546,7 +2627,7 @@
       }
 
       function rollDice(onComplete) {
-        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring) return;
+        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn) return;
         rewindSnap = { dice: dice.slice(), held: held.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn };
         const first = rollsLeft === rollsMax;
         isRolling = true;
@@ -2558,7 +2639,7 @@
         const luck = roller && roller.isAI && AI_LEVELS[roller.level] && AI_LEVELS[roller.level].luck;
         let next, notes = null;
         if (luck) {
-          next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, dice, heldSnap, rollsLeft, luck, aiTurnMods(roller));
+          next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, dice, heldSnap, rollsLeft, luck, aiTurnMods(roller), matchAug ? [0, 1, 2, 3, 4].map(function (i) { return faceList(roller, i); }) : null);
           if (augHas(roller, 'twins')) applyTwins(next, heldSnap);
         } else { next = rollValues(roller, dice, heldSnap, first); notes = lastRollNotes; }
         if (matchAug && rollsLeft === 0) {
@@ -2594,6 +2675,7 @@
           const v = finalV && finalV.length === 5 ? finalV : next;
           dice = v;
           isRolling = false;
+          if (firstThrowPending) { firstThrowPending = false; applyGlue(); }
           broadcastState();
           renderAll();
           postRollFx(v);
@@ -2640,12 +2722,15 @@
         { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
         { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 주사위를 4번 굴릴 수 있습니다', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
         { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈이 점수 합산에서 2배로 계산됩니다', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
+        { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 앞 절반엔 1~3만, 뒤 절반엔 4~6만 나옵니다', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
+        { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1이 3개 이상인 채로 기록하면 깨어나, 그 뒤로 1은 족보에서 아무 눈이나 됩니다', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
         { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1번·2번 주사위가 항상 같은 눈으로 나옵니다', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
         { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상을 쾅! 2회 · 누가 굴렸든, 주사위가 구르기 시작해서 다시 굴리거나 기록하기 전까지 언제든 흔듭니다', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집기 2회', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 다시 굴리기 3회', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
         { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴린 결과를 취소하고 굴림 횟수를 돌려받기 2회', ch: { rewind: 2 }, ev: 12 },
         { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꾸기 2회', ch: { psychic: 2 }, ev: 24, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
+        { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '2회, 바로 앞 사람이 기록한 주사위 그대로 내 턴을 시작합니다', ch: { ride: 2 }, ev: 22 },
         { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1이 하나당 6점', ev: 10 },
         { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '1회, 이미 기록한 칸을 더 높은 점수로 다시 기록 · 대신 마지막에 빈칸 하나가 남습니다', ch: { overwrite: 1 }, ev: 10 },
         { id: 'yachtClub', tier: 2, cat: 'score', name: '요트 클럽', desc: '야트 100점', ev: 18, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
@@ -2653,21 +2738,30 @@
         { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나가 예언됩니다 · 그 칸에 기록하면 +10점', ev: 14 },
         { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '1회, 족보 조건을 무시하고 원하는 칸에 기록', ch: { joker: 1 }, ev: 30 },
         { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스 35점 → 70점', ev: 24 },
+        { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '상단 보너스가 없어지는 대신, 같은 눈 4개 이상으로 채운 상단 칸마다 +10', ev: 7 },
+        { id: 'grandSlam', tier: 2, cat: 'score', name: '그랜드슬램', desc: '포카인드·풀하우스·두 스트레이트·야트를 0점 없이 다 채우면 게임 끝에 +40', ev: 14 },
         { id: 'shaky', tier: 1, cat: 'hex', name: '손 떨림', desc: '상대들의 다음 2턴 굴림이 1번씩 줄어듭니다', ev: 9 },
         { id: 'seal', tier: 1, cat: 'hex', name: '봉인', desc: '2회, 다음 상대의 그 턴 가장 점수가 높은 칸을 잠급니다', ch: { seal: 2 }, ev: 9 },
         { id: 'pressure', tier: 1, cat: 'hex', name: '압박', desc: '상대가 한 턴에 굴림을 끝까지 다 쓸 때마다 상대 -3점', ev: 8 },
         { id: 'curse', tier: 2, cat: 'hex', name: '저주 주사위', desc: '상대 5번 주사위의 6 면이 1로 바뀝니다', ev: 10, art: { zoom: 0.78, glyph: 1, dice: [{ v: 1, skin: 'curse', ry: 0.9 }] } },
         { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '1회, 내 칸 하나와 상대의 같은 칸 점수를 맞바꿉니다', ch: { swap: 1 }, ev: 16 },
         { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임이 끝날 때 상대 1등의 최고 점수 칸 절반을 훔칩니다', ev: 24 },
+        { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '2회, 숫자 하나를 찍으면 다음 상대 첫 굴림에서 그 눈 주사위가 그 턴 내내 붙어요', ch: { glue: 2 }, ev: 8 },
+        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1회, 1등 상대에게 폭탄 · 받은 사람은 20점 이상 기록해야 돌려보내고, 못 하면 -20', ch: { bomb: 1 }, ev: 12 },
         { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '1회, 켜고 기록하면 점수 2배 · 0점이면 -20점', ch: { allin: 1 }, ev: 16 },
         { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에서 바로 기록하면 +6점', ev: 6 },
         { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 +30점 · 게임이 끝날 때 상단 보너스가 없으면 -50점', ev: 8 },
         { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임이 끝날 때 1등과 30점 이상 뒤져 있으면 +40점', ev: 10 },
+        { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 내 턴에 2번 더 굴립니다', ev: 8 },
+        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '굴림을 다 쓴 뒤 3번 더 굴릴 수 있지만, 다시 굴린 주사위에 1이 나오면 펑! 0점', ch: { fuse: 3 }, ev: 13 },
+        { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '1회, 상대가 채운 칸에 도전 · 같거나 높게 쓰면 상대 칸 0점, 지면 내 점수 절반', ch: { gauntlet: 1 }, ev: 22 },
         { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 모든 기록 +8점', ev: 20, fixed: true },
         { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다 · 못 채운 칸은 0점', ev: 8 },
         { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드가 시작될 때마다 총점의 5%를 이자로 받습니다', ev: 32 },
         { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임이 끝나기 전에 나만 한 턴 더 · 기록한 칸 하나를 더 높은 점수로 덮어씁니다', ev: 18 },
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다 · 그 턴은 가장 낮은 빈칸에 0점', ev: 18 },
+        { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '2회, 같은 주사위로 빈칸 두 개를 한 번에 기록 · 칸이 일찍 차면 남은 턴은 쉽니다', ch: { twofer: 2 }, ev: 20 },
+        { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '이번 선택이 끝나면, 상대들이 방금 고른 증강 중 하나를 똑같이 얻습니다', ev: 12 },
         { id: 'rerollMaster', tier: 1, cat: 'meta', name: '리롤 장인', desc: '앞으로 증강을 고를 때 다시 뽑기 +2회', ev: 4 },
         { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 올라갑니다', ev: 9 }
       ];
@@ -2707,6 +2801,18 @@
         encore: '<path d="M24 4l5 10 11 1.6-8 7.8 2 11L24 29l-10 5.4 2-11-8-7.8L19 14z"/><path d="M24 34v9M15 44h18"/><circle class="a" cx="24" cy="19" r="3"/>',
         timeThief: '<path d="M14 5h20M14 43h20"/><path d="M16 5c0 10 16 12 16 19S16 33 16 43M32 5c0 10-16 12-16 19s16 9 16 19"/><path class="a" d="M19 39c2-4 8-4 10 0z"/>',
         rerollMaster: '<rect x="6" y="12" width="17" height="24" rx="3"/><rect x="14" y="8" width="17" height="24" rx="3"/><path d="M38 24a9 9 0 1 1-4 12"/><path d="M40 16v8h-8"/>',
+        deepWell: '<path d="M9 25h30v14a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3z"/><path d="M9 32h30M17 25v7M31 32v10"/><path d="M13 25V9M35 25V9M9 9h30"/><path d="M24 9v7"/><rect class="a" x="20" y="16" width="8" height="8" rx="2"/>',
+        pupa: '<path d="M8 6h32"/><path d="M22 6v6"/><ellipse cx="22" cy="27" rx="8" ry="14"/><path d="M15 21l13 5M14 29l15 5M16 36l10 3"/><path class="a" d="M30 21c7-7 15-3 13 5-1 6-8 8-12 4z"/>',
+        rise: '<rect x="12" y="17" width="19" height="19" rx="4" transform="rotate(-28 21.5 26.5)"/><path d="M5 42h38"/><path d="M38 39c3-9 1-16-5-21"/><path d="M28 17l5 1 1-5"/><path class="a" d="M35 3l5 5 5-5h-3l-2 2-2-2zM35 9l5 5 5-5h-3l-2 2-2-2z"/>',
+        grandSlam: '<path d="M24 7l17 17-17 17L7 24z"/><rect class="a" x="21" y="4" width="6" height="6" transform="rotate(45 24 7)"/><rect class="a" x="38" y="21" width="6" height="6" transform="rotate(45 41 24)"/><rect class="a" x="4" y="21" width="6" height="6" transform="rotate(45 7 24)"/><path class="a" d="M24.0 33.5L25.6 37.7L30.2 38.0L26.7 40.9L27.8 45.3L24.0 42.8L20.2 45.3L21.3 40.9L17.8 38.0L22.4 37.7z"/>',
+        wildOne: '<rect x="7" y="7" width="34" height="34" rx="8"/><path class="a" d="M24.0 13.0L26.5 18.0L31.8 16.2L30.0 21.5L35.0 24.0L30.0 26.5L31.8 31.8L26.5 30.0L24.0 35.0L21.5 30.0L16.2 31.8L18.0 26.5L13.0 24.0L18.0 21.5L16.2 16.2L21.5 18.0z"/><circle cx="24" cy="24" r="3.6" fill="currentColor" stroke="none"/>',
+        glue: '<rect x="11" y="5" width="26" height="24" rx="6"/><circle cx="24" cy="17" r="3"/><path class="a" d="M6 37c4-5 10-6 18-6s14 1 18 6c-2 5-10 7-18 7S8 42 6 37z"/><path class="a" d="M16 28h5v8a2.5 2.5 0 0 1-5 0zM28 28h5v5a2.5 2.5 0 0 1-5 0z"/>',
+        bomb: '<circle cx="20" cy="29" r="14"/><path d="M29 18l4-4"/><path d="M33 14c1-4 5-6 8-4"/><path d="M20 22v7l5 3"/><path class="a" d="M41.0 2.0L42.6 6.4L47.0 8.0L42.6 9.6L41.0 14.0L39.4 9.6L35.0 8.0L39.4 6.4z"/>',
+        fuse: '<path d="M4 41c7 1 10-4 8-9s-7-3-6 1 7 6 12 1 5-12 11-16 9-5 10-9"/><path d="M43 15l3 2M36 3l1-2"/><path class="a" d="M40.0 3.5L41.6 8.4L46.5 10.0L41.6 11.6L40.0 16.5L38.4 11.6L33.5 10.0L38.4 8.4z"/>',
+        ride: '<rect x="4" y="15" width="18" height="18" rx="4" stroke-dasharray="4 3"/><rect x="26" y="17" width="18" height="18" rx="4"/><path d="M12 12c3-7 15-9 21-3"/><path d="M34 4l-1 6-6-1"/><circle class="a" cx="35" cy="26" r="3.2"/>',
+        gauntlet: '<rect x="4" y="14" width="22" height="17" rx="5"/><path d="M10 14v6M15 14v6M20 14v6"/><path d="M6 31h18v10H6z"/><rect x="33" y="20" width="11" height="11" rx="2"/><path class="a" d="M27 9l4 5-6 1zM28 33l6 2-4 4z"/>',
+        twofer: '<rect x="4" y="17" width="14" height="14" rx="3"/><circle class="a" cx="11" cy="24" r="2"/><path d="M18 24h7c4 0 6-4 8-9M25 24c4 0 6 4 8 9"/><rect class="a" x="34" y="7" width="10" height="10" rx="2"/><rect class="a" x="34" y="31" width="10" height="10" rx="2"/>',
+        mimic: '<circle cx="27" cy="19" r="13"/><path d="M18 28L7 42"/><path d="M21 13a8 8 0 0 1 8-3"/><path class="a" d="M40.0 2.5L41.4 6.6L45.5 8.0L41.4 9.4L40.0 13.5L38.6 9.4L34.5 8.0L38.6 6.6z"/>',
         boxUp: '<rect x="8" y="20" width="32" height="21" rx="3"/><path d="M6 14h36v6H6z"/><path d="M24 14v27"/><path class="a" d="M24 14c-3-5-10-6-10-2 0 3 6 2 10 2zM24 14c3-5 10-6 10-2 0 3-6 2-10 2z"/>'
       };
       const DRAFT_ROUNDS = [1, 5, 9];
@@ -2725,8 +2831,19 @@
       let encoreQueue = null;
       let sealTurn = false;    // this turn's best box is locked (봉인)
       let turnLost = false;    // this turn was taken by 시간 도둑
+      let riseTurn = false;    // 칠전팔기: this turn has two extra rolls
+      let stuck = [false, false, false, false, false]; // 끈끈이: dice glued for the rest of this turn
+      let firstThrowPending = false; // host: this turn's first dice haven't landed yet (끈끈이 checks them)
+      let fuseBust = false;    // 도화선 went off: this turn's record is a zero
+      let duel = null;         // 도전장 this turn: { q, cat, val }
+      let turnNo = 0;          // 편승: counts every turn start
+      let lastRec = null;      // 편승: { p, dice, seq } - the dice of the last record
+      let rideTurn = false;    // 편승 started this turn
+      let twoferPend = null;   // 일석이조: { first } - the second box is still to be picked
+      let restTurn = false;    // 일석이조: every box is filled, this turn is skipped
+      const QUEST = ['fourKind', 'fullHouse', 'smallStraight', 'largeStraight', 'yacht']; // 그랜드슬램
       let lastRollNotes = null;
-      const armed = { joker: false, allin: false, overwrite: false };
+      const armed = { joker: false, allin: false, overwrite: false, twofer: false };
 
       function glyphSvg(id) {
         return '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (GLYPH[id] || '') + '</svg>';
@@ -2736,13 +2853,42 @@
         if (!a) return '';
         const c = AUG_CATS[a.cat];
         return '<span class="aug-badge t' + a.tier + (isNew ? ' pop' : '') + '" style="--cat:' + c.color + ';color:' + c.fg + '" data-aug="' + id + '"' +
-          (pIdx >= 0 ? ' data-p="' + pIdx + '"' : '') + ' role="img" aria-label="' + esc(a.name) + '">' + glyphSvg(id) + '</span>';
+          (pIdx >= 0 ? ' data-p="' + pIdx + '"' : '') + ' role="img" aria-label="' + esc(a.name) + '">' + glyphSvg(id) +
+          (pIdx >= 0 && players[pIdx] && players[pIdx].mim === id ? '<i class="mirror-mark"></i>' : '') + '</span>';
       }
       function augHas(p, id) { return !!(matchAug && p && p.aug && p.aug.indexOf(id) !== -1); }
       function augCount(p, id) { return matchAug && p && p.aug ? p.aug.filter(function (x) { return x === id; }).length : 0; }
-      function bonusRule(p) { return { need: 63, amount: augHas(p, 'bonusHunter') ? 70 : 35 }; }
+      function bonusRule(p) { return { need: 63, amount: augHas(p, 'deepWell') ? 0 : augHas(p, 'bonusHunter') ? 70 : 35 }; }
+      // 만능 1: does the hand meet a pattern when every 1 may stand for any face?
+      function wildMet(catId, counts) {
+        const w = counts[1];
+        if (!w) return false;
+        let maxO = 0, faces = 0;
+        for (let f = 2; f <= 6; f++) { if (counts[f] > maxO) maxO = counts[f]; if (counts[f]) faces++; }
+        if (catId === 'yacht') return maxO + w >= 5;
+        if (catId === 'fourKind') return maxO + w >= 4;
+        if (catId === 'fullHouse') return faces <= 2;
+        const runs = catId === 'smallStraight' ? [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]] : catId === 'largeStraight' ? [[1, 2, 3, 4, 5], [2, 3, 4, 5, 6]] : null;
+        if (!runs) return false;
+        // a wild can also be the run's own 1
+        return runs.some(function (R) { let miss = 0; R.forEach(function (f) { if (f === 1 || !counts[f]) miss++; }); return miss <= w; });
+      }
+      function questState(p) {
+        const st = QUEST.map(function (c) { const v = p.scores[c]; return v === null || v === undefined ? 0 : v > 0 ? 1 : -1; });
+        return { lamps: st, alive: st.indexOf(-1) === -1, lit: st.filter(function (x) { return x === 1; }).length };
+      }
+      // some cards don't make sense together or any more
+      function augFits(p, id) {
+        if (id === 'deepWell') return getPlayerTotals(p).upper < 63 && !augHas(p, 'bonusHunter') && !augHas(p, 'debt');
+        if ((id === 'bonusHunter' || id === 'debt') && augHas(p, 'deepWell')) return false;
+        if (id === 'grandSlam') return questState(p).alive;
+        return true;
+      }
       function cursedBy(p) { return matchAug && players.some(function (q) { return q !== p && augHas(q, 'curse'); }); }
-      function freshAugState(p) { p.aug = []; p.ch = {}; p.extra = 0; p.shake = 0; p.boxUp = 0; p.sealed = 0; p.skip = 0; p.prophecy = null; }
+      function freshAugState(p) {
+        p.aug = []; p.ch = {}; p.extra = 0; p.shake = 0; p.boxUp = 0; p.sealed = 0; p.skip = 0; p.prophecy = null;
+        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null;
+      }
       function charges(p, k) { return matchAug && p && p.ch ? (p.ch[k] || 0) : 0; }
       function signed(n) { return (n > 0 ? '+' : '') + n; }
       function openCats(p) { return CATEGORIES.filter(function (c) { return p.scores[c.id] === null; }).map(function (c) { return c.id; }); }
@@ -2754,7 +2900,8 @@
         return best;
       }
       function previewOpts(withFlags) {
-        const o = { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 };
+        const o = { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn };
+        if (twoferPend) o.second = true;
         if (withFlags) { o.joker = armed.joker; o.allin = armed.allin; }
         return o;
       }
@@ -2779,9 +2926,12 @@
           if (unit !== f && counts[f]) note('aceRebel');
           v = counts[f] * unit;
           if (g === f) { v += unit; note('golden'); }
+          if (has('deepWell') && counts[f] >= 4) { v += 10; note('deepWell'); }
         } else {
-          const jok = !!opts.joker && base === 0 && catId !== 'choice';
-          const met = base > 0 || jok;
+          const wm = base === 0 && catId !== 'choice' && has('wildOne') && !!p.wake && wildMet(catId, counts);
+          const jok = !!opts.joker && !opts.second && base === 0 && !wm && catId !== 'choice';
+          const met = base > 0 || wm || jok;
+          if (wm) note('wildOne');
           if (jok) note('joker');
           const sumG = sum + g;
           if (catId === 'choice') { v = sumG; if (g) note('golden'); }
@@ -2790,21 +2940,27 @@
           else if (catId === 'largeStraight') v = met ? 30 : 0;
           else { v = met ? 50 : 0; if (met && has('yachtClub')) { v = 100; note('yachtClub'); } }
         }
-        if (has('blackjack') && sum === 21) { v += 21; note('blackjack'); }
+        if (has('blackjack') && sum === 21 && !opts.second) { v += 21; note('blackjack'); }
         if (has('lateBloom') && (opts.roundNo || round) >= 10) { v += 8; note('lateBloom'); }
-        if (has('speedrun') && opts.firstRoll) { v += 6; note('speedrun'); }
+        if (has('speedrun') && opts.firstRoll && !opts.second) { v += 6; note('speedrun'); }
         if (has('prophecy') && !opts.noProphecy && p.prophecy === catId) { v += 10; note('prophecy'); }
-        if (opts.allin) { v = v > 0 ? v * 2 : -20; note('allin'); }
+        if (opts.allin && !opts.second) { v = v > 0 ? v * 2 : -20; note('allin'); }
         return v;
       }
 
       // ---------- dice ----------
       // faces of die i for player p (무거운 주사위: die 1's 1 → 6 · 저주: die 5's 6 → 1)
-      function faceList(p, i) {
-        const f = [1, 2, 3, 4, 5, 6];
+      function rawFaces(p, i) {
+        let f = [1, 2, 3, 4, 5, 6];
         if (!matchAug || !p) return f;
         if (i === 0 && augHas(p, 'loaded')) f[0] = 6;
-        if (i === 4 && cursedBy(p)) f[5] = 1;
+        if (i === 4 && augHas(p, 'pupa')) f = round >= (p.hatch || 99) ? [4, 4, 5, 5, 6, 6] : [1, 1, 2, 2, 3, 3];
+        return f;
+      }
+      // 저주 turns die 5's sixes into ones after any other change (a butterfly die reads 4 4 5 5 1 1)
+      function faceList(p, i) {
+        const f = rawFaces(p, i);
+        if (i === 4 && cursedBy(p)) return f.map(function (v) { return v === 6 ? 1 : v; });
         return f;
       }
       let rollNotes = null;
@@ -2812,7 +2968,7 @@
         const f = faceList(p, i), k = Math.floor(Math.random() * 6), v = f[k];
         if (rollNotes) {
           if (i === 0 && k === 0 && v === 6 && augHas(p, 'loaded')) rollNotes.loaded = true;
-          if (i === 4 && k === 5 && v === 1 && cursedBy(p)) rollNotes.curse = true;
+          if (i === 4 && v === 1 && cursedBy(p) && rawFaces(p, i)[k] === 6) rollNotes.curse = true;
         }
         return v;
       }
@@ -2825,6 +2981,7 @@
         rollNotes = {};
         const next = cur.map(function (v, i) { return heldSnap[i] ? v : rollOne(p, i); });
         if (augHas(p, 'twins') && (!heldSnap[0] || !heldSnap[1])) { applyTwins(next, heldSnap); rollNotes.twins = true; }
+        if (augHas(p, 'wildOne') && p.wake && next.some(function (v, i) { return v === 1 && !heldSnap[i]; })) rollNotes.wildOne = true;
         lastRollNotes = rollNotes;
         rollNotes = null;
         return next;
@@ -2836,7 +2993,10 @@
         if (augHas(p, 'twins')) { s[0] = 'twin'; s[1] = 'twin'; }
         if (augHas(p, 'loaded')) s[0] = 'lead';
         if (augHas(p, 'golden')) s[2] = 'gold';
+        if (augHas(p, 'pupa')) s[4] = round >= (p.hatch || 99) ? 'wing' : 'cocoon';
         if (cursedBy(p)) s[4] = 'curse';
+        stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
+        if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1 && !s[i]) s[i] = 'wild'; });
         return s;
       }
 
@@ -2847,13 +3007,13 @@
         return r < o[0] ? 1 : r < o[0] + o[1] ? 2 : 3;
       }
       function augAllowed(a, roundNo) {
-        if (a.cat === 'meta' && roundNo >= DRAFT_ROUNDS[DRAFT_ROUNDS.length - 1]) return false;
-        if ((a.cat === 'hex' || a.id === 'timeThief' || a.id === 'comeback') && players.length < 2) return false;
+        if (a.cat === 'meta' && a.id !== 'mimic' && roundNo >= DRAFT_ROUNDS[DRAFT_ROUNDS.length - 1]) return false;
+        if ((a.cat === 'hex' || ['timeThief', 'comeback', 'ride', 'gauntlet', 'mimic'].indexOf(a.id) !== -1) && players.length < 2) return false;
         if (a.id === 'lateBloom' && lastRound < 10) return false;
         return true;
       }
       function drawCards(p, tier, roundNo, avoid) {
-        const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo); };
+        const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo) && augFits(p, a.id); };
         const shuffle = function (arr) {
           for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
           return arr;
@@ -2877,6 +3037,8 @@
         if (a.ch) Object.keys(a.ch).forEach(function (k) { p.ch[k] = (p.ch[k] || 0) + a.ch[k]; });
         if (id === 'shaky') players.forEach(function (q) { if (q !== p) q.shake = (q.shake || 0) + 2; });
         if (id === 'boxUp') p.boxUp = (p.boxUp || 0) + 1;
+        if (id === 'pupa') { p.hatch = round + Math.ceil((lastRound - round + 1) / 2); p.hatched = 0; fx('aug', { id: 'pupa', p: pi, phase: 'pick', delay: 2600 }); }
+        if (id === 'deepWell') fx('aug', { id: 'deepWell', p: pi, phase: 'pick', delay: 2600 });
         if (id === 'debt') { p.extra = (p.extra || 0) + 30; fx('aug', { id: 'debt', p: pi, phase: 'pick', delay: 900 }); }
         if (id === 'earlyEnd') { lastRound = Math.max(round + 1, lastRound - 2); fx('aug', { id: 'earlyEnd', p: pi, last: lastRound, delay: 900 }); }
         if (id === 'timeThief') {
@@ -2898,14 +3060,49 @@
         const o = draft.offers[pIdx];
         if (!o || o.chosen || o.cards.indexOf(id) === -1) return false;
         o.chosen = id;
-        grantAug(players[pIdx], id);
-        fx('augPick', { pIdx: pIdx, id: id });
+        const pl = players[pIdx];
+        if (o.mirror && pl.aug.indexOf('mimic') !== -1) {
+          pl.aug.splice(pl.aug.indexOf('mimic'), 1);
+          grantAug(pl, id);
+          pl.mim = id;
+          fx('aug', { id: 'mimic', p: pIdx, q: o.src && o.src[id] != null ? o.src[id] : -1, copy: id });
+        } else {
+          grantAug(pl, id);
+          fx('augPick', { pIdx: pIdx, id: id });
+        }
         broadcastState();
         renderAll();
+        if (draft.offers.every(function (x) { return !!x.chosen; }) && startMirrors()) return true;
         if (draft.offers.every(function (x) { return !!x.chosen; })) {
           const myMatch = matchId, d0 = draft;
           setTimeout(function () { if (matchId === myMatch && draft === d0) finishDraft(); }, 1700);
         }
+        return true;
+      }
+      // everyone picked: each 모방 owner now chooses from what the others took this round
+      function startMirrors() {
+        const mims = [];
+        draft.offers.forEach(function (o, i) { if (o.chosen === 'mimic' && !o.mirror) mims.push(i); });
+        if (!mims.length) return false;
+        mims.forEach(function (pi) {
+          const p = players[pi], o = draft.offers[pi];
+          const src = {}, cards = [];
+          draft.offers.forEach(function (x, j) {
+            const c = x.chosen;
+            if (j === pi || !c || c === 'mimic' || augHas(p, c) || !augFits(p, c) || !augAllowed(AUG[c], draft.round) || cards.indexOf(c) !== -1) return;
+            cards.push(c);
+            src[c] = j;
+          });
+          draft.offers[pi] = { tier: o.tier, cards: cards.length ? cards : drawCards(p, o.tier, draft.round, []), rerolls: cards.length ? 0 : o.rerolls, chosen: null, up: false, mirror: true, src: src };
+        });
+        broadcastState();
+        renderAll();
+        const myMatch = matchId;
+        mims.forEach(function (pi) {
+          const o = draft.offers[pi];
+          if (o.cards.length === 1 && Object.keys(o.src).length) setTimeout(function () { if (matchId === myMatch && draft && draft.offers[pi] === o && !o.chosen) draftPick(pi, o.cards[0]); }, 1700);
+          else if (players[pi].isAI) setTimeout(function () { if (matchId === myMatch) aiDraftPick(pi); }, 1300);
+        });
         return true;
       }
       function draftReroll(pIdx) {
@@ -2929,23 +3126,33 @@
         hasRolledThisTurn = false;
         rollsMax = 3; rollsLeft = 3; prevRollsLeft = 3;
         armedPower = null; armedReset(); rewindSnap = null; turnLost = false;
+        riseTurn = false;
+        stuck = [false, false, false, false, false]; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
+        twoferPend = null; restTurn = false;
       }
       // a turn begins (after any draft): rolls for this turn, curses, prophecy, AI kick-off
       function startTurn(announce) {
         const cur = players[currentPlayerIdx];
+        turnNo += 1;
         prepIdle();
+        const resting = matchAug && cur && !encoreTurn && openCats(cur).length === 0;
+        if (matchAug && cur && augHas(cur, 'fuse')) cur.ch.fuse = 3;
         sealTurn = false;
         players.forEach(function (q) { q.prophecy = null; });
         let shook = false;
         if (matchAug && cur) {
           if (augHas(cur, 'fourth')) rollsMax += 1;
-          if (!encoreTurn && cur.shake > 0) { rollsMax = Math.max(1, rollsMax - 1); cur.shake -= 1; shook = true; }
-          if (!encoreTurn && cur.sealed > 0) { cur.sealed -= 1; sealTurn = true; }
-          if (!encoreTurn && augHas(cur, 'prophecy')) {
+          if (!encoreTurn && !resting && cur.shake > 0) { rollsMax = Math.max(1, rollsMax - 1); cur.shake -= 1; shook = true; }
+          if (!encoreTurn && !resting && cur.sealed > 0) { cur.sealed -= 1; sealTurn = true; }
+          if (!encoreTurn && !resting && augHas(cur, 'prophecy')) {
             const open = openCats(cur);
             if (open.length > 1) cur.prophecy = open[Math.floor(Math.random() * open.length)];
           }
         }
+        const willSteal = matchAug && cur && !encoreTurn && cur.skip > 0;
+        if (matchAug && cur && !encoreTurn && !willSteal && !resting && cur.rise) { rollsMax += 2; cur.rise = 0; riseTurn = true; }
+        let hatchNow = false;
+        if (matchAug && cur && !willSteal && augHas(cur, 'pupa') && !cur.hatched && round >= (cur.hatch || 99)) { cur.hatched = 1; hatchNow = true; }
         rollsLeft = rollsMax;
         prevRollsLeft = rollsMax;
         const stolen = matchAug && cur && !encoreTurn && cur.skip > 0;
@@ -2963,13 +3170,28 @@
             if (matchId !== myMatch) return;
             if (cat) cur.scores[cat] = 0;
             fx('aug', { id: 'timeThief', q: currentPlayerIdx, cat: cat, phase: 'steal' });
+            if (cat) resolveBombs(currentPlayerIdx, 0); // a full card (rest turn) has nothing to steal: the bomb waits
             broadcastState();
             renderAll();
             setTimeout(function () { if (matchId !== myMatch) return; isScoring = false; turnLost = false; advanceTurn(); }, 1700);
           }, 1000);
           return;
         }
+        if (resting) {
+          restTurn = true;
+          isScoring = true;
+          broadcastState();
+          renderAll();
+          fx('aug', { id: 'twofer', p: currentPlayerIdx, phase: 'rest', delay: 300 });
+          const myMatch = matchId;
+          setTimeout(function () { if (matchId !== myMatch) return; isScoring = false; restTurn = false; advanceTurn(); }, 1500);
+          return;
+        }
         if (shook) fx('aug', { id: 'shaky', p: currentPlayerIdx, rolls: rollsMax, delay: 500 });
+        if (riseTurn) fx('aug', { id: 'rise', p: currentPlayerIdx, rolls: rollsMax, phase: 'rise', delay: 600 });
+        if (hatchNow) fx('aug', { id: 'pupa', p: currentPlayerIdx, phase: 'hatch', delay: 700 });
+        if (cur && players.some(function (o) { return o.bomb === currentPlayerIdx; })) fx('aug', { id: 'bomb', q: currentPlayerIdx, phase: 'tick', delay: 500 });
+        if (cur && cur.glue > 0 && !encoreTurn && !resting) fx('aug', { id: 'glue', q: currentPlayerIdx, face: cur.glue, phase: 'warn', delay: 450 });
         if (sealTurn) fx('aug', { id: 'seal', q: currentPlayerIdx, phase: 'turn', delay: 500 });
         if (cur && cur.prophecy) fx('aug', { id: 'prophecy', p: currentPlayerIdx, cat: cur.prophecy, phase: 'turn', delay: 600 });
         if (cur && cur.isAI) runAITurn();
@@ -3002,6 +3224,12 @@
         let t = 0;
         const later = function (fn) { const at = t; t += 1600; setTimeout(fn, 300 + at); };
         players.forEach(function (p, i) {
+          if (!augHas(p, 'grandSlam')) return;
+          const ok = QUEST.every(function (c) { return p.scores[c] !== null && p.scores[c] > 0; });
+          if (ok) p.extra = (p.extra || 0) + 40;
+          later(function () { fx('aug', { id: 'grandSlam', p: i, pts: ok ? 40 : 0, phase: ok ? 'done' : 'fail' }); });
+        });
+        players.forEach(function (p, i) {
           if (!augHas(p, 'debt')) return;
           const ok = getPlayerTotals(p).bonus > 0;
           if (!ok) p.extra = (p.extra || 0) - 50;
@@ -3019,6 +3247,12 @@
           q.extra = (q.extra || 0) - steal;
           p.extra = (p.extra || 0) + steal;
           later(function () { fx('aug', { id: 'thief', p: i, q: ti, pts: steal }); });
+        });
+        players.forEach(function (p, i) {
+          if (!(p.bomb >= 0)) return;
+          const h = p.bomb;
+          p.bomb = -1;
+          later(function () { fx('aug', { id: 'bomb', p: i, q: h, phase: 'fizzle' }); });
         });
         players.forEach(function (p, i) {
           if (!augHas(p, 'comeback')) return;
@@ -3055,9 +3289,9 @@
         const i = myDraftIdx();
         const o = i >= 0 ? draft.offers[i] : null;
         const rr = $('draftReroll');
-        if (o && !o.chosen && draftPending !== draft.round) {
+        if (o && !o.chosen && draftPending !== draft.round + (o.mirror ? 0.5 : 0)) {
           const who = $('draftWho');
-          who.textContent = humanCount() > 1 ? players[i].name : '';
+          who.textContent = (humanCount() > 1 ? players[i].name : '') + (o.mirror ? (humanCount() > 1 ? ' · ' : '') + '모방 · ' + (Object.keys(o.src || {}).length ? '상대가 고른 증강' : '새로 뽑기') : '');
           who.style.color = PLAYER_COLORS[i % 4];
           const sig = 'pick:' + draft.round + ':' + i + ':' + o.cards.join(',');
           if (sig !== draftSig) {
@@ -3210,7 +3444,7 @@
             draftSig = '';
             if (draft && draft.round === round0) {
               lastLocalPick = i;
-              if (isOnlineMatch && onlineRole === 'guest') { draftPending = round0; sendAction({ action: 'augPick', id: id }); }
+              if (isOnlineMatch && onlineRole === 'guest') { draftPending = round0 + (o.mirror ? 0.5 : 0); sendAction({ action: 'augPick', id: id }); }
               else draftPick(i, id);
             }
             syncDraftUi();
@@ -3246,6 +3480,12 @@
           if (p.shake) notes.push('손 떨림 ' + p.shake + '턴');
           if (p.sealed) notes.push('봉인 대기');
           if (p.skip) notes.push('턴 도둑맞음 대기');
+          if (p.glue) notes.push('끈끈이 ' + p.glue + ' 대기');
+          if (p.rise) notes.push('다음 턴 굴림 +2');
+          if (players.some(function (o) { return o.bomb === i; })) notes.push('폭탄 보유');
+          if (augHas(p, 'pupa')) notes.push(round >= (p.hatch || 99) ? '번데기: 나비' : '번데기: ' + p.hatch + '라운드 부화');
+          if (augHas(p, 'wildOne')) notes.push(p.wake ? '만능 1 깨어남' : '만능 1 잠듦');
+          if (augHas(p, 'grandSlam')) { const qs = questState(p); notes.push(qs.alive ? '그랜드슬램 ' + qs.lit + '/5' : '그랜드슬램 실패'); }
           const rows = (p.aug || []).map(function (id) {
             const a = AUG[id];
             const k = a.ch ? Object.keys(a.ch)[0] : null;
@@ -3754,6 +3994,310 @@
             else { stampFx(s, '연체 -50', '#ff5b72'); sfxSad(); }
             break;
           }
+          case 'deepWell': {
+            if (e.phase === 'pick') {
+              const b = ptOf(bonusEl);
+              burst(b, { shape: 'dust', count: 10, dist: 50, color: 'rgba(170,150,120,0.8)', dur: 900, spin: 80 });
+              restartAnim(bonusEl, 'fx-strike');
+              if (!sample('thud')) tone(90, 0.25, 'sine', 0.2, 50);
+              augPop('deepWell', b, '보너스 ✕');
+              break;
+            }
+            const t = tilePt(e.cat);
+            const face = UPPER_FACE[e.cat];
+            dice.forEach(function (v, i) {
+              if (v !== face) return;
+              setTimeout(function () { if (use3D()) window.Dice3D.aura(i, '#3fe0a9', 900); sfxTick(); }, i * 120);
+            });
+            setTimeout(function () {
+              stampFx(t, '+10', '#3fe0a9');
+              decalFx(t, 'ring_soft', 'rgba(63,224,169,0.6)', 150, 1000);
+              ringFx(t, '#3fe0a9', 2);
+            }, 650);
+            augPop('deepWell', t, '+10', { delay: 650 });
+            break;
+          }
+          case 'pupa': {
+            const pt = diePt(4);
+            if (e.phase === 'pick') {
+              if (use3D()) window.Dice3D.aura(4, '#f4efe2', 1400);
+              burst(pt, { shape: 'dust', count: 12, dist: 34, color: 'rgba(250,246,236,0.9)', dur: 1100, spin: 200 });
+              if (!sample('squeeze', { vol: 0.5 })) noise(700, 1, 0.3, 0.06, 'lowpass');
+              augPop('pupa', pt, '고치');
+              break;
+            }
+            // hatch: tremble, crack, a butterfly die
+            if (use3D()) { window.Dice3D.ring(4, '#ffffff', 10); setTimeout(function () { if (use3D()) window.Dice3D.ring(4, '#ffffff', 10); }, 220); }
+            setTimeout(function () {
+              burst(diePt(4), { shape: 'shard', count: 8, dist: 50, color: '#f4f1ea', dur: 800 });
+              if (!sample('shatter', { vol: 0.4 })) noise(2200, 1, 0.12, 0.1, 'bandpass');
+            }, 450);
+            setTimeout(function () {
+              const q = diePt(4);
+              burst(q, { shape: 'petal', count: 10, angle: -Math.PI / 2, spread: 1.6, dist: 90, color: ['#86d8ff', '#ff9fe0', '#fff6a8'], dur: 1400, gravity: -20, spin: 300 });
+              burst(q, { shape: 'star', count: 8, angle: -Math.PI / 2, spread: 1.4, dist: 80, color: ['#86d8ff', '#fff6a8'], dur: 1100 });
+              decalFx(q, 'flare', 'rgba(180,230,255,0.6)', 160, 900);
+              if (use3D()) window.Dice3D.aura(4, '#86d8ff', 1500);
+              showBanner('나비가 됐어요!', (who ? who.name + ' · ' : '') + '5번 주사위 4~6', 'cool');
+              if (!sample('petal')) tone(880, 0.2, 'sine', 0.06, 1320);
+              sample('sparkle', { delay: 0.25 });
+            }, 650);
+            break;
+          }
+          case 'rise': {
+            if (e.phase === 'fall') {
+              const t = tilePt(e.cat);
+              decalFx(t, 'impact', 'rgba(255,140,60,0.45)', 110, 900);
+              if (!sample('fail', { vol: 0.5 })) tone(220, 0.18, 'triangle', 0.05, 160);
+              setTimeout(function () {
+                stream(tilePt(e.cat), seatPt(e.p), { shape: 'ember', count: 8, arc: 90, wobble: 40, dur: 800, stagger: 50, color: ['#ffb04d', '#ff6a2a'],
+                  onEnd: function () { glyphPop(seatPt(e.p), 'rise', { color: '#ffb04d', size: 40 }); if (!sample('powerup')) tone(520, 0.2, 'square', 0.04, 880); } });
+              }, 400);
+              augPop('rise', t, '다음 턴 +2', { delay: 300 });
+              break;
+            }
+            if (use3D()) for (let i = 0; i < 5; i++) window.Dice3D.aura(i, '#ff8a3d', 1200);
+            const st = stagePt();
+            if (st) burst({ x: st.x, y: st.r.bottom - 20 }, { shape: 'ember', count: 14, angle: -Math.PI / 2, spread: 1.6, dist: 120, dur: 1200 });
+            if (!sample('fire')) noise(900, 0.8, 0.4, 0.08, 'bandpass', 0, 2400);
+            showChip((who ? who.name + ' · ' : '') + '칠전팔기 · 굴림 ' + e.rolls + '번', 'gold');
+            break;
+          }
+          case 'grandSlam': {
+            if (e.phase === 'lamp') {
+              const t = tilePt(e.cat);
+              burst(t, { shape: 'spark', count: 10, dist: 55, color: '#3fe0a9', dur: 700 });
+              decalFx(t, 'glow', 'rgba(63,224,169,0.5)', 120, 800);
+              if (!sample('chime', { rate: 1 + 0.12 * (e.lit || 0) })) tone(880 * Math.pow(2, (e.lit || 0) / 12), 0.15, 'sine', 0.05);
+              augPop('grandSlam', seatPt(e.p), (e.lit || 0) + '/5');
+              break;
+            }
+            if (e.phase === 'break' || e.phase === 'fail') {
+              const sp = seatPt(e.p);
+              for (let k = 0; k < 3; k++) setTimeout(function () { burst(seatPt(e.p), { shape: 'shard', count: 6, dist: 46, color: '#cfd8dc', dur: 700 }); }, k * 90);
+              if (e.cat) decalFx(tilePt(e.cat), 'smoke', 'rgba(120,120,120,0.5)', 110, 1000);
+              if (!sample('fail')) tone(300, 0.2, 'triangle', 0.05, 180);
+              sample('shatter', { vol: 0.5, delay: 0.15 });
+              augPop('grandSlam', sp, '실패');
+              break;
+            }
+            // done
+            const sp = seatPt(e.p);
+            screenFx('spot', 1400);
+            fireConfetti(true);
+            burst(sp, { shape: 'star', count: 16, dist: 90, color: ['#3fe0a9', '#ffd77a', '#ffffff'], dur: 1200 });
+            decalFx(sp, 'flare', 'rgba(255,230,150,0.8)', 170, 1200);
+            showBanner('그랜드슬램!', (who ? who.name + ' · ' : '') + '족보 다섯 칸 완성 +40', 'hot');
+            if (!sample('spotlight')) tone(523, 0.15, 'triangle', 0.05);
+            if (!sample('trophy', { delay: 0.25 })) { tone(659, 0.15, 'triangle', 0.05, 0, 0.12); tone(784, 0.15, 'triangle', 0.05, 0, 0.24); tone(1046, 0.3, 'triangle', 0.05, 0, 0.36); }
+            sample('score_big', { delay: 0.45 });
+            break;
+          }
+          case 'wildOne': {
+            const ones = [];
+            dice.forEach(function (v, i) { if (v === 1) ones.push(i); });
+            if (e.phase === 'wake') {
+              const t = tilePt(e.cat);
+              burst(t, { shape: 'star', count: 14, dist: 80, color: ['#ff6b6b', '#ffd93d', '#6bff95', '#4fd1ff', '#c77dff'], dur: 1100 });
+              burst(t, { shape: 'flare', count: 4, dist: 40, color: '#ffffff', dur: 900 });
+              flashScreen();
+              fireConfetti(false);
+              ones.forEach(function (i) { if (use3D()) { window.Dice3D.aura(i, '#e0c3ff', 1800); window.Dice3D.ring(i, '#ffffff', 14); } });
+              showBanner('1이 깨어났다!', '이제 1은 족보 만능', 'cool');
+              if (!sample('joker')) { tone(523, 0.12, 'triangle', 0.05); tone(659, 0.12, 'triangle', 0.05, 0, 0.08); tone(784, 0.12, 'triangle', 0.05, 0, 0.16); tone(1046, 0.2, 'triangle', 0.05, 0, 0.24); }
+              sample('sparkle', { delay: 0.3 });
+              break;
+            }
+            if (e.cat) {
+              // a wild finished a pattern
+              const t = tilePt(e.cat);
+              ones.forEach(function (i) { decalFx(diePt(i), 'twirl', 'rgba(200,160,255,0.7)', 100, 900); });
+              augPop('wildOne', t, '만능!');
+              if (!sample('magic')) tone(990, 0.15, 'triangle', 0.05, 1320);
+              break;
+            }
+            // landing glow
+            ones.forEach(function (i) { if (use3D()) window.Dice3D.aura(i, '#d9b8ff', 900); burst(diePt(i), { shape: 'magic', count: 2, dist: 20, color: '#d6bcff', dur: 800, spin: 200 }); });
+            if (ones.length) sample('sparkle', { vol: 0.25 });
+            break;
+          }
+          case 'glue': {
+            const qp = players[e.q];
+            if (e.phase === 'set') {
+              const a = seatPt(e.p), b = seatPt(e.q);
+              if (a && b) stream(a, b, { shape: 'glow', count: 8, arc: 70, wobble: 20, dur: 800, stagger: 50, color: '#7dff9a' });
+              if (!sample('squeeze')) noise(500, 1.5, 0.25, 0.12, 'lowpass', 0, 180);
+              showChip('끈끈이 · ' + e.face + ' → ' + (qp ? qp.name : ''), 'cool');
+              setTimeout(function () { burst(seatPt(e.q), { shape: 'glow', count: 4, dist: 18, color: '#8cff9f', dur: 700 }); }, 800);
+              break;
+            }
+            if (e.phase === 'warn') { augPop('glue', seatPt(e.q), e.face + '이 붙어요'); break; }
+            if (e.phase === 'stick') {
+              const idx = toArr(e.idx).map(Number);
+              idx.forEach(function (i, k) {
+                setTimeout(function () {
+                  const pt = diePt(i);
+                  decalFx(pt, 'smoke', 'rgba(90,220,120,0.55)', 110, 1600);
+                  burst(pt, { shape: 'glow', count: 4, dist: 26, color: '#8cff9f', dur: 900, gravity: 60 });
+                  if (use3D()) { window.Dice3D.aura(i, '#5dff8a', 1600); window.Dice3D.ring(i, '#5dff8a', 14); }
+                }, k * 110);
+              });
+              showChip('끈끈이! ' + e.face + ' ×' + idx.length, 'gold');
+              if (!sample('squeeze')) tone(220, 0.2, 'sine', 0.08, 140);
+              sample('wobble', { delay: 0.12 });
+              break;
+            }
+            if (e.phase === 'miss') {
+              burst(stagePt(), { shape: 'dust', count: 8, dist: 50, color: 'rgba(160,220,170,0.7)', dur: 800 });
+              showChip('끈끈이 헛방', 'cool');
+              if (!sample('fail', { vol: 0.4 })) tone(300, 0.15, 'triangle', 0.05, 200);
+              break;
+            }
+            if (e.phase === 'poke') {
+              const i = Number(toArr(e.idx)[0]);
+              if (use3D()) window.Dice3D.ring(i, '#5dff8a', 8);
+              burst(diePt(i), { shape: 'glow', count: 2, dist: 12, color: '#8cff9f', dur: 500 });
+              if (!sample('wobble')) tone(180, 0.12, 'sine', 0.06, 120);
+            }
+            break;
+          }
+          case 'bomb': {
+            const qp = players[e.q];
+            if (e.phase === 'light' || e.phase === 'pass') {
+              const fromI = e.phase === 'light' ? e.p : e.q, toI = e.phase === 'light' ? e.q : e.to;
+              const a = seatPt(fromI), b = seatPt(toI);
+              if (a) burst(a, { shape: 'smoke', count: 5, dist: 26, color: 'rgba(120,110,100,0.6)', dur: 800 });
+              if (a && b) stream(a, b, { shape: 'glyph', html: glyphSvg('bomb'), count: 1, arc: 110, dur: 800, color: '#ffb48a',
+                onEnd: function () { burst(b, { shape: 'spark', count: 8, dist: 30, color: '#ffd77a', dur: 600 }); } });
+              if (a && b) stream(a, b, { shape: 'ember', count: 6, arc: 110, dur: 800, stagger: 30 });
+              if (e.phase === 'light') { setTimeout(function () { if (!sample('thud')) { tone(90, 0.25, 'sine', 0.25, 50); noise(2600, 1, 0.4, 0.04, 'bandpass'); } }, 760); showChip('시한폭탄 → ' + (qp ? qp.name : ''), 'gold'); }
+              else { if (!sample('swap')) tone(520, 0.12, 'triangle', 0.05, 780); const tp = players[e.to]; showChip('폭탄 넘김! → ' + (tp ? tp.name : ''), 'cool'); }
+              break;
+            }
+            if (e.phase === 'tick') {
+              const sp = seatPt(e.q);
+              ringFx(sp, '#ff7a5a', 1.6);
+              if (!sample('clock')) tone(1200, 0.04, 'square', 0.03);
+              if (e.q === powerOwnerIdx() || (qp && !qp.isAI && !isOnlineMatch)) showChip('폭탄! 20점 이상 기록하면 돌려보내요', 'gold');
+              break;
+            }
+            if (e.phase === 'boom') {
+              const sp = seatPt(e.q);
+              burst(sp, { shape: 'smoke', count: 14, angle: -Math.PI / 2, spread: 0.6, dist: 120, color: 'rgba(70,60,55,0.7)', dur: 1500 });
+              burst(sp, { shape: 'ember', count: 16, dist: 90, dur: 1000 });
+              burst(sp, { shape: 'flare', count: 4, dist: 50, color: '#ffb04d', dur: 700 });
+              burst(sp, { shape: 'minus', html: '-20', count: 1, angle: Math.PI / 2, spread: 0.2, dist: 60, color: '#ff5b5b', dur: 1300 });
+              decalFx(sp, 'impact', 'rgba(40,30,25,0.6)', 170, 2600);
+              flashScreen(); bigShake();
+              wordFx(sp, 'BOOM');
+              const seat = seatsEl.children[e.q];
+              if (seat) restartAnim(seat, 'is-hit');
+              showBanner('시한폭탄 BOOM!', (qp ? qp.name : '') + ' -20', 'hot');
+              if (!sample('fire')) { tone(60, 0.5, 'sine', 0.35, 30); noise(250, 0.7, 0.35, 0.4, 'lowpass'); }
+              sample('shatter', { delay: 0.08 }); sample('thud', { delay: 0.02 });
+              break;
+            }
+            if (e.phase === 'fizzle') {
+              burst(seatPt(e.q), { shape: 'smoke', count: 5, angle: -Math.PI / 2, spread: 0.8, dist: 40, color: 'rgba(150,150,150,0.6)', dur: 900 });
+              if (!sample('fail', { vol: 0.35 })) tone(240, 0.15, 'triangle', 0.04, 160);
+              augPop('bomb', seatPt(e.q), '불발');
+            }
+            break;
+          }
+          case 'fuse': {
+            if (e.phase === 'safe') {
+              ringFx(stagePt(), '#ffd77a', 2);
+              showChip('휴… 도화선 ' + (e.left || 0) + '회 남음', 'cool');
+              if (!sample('chime')) { tone(1046, 0.12, 'sine', 0.05); tone(1318, 0.14, 'sine', 0.05, 0, 0.07); }
+              break;
+            }
+            const idx = toArr(e.idx).map(Number);
+            idx.forEach(function (i) { if (use3D()) window.Dice3D.ring(i, '#ff3b30', 18); });
+            setTimeout(function () {
+              flashScreen(); bigShake();
+              idx.forEach(function (i) {
+                const pt = diePt(i);
+                burst(pt, { shape: 'flare', count: 6, dist: 60, color: '#ffb04d', dur: 700 });
+                burst(pt, { shape: 'smoke', count: 10, dist: 70, color: 'rgba(90,80,72,0.7)', dur: 1300 });
+                decalFx(pt, 'impact', 'rgba(40,30,25,0.65)', 140, 2400);
+              });
+              wordFx(stagePt(), '펑!');
+              showBanner('도화선 펑!', (who ? who.name + ' · ' : '') + '이번 턴은 0점', 'hot');
+              if (!sample('slam')) { tone(70, 0.4, 'sine', 0.35, 35); noise(300, 0.8, 0.3, 0.4, 'lowpass'); }
+              sample('shatter', { delay: 0.05 });
+            }, 250);
+            break;
+          }
+          case 'gauntlet': {
+            const qp = players[e.q];
+            if (e.phase === 'declare') {
+              if (!sample('horn')) tone(392, 0.3, 'sawtooth', 0.05, 523);
+              showBanner('도전장!', (qp ? qp.name + '의 ' : '') + catKo(e.cat) + ' ' + e.val + '점에 도전', 'hot');
+              screenFx('spot', 1300);
+              sample('spotlight', { delay: 0.2 });
+              ringFx(tilePt(e.cat), '#ff5b72', 2.2);
+              burst(seatPt(e.q), { shape: 'spark', count: 8, dist: 40, color: '#ff5b72', dur: 700 });
+              break;
+            }
+            const t = tilePt(e.cat);
+            if (e.phase === 'win') {
+              const sp = seatPt(e.q);
+              burst(sp, { shape: 'shard', count: 10, dist: 60, color: '#ff8a8a', dur: 900 });
+              decalFx(sp, 'lightning', 'rgba(255,90,90,0.7)', 150, 900);
+              burst(sp, { shape: 'minus', html: '-' + e.val, count: 1, angle: Math.PI / 2, spread: 0.2, dist: 60, color: '#ff5b5b', dur: 1300 });
+              stampFx(t, '승!', '#ffd77a');
+              showChip('도전 성공! ' + (qp ? qp.name : '') + ' ' + catKo(e.cat) + ' → 0', 'gold');
+              if (!sample('shatter')) tone(220, 0.2, 'sawtooth', 0.05);
+              if (!sample('trophy', { delay: 0.35 })) tone(880, 0.25, 'triangle', 0.05, 0, 0.2);
+              break;
+            }
+            tileOverlay(e.cat, 'erase', 900, '<i></i><i></i><i></i>');
+            burst(t, { shape: 'dust', count: 10, dist: 50, color: 'rgba(200,190,170,0.7)', dur: 900 });
+            augPop('gauntlet', t, '½');
+            showChip('도전 실패… 점수 절반', 'cool');
+            if (!sample('fail')) tone(330, 0.25, 'triangle', 0.05, 196);
+            break;
+          }
+          case 'twofer': {
+            if (e.phase === 'first') {
+              if (use3D()) for (let i = 0; i < 5; i++) window.Dice3D.aura(i, '#ff9f5a', 900);
+              decalFx(stagePt(), 'twirl', 'rgba(255,159,90,0.6)', 260, 900);
+              ringFx(tilePt(e.cat), '#ff9f5a', 2);
+              showChip('일석이조 · 칸 하나 더 고르세요', 'gold');
+              if (!sample('squeeze', { vol: 0.6 })) tone(440, 0.15, 'triangle', 0.05, 660);
+              break;
+            }
+            if (e.phase === 'second') {
+              const a = tilePt(e.cat), b = tilePt(e.cat2);
+              beamFx(a, b, '#ff9f5a');
+              if (a && b) stream(a, b, { shape: 'spark', count: 8, arc: 40, dur: 600, stagger: 40, color: ['#ffd77a', '#ff9f5a'] });
+              if (!sample('stamp')) noise(400, 1, 0.08, 0.3, 'lowpass');
+              if (!sample('stamp', { vol: 0.45, delay: 0.18 })) noise(400, 1, 0.08, 0.2, 'lowpass', 0.18);
+              if ((e.pts || 0) >= 40) { showBanner('일석이조!', catKo(e.cat) + ' + ' + catKo(e.cat2) + ' · ' + e.pts + '점', 'hot'); sample('score_big', { delay: 0.3 }); }
+              else showChip('일석이조! ' + catKo(e.cat) + ' + ' + catKo(e.cat2), 'gold');
+              break;
+            }
+            // rest
+            const sp = seatPt(e.p);
+            burst(sp, { shape: 'smoke', count: 4, angle: -Math.PI / 2, spread: 0.5, dist: 40, size: 0.6, color: 'rgba(220,220,240,0.6)', dur: 1200 });
+            augPop('twofer', sp, '휴식');
+            showChip((who ? who.name + ' · ' : '') + '칸을 다 채워서 쉬어요', 'cool');
+            if (!sample('chime', { vol: 0.4 })) tone(523, 0.25, 'sine', 0.04);
+            break;
+          }
+          case 'mimic': {
+            const from = e.q >= 0 ? seatPt(e.q) : stagePt(), to = seatPt(e.p);
+            if (from && to) { beamFx(from, to, '#4fd1ff'); stream(from, to, { shape: 'glow', count: 8, arc: 60, dur: 800, stagger: 40, color: '#bff0ff' }); }
+            setTimeout(function () {
+              glyphPop(seatPt(e.p), e.copy, { color: '#bff0ff', size: 46 });
+              ringFx(seatPt(e.p), '#4fd1ff', 2.5);
+            }, 750);
+            const a = AUG[e.copy];
+            showChip((who ? who.name + ' ' : '') + '모방 → ' + (a ? a.name : ''), 'cool');
+            if (!sample('magic')) tone(660, 0.15, 'triangle', 0.05);
+            if (!sample('cards', { delay: 0.25 })) tone(990, 0.2, 'triangle', 0.05, 0, 0.12);
+            break;
+          }
           case 'comeback': {
             const s = seatPt(e.p);
             burst(s, { shape: 'ember', count: 28, angle: -Math.PI / 2, spread: 1.4, dist: 120, dur: 1300 });
@@ -3810,7 +4354,7 @@
       function augRollFx(notes) {
         if (!notes || !matchAug) return;
         let k = 0;
-        ['loaded', 'curse', 'twins'].forEach(function (id) { if (notes[id]) fx('aug', { id: id, p: currentPlayerIdx, delay: 120 + (k++) * 320 }); });
+        ['loaded', 'curse', 'twins', 'wildOne'].forEach(function (id) { if (notes[id]) fx('aug', { id: id, p: currentPlayerIdx, delay: 120 + (k++) * 320 }); });
       }
 
       // ================= Augment powers =================
@@ -3825,16 +4369,22 @@
         rewind: { label: '되감기', chip: 'REWIND', kind: 'instant' },
         seal: { label: '봉인', chip: '봉인', kind: 'instant' },
         swap: { label: '맞바꾸기', chip: 'SWAP', kind: 'tile' },
+        glue: { label: '끈끈이', chip: '끈끈이', kind: 'face' },
+        bomb: { label: '폭탄', chip: '시한폭탄', kind: 'instant' },
+        fuse: { label: '도화선', chip: '도화선', kind: 'instant' },
+        ride: { label: '편승', chip: '편승', kind: 'instant' },
+        gauntlet: { label: '도전장', chip: '도전장', kind: 'tile' },
+        twofer: { label: '일석이조', chip: '일석이조', kind: 'toggle' },
         overwrite: { label: '덮어쓰기', chip: '덮어쓰기', kind: 'toggle' },
         joker: { label: '조커', chip: 'JOKER', kind: 'toggle' },
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' }
       };
-      const POWER_KEYS = ['slam', 'flip', 'reroll', 'psychic', 'rewind', 'seal', 'swap', 'overwrite', 'joker', 'allin'];
+      const POWER_KEYS = ['slam', 'ride', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
       let flipIdx = -1;      // 2D fallback: die doing a flip
-      function armedReset() { armed.joker = false; armed.allin = false; armed.overwrite = false; psychicDie = -1; }
+      function armedReset() { armed.joker = false; armed.allin = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
       // the opponent box with the best trade for player pi in category cat (both filled, theirs higher)
       function swapInfo(pi, cat) {
         const me = players[pi];
@@ -3862,6 +4412,8 @@
         const cur = players[currentPlayerIdx];
         if (!cur) return false;
         const val = cur.scores[id];
+        if (duel) return id === duel.cat && (val === null || val === undefined);
+        if (twoferPend) return id !== twoferPend.first && id !== sealCatFor(cur) && (val === null || val === undefined) && scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })) > 0;
         if (val === null || val === undefined) return id !== sealCatFor(cur);
         if (encoreTurn) return true;
         if (armed.overwrite && charges(cur, 'overwrite') > 0) return scoreFor(cur, id, dice, previewOpts(true)) > val;
@@ -3871,12 +4423,18 @@
         const cur = players[currentPlayerIdx];
         const def = POWER_DEFS[kind];
         if (!matchAug || !def || def.kind === 'live' || !gameActive || draft || !cur || charges(cur, kind) <= 0) return false;
-        if (isRolling || isScoring || turnLost) return false;
+        if (isRolling || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
         if (kind === 'seal') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].sealed > 0) && !encoreTurn; }
-        if (kind === 'swap') return !encoreTurn && CATEGORIES.some(function (c) { return !!swapInfo(currentPlayerIdx, c.id); });
+        if (kind === 'swap') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return !!swapInfo(currentPlayerIdx, c.id); });
+        if (kind === 'glue') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].glue > 0) && !encoreTurn; }
+        if (kind === 'bomb') return !encoreTurn && !(cur.bomb >= 0) && leaderOther(currentPlayerIdx) >= 0;
+        if (kind === 'ride') return !hasRolledThisTurn && !encoreTurn && !!lastRec && lastRec.seq === turnNo - 1 && lastRec.p !== currentPlayerIdx && rollsMax >= 1;
+        if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
         if (!hasRolledThisTurn) return false;
-        if (kind === 'rewind') return rollsLeft < rollsMax;
-        if (kind === 'overwrite') return !encoreTurn && CATEGORIES.some(function (c) { return cur.scores[c.id] !== null; });
+        if (kind === 'rewind') return rollsLeft < rollsMax || (!!rewindSnap && !!rewindSnap.fuse);
+        if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
+        if (kind === 'twofer') return !encoreTurn && !duel && twoferPairs(cur);
+        if (kind === 'overwrite') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return cur.scores[c.id] !== null; });
         return true;
       }
       // whose charges this screen spends: the local human (hot-seat: whoever's turn it is)
@@ -3890,7 +4448,7 @@
       // Anyone with a charge may slam - moving dice get knocked mid-air, resting dice get shaken off the felt.
       function canSlam(pIdx) {
         const p = players[pIdx];
-        if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost) return false;
+        if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
         if (isRolling) return (isOnlineMatch && onlineRole === 'guest') || slamOpen() || slamSettling();
         return hasRolledThisTurn && held.some(function (h) { return !h; });
       }
@@ -3950,12 +4508,18 @@
       function usePower(kind, idx, face, onComplete, cat) {
         if (!canUsePower(kind)) return false;
         const cur = players[currentPlayerIdx];
-        if (kind === 'joker' || kind === 'allin' || kind === 'overwrite') return false; // toggles apply when recording
+        if (POWER_DEFS[kind].kind === 'toggle') return false; // toggles (joker / allin / overwrite / twofer) apply when recording
         if (kind === 'rewind') return doRewind(onComplete);
         if (kind === 'seal') return doSeal(onComplete);
         if (kind === 'swap') return doSwap(cat, onComplete);
+        if (kind === 'glue') return doGlue(face, onComplete);
+        if (kind === 'bomb') return doBomb(onComplete);
+        if (kind === 'fuse') return doFuse(onComplete);
+        if (kind === 'ride') return doRide(onComplete);
+        if (kind === 'gauntlet') return doGauntlet(cat, onComplete);
+        if (POWER_DEFS[kind].kind !== 'target') return false;
         if (!(idx >= 0 && idx < 5)) return false;
-        if (kind === 'psychic' && !(face >= 1 && face <= 6)) return false;
+        if (kind === 'psychic' && !(face >= 1 && face <= 6 && face === Math.floor(face))) return false;
         cur.ch[kind] -= 1;
         if (kind === 'reroll') {
           const next = dice.slice();
@@ -4002,6 +4566,9 @@
         held = rewindSnap.held.slice();
         rollsLeft = rewindSnap.rollsLeft;
         hasRolledThisTurn = rewindSnap.hasRolled;
+        if (rewindSnap.fuse) cur.ch.fuse = (cur.ch.fuse || 0) + 1;
+        if (rewindSnap.ride) { cur.ch.ride = (cur.ch.ride || 0) + 1; rideTurn = false; }
+        if (!rewindSnap.hasRolled) stuck = [false, false, false, false, false]; // the first roll is undone: nothing stays glued
         rewindSnap = null;
         rollSeq++;
         armedPower = null; psychicDie = -1; selectedTile = null;
@@ -4028,7 +4595,7 @@
       function doSwap(cat, onComplete) {
         const cur = players[currentPlayerIdx];
         const sw = swapInfo(currentPlayerIdx, cat);
-        if (!sw || charges(cur, 'swap') <= 0) return false;
+        if (!sw || duel || charges(cur, 'swap') <= 0) return false;
         cur.ch.swap -= 1;
         cur.scores[cat] = sw.b;
         players[sw.q].scores[cat] = sw.a;
@@ -4038,6 +4605,126 @@
         renderAll();
         if (typeof onComplete === 'function') setTimeout(onComplete, 700);
         return true;
+      }
+      // ---------- 끈끈이 / 시한폭탄 / 도화선 / 편승 / 도전장 ----------
+      function doGlue(face, onComplete) {
+        const cur = players[currentPlayerIdx];
+        const t = nextOpponent(currentPlayerIdx);
+        face = Math.floor(Number(face));
+        if (t < 0 || !(face >= 1 && face <= 6) || charges(cur, 'glue') <= 0 || players[t].glue > 0) return false;
+        cur.ch.glue -= 1;
+        players[t].glue = face;
+        players[t].glueBy = currentPlayerIdx;
+        armedPower = null;
+        fx('aug', { id: 'glue', p: currentPlayerIdx, q: t, face: face, phase: 'set' });
+        broadcastState();
+        renderAll();
+        if (typeof onComplete === 'function') setTimeout(onComplete, 650);
+        return true;
+      }
+      function applyGlue() {
+        const cur = players[currentPlayerIdx];
+        if (!matchAug || !cur || !(cur.glue > 0) || encoreTurn) return;
+        const face = cur.glue, by = cur.glueBy;
+        cur.glue = 0; cur.glueBy = -1;
+        const idx = [];
+        dice.forEach(function (v, i) { if (v === face) { stuck[i] = true; held[i] = true; idx.push(i); } });
+        fx('aug', { id: 'glue', p: by, q: currentPlayerIdx, face: face, idx: idx, phase: idx.length ? 'stick' : 'miss' });
+      }
+      function doBomb(onComplete) {
+        const cur = players[currentPlayerIdx];
+        const t = leaderOther(currentPlayerIdx);
+        if (t < 0 || charges(cur, 'bomb') <= 0 || cur.bomb >= 0) return false;
+        cur.ch.bomb -= 1;
+        cur.bomb = t;
+        cur.bombT = t;
+        fx('aug', { id: 'bomb', p: currentPlayerIdx, q: t, phase: 'light' });
+        broadcastState();
+        renderAll();
+        if (typeof onComplete === 'function') setTimeout(onComplete, 900);
+        return true;
+      }
+      // the holder h just recorded `value`: 20+ throws every bomb on them back, anything less sets it off
+      function resolveBombs(h, value) {
+        players.forEach(function (o, oi) {
+          if (o.bomb !== h) return;
+          if (value >= 20) {
+            o.bomb = h === oi ? o.bombT : oi;
+            fx('aug', { id: 'bomb', p: oi, q: h, to: o.bomb, phase: 'pass', delay: 800 });
+          } else {
+            players[h].extra = (players[h].extra || 0) - 20;
+            o.bomb = -1;
+            fx('aug', { id: 'bomb', p: oi, q: h, phase: 'boom', delay: 800 });
+          }
+        });
+      }
+      function doFuse(onComplete) {
+        const cur = players[currentPlayerIdx];
+        if (charges(cur, 'fuse') <= 0 || rollsLeft !== 0 || fuseBust) return false;
+        const free = [0, 1, 2, 3, 4].filter(function (i) { return !held[i]; });
+        if (!free.length) return false;
+        cur.ch.fuse -= 1;
+        rewindSnap = { dice: dice.slice(), held: held.slice(), rollsLeft: 0, hasRolled: true, fuse: true };
+        const next = rollValues(cur, dice, held, false);
+        const myMatch = matchId;
+        tossDice(next, held.slice(), { power: 'fuse', pIdx: currentPlayerIdx, sound: 'fire' }, function () {
+          if (matchId !== myMatch) return;
+          const hit = free.filter(function (i) { return dice[i] === 1; });
+          if (hit.length) {
+            fuseBust = true;
+            rewindSnap = null;
+            fx('aug', { id: 'fuse', p: currentPlayerIdx, idx: hit, phase: 'bust' });
+          } else fx('aug', { id: 'fuse', p: currentPlayerIdx, phase: 'safe', left: charges(cur, 'fuse') });
+          broadcastState();
+          renderAll();
+          if (typeof onComplete === 'function') onComplete();
+        }, lastRollNotes);
+        return true;
+      }
+      function doRide(onComplete) {
+        const cur = players[currentPlayerIdx];
+        if (!lastRec || charges(cur, 'ride') <= 0 || hasRolledThisTurn) return false;
+        cur.ch.ride -= 1;
+        rewindSnap = { dice: dice.slice(), held: held.slice(), rollsLeft: rollsLeft, hasRolled: false, ride: true };
+        held = [false, false, false, false, false];
+        hasRolledThisTurn = true;
+        rollsLeft = Math.max(0, rollsMax - 1);
+        rideTurn = true;
+        tossDice(lastRec.dice.slice(), [false, false, false, false, false], { power: 'ride', pIdx: currentPlayerIdx, knock: true, sound: 'swap', from: lastRec.p }, onComplete);
+        return true;
+      }
+      // the opponent box player pi could challenge in cat: mine empty, theirs 1+ (highest; tie -> higher total)
+      function gauntletInfo(pi, cat) {
+        const me = players[pi];
+        if (!me || me.scores[cat] !== null) return null;
+        let best = null;
+        players.forEach(function (q, j) {
+          if (j === pi) return;
+          const v = q.scores[cat];
+          if (v === null || v === undefined || v < 1) return;
+          if (!best || v > best.val || (v === best.val && getPlayerTotals(q).total > getPlayerTotals(players[best.q]).total)) best = { q: j, val: v };
+        });
+        return best;
+      }
+      function doGauntlet(cat, onComplete) {
+        const cur = players[currentPlayerIdx];
+        const info = CAT_IDS.indexOf(cat) !== -1 ? gauntletInfo(currentPlayerIdx, cat) : null;
+        if (!info || charges(cur, 'gauntlet') <= 0 || duel || hasRolledThisTurn) return false;
+        cur.ch.gauntlet -= 1;
+        duel = { q: info.q, cat: cat, val: info.val };
+        armedPower = null;
+        fx('aug', { id: 'gauntlet', p: currentPlayerIdx, q: info.q, cat: cat, val: info.val, phase: 'declare' });
+        broadcastState();
+        renderAll();
+        if (typeof onComplete === 'function') setTimeout(onComplete, 900);
+        return true;
+      }
+      function handleGauntletTap(cat) {
+        if (!isMyTurn() || armedPower !== 'gauntlet') return;
+        armedPower = null;
+        if (!gauntletInfo(currentPlayerIdx, cat)) { renderTiles(); renderPowers(); return; }
+        if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: 'gauntlet', cat: cat }); renderTiles(); renderPowers(); return; }
+        usePower('gauntlet', NaN, NaN, null, cat);
       }
       function handleSwapTap(cat) {
         if (!isMyTurn() || armedPower !== 'swap') return;
@@ -4078,6 +4765,20 @@
         } else if (k === 'reroll') {
           if (!sfxBuf.reroll || !sfxBuf.reroll.length) tone(760, 0.18, 'triangle', 0.08, 380);
           ringFx(pt, '#ff8fa0', 2.2);
+        } else if (k === 'fuse') {
+          const st = stagePt();
+          if (st) stream({ x: st.r.left + 20, y: st.r.bottom - 14 }, { x: st.r.right - 20, y: st.r.bottom - 14 }, { shape: 'ember', count: 14, arc: 14, wobble: 10, dur: 700, stagger: 30, color: ['#ffcf5a', '#ff7a2a'] });
+          if (use3D()) toArr(extra.held).forEach(function (h, i) { if (!h) window.Dice3D.aura(i, '#ff7a2a', 900); });
+          if (!sfxBuf.fire || !sfxBuf.fire.length) noise(3000, 1, 0.5, 0.05, 'bandpass');
+          sfxTick(); setTimeout(sfxTick, 90); setTimeout(sfxTick, 180);
+        } else if (k === 'ride') {
+          const from = seatPt(extra.from), to = seatPt(extra.pIdx);
+          if (from && to) stream(from, to, { shape: 'glow', count: 10, arc: 80, wobble: 20, dur: 750, stagger: 40, color: '#7fe9ff' });
+          for (let i = 0; i < 5; i++) setTimeout(function () { ringFx(diePt(i), '#7fe9ff', 1.6); decalFx(diePt(i), 'twirl', 'rgba(127,233,255,0.5)', 70, 700); }, 300 + i * 60);
+          sample('deal', { delay: 0.2 });
+          if (!sfxBuf.swap || !sfxBuf.swap.length) { noise(800, 1, 0.25, 0.06, 'bandpass', 0, 3000); tone(660, 0.12, 'triangle', 0.05); }
+          const q = players[extra.from];
+          if (q) setTimeout(function () { showChip('편승! ' + q.name + '의 주사위', 'cool'); }, 500);
         }
         const augId = augIdForPower(p, k);
         const owner = p && extra.pIdx !== powerOwnerIdx() ? p.name + ' · ' : '';
@@ -4091,7 +4792,8 @@
         const owner = players[me];
         const keys = owner && matchAug && gameActive && !draft ? POWER_KEYS.filter(function (k) { return charges(owner, k) > 0; }) : [];
         const mine = isMyTurn();
-        if (!mine) { armedPower = null; armed.joker = false; armed.allin = false; armed.overwrite = false; psychicDie = -1; }
+        if (!mine) { armedPower = null; armed.joker = false; armed.allin = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
+        if (armed.twofer && (charges(owner, 'twofer') <= 0 || twoferPend)) armed.twofer = false;
         if (armedPower && !canUsePower(armedPower)) { armedPower = null; psychicDie = -1; }
         if (armed.joker && charges(owner, 'joker') <= 0) armed.joker = false;
         if (armed.allin && charges(owner, 'allin') <= 0) armed.allin = false;
@@ -4145,7 +4847,7 @@
           renderTiles(); renderPowers();
           return;
         }
-        if (def.kind === 'target' || def.kind === 'tile') {
+        if (def.kind === 'target' || def.kind === 'tile' || def.kind === 'face') {
           armedPower = armedPower === kind ? null : kind;
           psychicDie = -1;
           sfxTick();
@@ -4166,8 +4868,15 @@
         b.addEventListener('click', function () { pickFace(v); });
         facePick.appendChild(b);
       });
-      function renderFacePick() { facePick.hidden = !(armedPower === 'psychic' && psychicDie >= 0 && isMyTurn() && !isRolling); }
+      function renderFacePick() { facePick.hidden = !(((armedPower === 'psychic' && psychicDie >= 0) || armedPower === 'glue') && isMyTurn() && !isRolling); }
       function pickFace(v) {
+        if (armedPower === 'glue') {
+          armedPower = null;
+          if (isOnlineMatch && onlineRole === 'guest') sendAction({ action: 'power', kind: 'glue', face: v });
+          else usePower('glue', -1, v);
+          renderDice(); renderPowers();
+          return;
+        }
         if (armedPower !== 'psychic' || psychicDie < 0) return;
         const idx = psychicDie;
         armedPower = null;
@@ -4179,35 +4888,116 @@
 
       // ---------- AI with augments ----------
       // expected extra a still-open category brings under an augment (approximate, from optimal-play averages)
-      const AUG_BOOST = { aceRebel: [[0, 10]], yachtClub: [[11, 17]] };
+      const AUG_BOOST = { aceRebel: [[0, 10]], yachtClub: [[11, 17]], deepWell: [[0, 1], [1, 1.4], [2, 1.8], [3, 2.2], [4, 2.5], [5, 2.8]] };
+      let ONES_OF = null; // number of 1s in each dice multiset (YachtAI indexing)
+      function onesOf() { if (!ONES_OF) ONES_OF = YachtAI.buildSC(function (ci, d) { return ci ? 0 : d.filter(function (v) { return v === 1; }).length; }); return ONES_OF; }
       const modsCache = {};
       function aiMods(p) {
         if (!matchAug || !p || !p.aug || !p.aug.length) return null;
-        const key = p.aug.slice().sort().join(',') + '|' + (round >= 10 ? 'L' : 'E');
+        const key = p.aug.slice().sort().join(',') + '|' + (round >= 10 ? 'L' : 'E') + '|W' + (p.wake ? 1 : 0) + '|P' + (augHas(p, 'pupa') ? (round >= (p.hatch || 99) ? 'B' : 'C') : '');
         if (modsCache[key]) return modsCache[key];
         const sc = YachtAI.buildSC(function (ci, d) { return scoreFor(p, CAT_IDS[ci], d, { noGolden: true, noProphecy: true, roundNo: round }); });
         const boost = new Float64Array(12);
         Object.keys(AUG_BOOST).forEach(function (id) { if (augHas(p, id)) AUG_BOOST[id].forEach(function (b) { boost[b[0]] += b[1]; }); });
+        // 만능 1 awake: patterns come much easier from now on
+        if (augHas(p, 'wildOne') && p.wake) { boost[11] += 12; boost[10] += 5; boost[9] += 3; boost[8] += 3; boost[7] += 3; }
+        // 번데기 cocoon: fill the low boxes now, keep the high ones for the butterfly half
+        if (augHas(p, 'pupa') && round < (p.hatch || 99)) { [3, 4, 5, 6, 7].forEach(function (ci) { boost[ci] += 1.5; }); [0, 1, 2].forEach(function (ci) { boost[ci] -= 1; }); }
         const br = bonusRule(p);
         // 빚: missing the bonus also costs 50, so the bonus is worth that much more
         const m = { sc: sc, boost: boost, shift: 63 - br.need, bonus: br.amount + (augHas(p, 'debt') ? 50 : 0) };
         modsCache[key] = m;
         return m;
       }
+      // 그랜드슬램: rough odds of still filling quest box c with T turns left
+      function questOdds(c, T) {
+        if (c === 'yacht') return Math.min(0.55, 0.045 * T);
+        if (c === 'largeStraight') return Math.min(0.92, 0.25 + 0.06 * T);
+        if (c === 'smallStraight') return Math.min(0.97, 0.55 + 0.04 * T);
+        if (c === 'fullHouse') return Math.min(0.95, 0.4 + 0.05 * T);
+        return Math.min(0.92, 0.3 + 0.055 * T);
+      }
+      // this turn's record incentives as a per-box delta on the real scores (exact[]); null if none apply
+      function aiRecordAdj(p, exact) {
+        if (!matchAug || !p || p !== players[currentPlayerIdx]) return null;
+        const after = Math.max(0, lastRound - round);
+        const adj = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let any = false;
+        if (augHas(p, 'grandSlam') && questState(p).alive) {
+          const O = QUEST.filter(function (c) { return p.scores[c] === null; });
+          let B = 40;
+          O.forEach(function (c) { B *= questOdds(c, after + 1); });
+          O.forEach(function (c) { const ci = CAT_IDS.indexOf(c), q = questOdds(c, after + 1); adj[ci] += exact[ci] > 0 ? B * (1 - q) / q : -B; any = true; });
+        }
+        if (augHas(p, 'rise') && !p.rise && after >= 1) exact.forEach(function (v, ci) { if (v <= 0) { adj[ci] += 6; any = true; } });
+        if (augHas(p, 'wildOne') && !p.wake && countsOf(dice)[1] >= 3) {
+          const W = 2.5 * QUEST.filter(function (c) { return p.scores[c] === null; }).length * Math.min(1, after / 8);
+          if (W > 0) { for (let ci = 0; ci < 12; ci++) adj[ci] += W; any = true; }
+        }
+        if (players.some(function (o) { return o.bomb === currentPlayerIdx; })) exact.forEach(function (v, ci) { if (v >= 20) { adj[ci] += 20; any = true; } });
+        return any ? adj : null;
+      }
       // this turn's view: prophecy bonus box, pressure on the last roll
       function aiTurnMods(p) {
         if (!matchAug || !p) return null;
         const base = aiMods(p);
         const pressureN = players.filter(function (q) { return q !== p && augHas(q, 'pressure'); }).length;
-        if (!base && !pressureN && !p.prophecy) return null;
+        if (!base && !pressureN && !p.prophecy && !duel && !players.some(function (o) { return o.bomb === currentPlayerIdx; })) return null;
         const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, base || {});
+        let scx = null;
+        const scw = function () { if (!scx) { scx = Float64Array.from(m.sc || YachtAI.baseSC()); m.sc = scx; } return scx; };
         if (p.prophecy && p === players[currentPlayerIdx]) {
           const ci = CAT_IDS.indexOf(p.prophecy);
-          const sc = Float64Array.from(m.sc || YachtAI.baseSC());
+          const sc = scw();
           for (let d = 0; d < 252; d++) sc[ci * 252 + d] += 10;
-          m.sc = sc;
+        }
+        const after = Math.max(0, lastRound - round); // my turns after this one
+        // 그랜드슬램: don't scratch a quest box, chase the last ones
+        if (augHas(p, 'grandSlam') && questState(p).alive) {
+          const O = QUEST.filter(function (c) { return p.scores[c] === null; });
+          const T = after + 1;
+          const qp = function (c) {
+            if (c === 'yacht') return Math.min(0.55, 0.045 * T);
+            if (c === 'largeStraight') return Math.min(0.92, 0.25 + 0.06 * T);
+            if (c === 'smallStraight') return Math.min(0.97, 0.55 + 0.04 * T);
+            if (c === 'fullHouse') return Math.min(0.95, 0.4 + 0.05 * T);
+            return Math.min(0.92, 0.3 + 0.055 * T);
+          };
+          let B = 40;
+          O.forEach(function (c) { B *= qp(c); });
+          if (O.length) {
+            const sc = scw();
+            O.forEach(function (c) {
+              const ci = CAT_IDS.indexOf(c), q = qp(c);
+              for (let d = 0; d < 252; d++) { const v = sc[ci * 252 + d]; sc[ci * 252 + d] = v + (v > 0 ? B * (1 - q) / q : -B); }
+            });
+          }
+        }
+        // 칠전팔기: a zero buys two extra rolls next turn
+        if (augHas(p, 'rise') && !p.rise && after >= 1) { const sc = scw(); for (let i = 0; i < sc.length; i++) if (sc[i] <= 0) sc[i] += 6; }
+        // 만능 1 asleep: a record with three 1s wakes it
+        if (augHas(p, 'wildOne') && !p.wake) {
+          const pat = QUEST.filter(function (c) { return p.scores[c] === null; }).length;
+          const W = 2.5 * pat * Math.min(1, after / 8);
+          if (W > 0) {
+            const sc = scw(), ones = onesOf();
+            for (let ci = 0; ci < 12; ci++) for (let d = 0; d < 252; d++) if (ones[d] >= 3) sc[ci * 252 + d] += W;
+          }
         }
         if (pressureN) m.pressure = 3 * pressureN;
+        // holding a bomb: a 20+ record sends it back
+        if (p === players[currentPlayerIdx] && players.some(function (o) { return o.bomb === currentPlayerIdx; })) {
+          const sc = scw();
+          for (let i = 0; i < sc.length; i++) if (sc[i] >= 20) sc[i] += 20;
+        }
+        // 도전장 declared: aim at that box only
+        if (duel && p === players[currentPlayerIdx]) {
+          const sc = scw(), dci = CAT_IDS.indexOf(duel.cat), T = duel.val;
+          for (let ci = 0; ci < 12; ci++) for (let d = 0; d < 252; d++) {
+            const k = ci * 252 + d, v = sc[k];
+            sc[k] = ci === dci ? (v >= T ? v + T : (v > 0 ? Math.floor(v / 2) : v)) : -1e6;
+          }
+        }
         return m;
       }
       // a short game (조기 종료 / 시간 도둑) can't fill every box: the AI writes off the cheapest ones
@@ -4221,13 +5011,17 @@
         return s;
       }
       function withExact(mods, p, flags) {
-        const exact = CAT_IDS.map(function (id) { return scoreFor(p, id, dice, Object.assign(previewOpts(false), flags || {})); });
+        const bust = fuseBust && p === players[currentPlayerIdx];
+        const exact = CAT_IDS.map(function (id) { return bust ? (flags && flags.allin ? -20 : 0) : scoreFor(p, id, dice, Object.assign(previewOpts(false), flags || {})); });
         const m = Object.assign({}, mods || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: exact });
+        const adj = aiRecordAdj(p, exact);
+        if (adj) m.adj = adj;
         const sealId = sealCatFor(p);
         if (sealId) m.block = 1 << CAT_IDS.indexOf(sealId);
+        if (duel && p === players[currentPlayerIdx]) m.block = 4095 & ~(1 << CAT_IDS.indexOf(duel.cat));
         return m;
       }
-      function aiExact(p) { const m = aiTurnMods(p); return m || sealCatFor(p) ? withExact(m, p) : null; }
+      function aiExact(p) { const m = aiTurnMods(p); return m || sealCatFor(p) || duel ? withExact(m, p) : null; }
       function augValue(p, id) {
         const a = AUG[id];
         const left = Math.max(0, lastRound + 1 - round) / 12;
@@ -4237,7 +5031,49 @@
         let topOther = -1e9;
         players.forEach(function (q, j) { if (j !== pi) topOther = Math.max(topOther, getPlayerTotals(q).total); });
         let v = a.ev;
-        if (!a.ch && !a.fixed && ['thief', 'encore', 'timeThief', 'earlyEnd', 'debt', 'comeback'].indexOf(id) === -1) v *= left;
+        if (!a.ch && !a.fixed && ['thief', 'encore', 'timeThief', 'earlyEnd', 'debt', 'comeback', 'deepWell', 'pupa', 'grandSlam', 'mimic'].indexOf(id) === -1) v *= left;
+        if (id === 'deepWell') {
+          const t = getPlayerTotals(p);
+          let par = t.upper;
+          CATEGORIES.slice(0, 6).forEach(function (c, ci) { if (open(c.id)) par += 3 * (ci + 1); });
+          const pB = t.bonus ? 1 : Math.max(0, Math.min(1, (par - 50) / 26));
+          const openUp = CATEGORIES.slice(0, 6).filter(function (c) { return open(c.id); }).length;
+          v = t.upper >= 63 ? 0 : 2.3 * openUp * left * 1.5 - 35 * pB + 4;
+        }
+        if (id === 'pupa') {
+          const N = lastRound - round + 1;
+          const hi = ['fours', 'fives', 'sixes', 'choice', 'fourKind'].filter(open).length;
+          v = 4 + 1.2 * hi * (N >= 4 ? 1 : 0.5) - (['ones', 'twos', 'threes'].some(open) ? 0 : 2);
+        }
+        if (id === 'grandSlam') {
+          const qs = questState(p);
+          const T = lastRound - round + 1;
+          let pr = 1;
+          QUEST.forEach(function (c) {
+            if (!open(c)) return;
+            pr *= c === 'yacht' ? Math.min(0.55, 0.045 * T) : c === 'largeStraight' ? Math.min(0.92, 0.25 + 0.06 * T) : c === 'smallStraight' ? Math.min(0.97, 0.55 + 0.04 * T) : c === 'fullHouse' ? Math.min(0.95, 0.4 + 0.05 * T) : Math.min(0.92, 0.3 + 0.055 * T);
+          });
+          v = qs.alive ? 40 * pr + 2 : 0;
+        }
+        if (id === 'mimic') {
+          let best = 0;
+          if (draft) draft.offers.forEach(function (o, j) {
+            if (j === pi || !o) return;
+            if (o.chosen && o.chosen !== 'mimic' && !augHas(p, o.chosen)) best = Math.max(best, augValue(p, o.chosen));
+            else if (!o.chosen) {
+              const pool = AUG_LIST.filter(function (x) { return x.tier === o.tier && x.id !== 'mimic'; });
+              const mean = pool.reduce(function (m, x) { return m + x.ev; }, 0) / Math.max(1, pool.length);
+              best = Math.max(best, 0.8 * mean * Math.max(0.4, left));
+            }
+          });
+          v = best;
+        }
+        if (id === 'twofer') v = a.ev * Math.min(1, left * 1.5);
+        if (id === 'fuse') { v = a.ev * left; if (augHas(p, 'loaded')) v += 3; if (players.some(function (q) { return q !== p && augHas(q, 'curse'); })) v -= 3; }
+        if (id === 'ride') v = a.ev * (lastRound - round + 1 < 3 ? 0.6 : 1);
+        if (id === 'gauntlet') v = a.ev * (lastRound - round < 1 ? 0.3 : 1);
+        if (id === 'bomb' && lastRound - round < 1) v = 0;
+        if (id === 'wildOne') { if (augHas(p, 'aceRebel') && open('ones')) v += 6; if (augHas(p, 'loaded')) v -= 4; }
         if (id === 'compound') v = a.ev * left * left * 1.3;
         if ((id === 'aceRebel' && !open('ones')) || (id === 'yachtClub' && !open('yacht'))) v = 0;
         if (id === 'bonusHunter') {
@@ -4291,8 +5127,10 @@
           });
           return { cat: best.cat, flags: {} };
         }
+        if (duel) return { cat: duel.cat, flags: {} };
         const sc = aiScores(cur);
         const tm = aiTurnMods(cur);
+        if (fuseBust) return { cat: YachtAI.decide(sc, CAT_IDS, dice, 0, null, aiTemp(), withExact(tm, cur)).category, flags: {} };
         let cat = planned;
         if (!cat || cat === sealId || cur.scores[cat] !== null) cat = YachtAI.decide(sc, CAT_IDS, dice, 0, null, aiTemp(), withExact(tm, cur)).category;
         if (!matchAug) return { cat: cat, flags: {} };
@@ -4303,6 +5141,34 @@
           L.forEach(function (x) { if (x.val > b.val) b = x; });
           return b;
         };
+        // 일석이조: write these dice twice when that beats a single record by enough to pay for the lost turn
+        if (charges(cur, 'twofer') > 0 && canUsePower('twofer')) {
+          const ex1 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, previewOpts(false)); });
+          const ex2 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })); });
+          const L = YachtAI.catValues(sc, CAT_IDS, dice, withExact(tm, cur));
+          let single = -1e9;
+          L.forEach(function (x) { if (x.val > single) single = x.val; });
+          const t0 = getPlayerTotals(cur), bAmt = bonusRule(cur).amount;
+          let pair = null;
+          L.slice().sort(function (a, b) { return b.val - a.val; }).slice(0, 4).forEach(function (xa) {
+            if (ex1[xa.ci] <= 0) return;
+            const A = CAT_IDS[xa.ci];
+            const scA = Object.assign({}, sc);
+            scA[A] = ex1[xa.ci];
+            const crossA = xa.ci < 6 && t0.upper < 63 && t0.upper + ex1[xa.ci] >= 63 ? bAmt : 0;
+            const m2 = withExact(tm, cur, { second: true });
+            YachtAI.catValues(scA, CAT_IDS, dice, m2).forEach(function (xb) {
+              if (xb.ci === xa.ci || ex2[xb.ci] <= 0) return;
+              const v = ex1[xa.ci] + crossA + xb.val;
+              if (!pair || v > pair.v) pair = { A: A, B: CAT_IDS[xb.ci], v: v };
+            });
+          });
+          const turnsLeft = lastRound - round + 1, ch = charges(cur, 'twofer');
+          if (pair) {
+            const gain = pair.v - single;
+            if (gain > 5 * (ch >= 2 ? 1 : 1.4) * Math.min(1, turnsLeft / 5) || (gain > 0 && turnsLeft <= ch)) return { cat: pair.A, flags: { twofer: pair.B } };
+          }
+        }
         if (charges(cur, 'joker') > 0 || charges(cur, 'allin') > 0) {
           let best = bestOf({}), flags = {};
           if (charges(cur, 'joker') > 0) { const j = bestOf({ joker: true }); if (j.val - best.val > 24 * keep + 1) { best = j; flags = { joker: true }; } }
@@ -4325,6 +5191,43 @@
         return { cat: cat, flags: {} };
       }
       const PW_COST = { reroll: 8, flip: 6, psychic: 14, rewind: 8, slam: 10 };
+      // 도화선: value of one more throw (any re-rolled 1 = a zero in the cheapest box) vs. recording now
+      function aiFuseOption(cur) {
+        const sc = aiScores(cur), tm = aiTurnMods(cur);
+        const exactFor = function (d) { return CAT_IDS.map(function (id) { return scoreFor(cur, id, d, previewOpts(false)); }); };
+        const bestFor = function (d, ex) {
+          const m = Object.assign({}, tm || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: ex });
+          const adj = aiRecordAdj(cur, ex);
+          if (adj) m.adj = adj;
+          const L = YachtAI.catValues(sc, CAT_IDS, d, m);
+          let b = -1e9;
+          L.forEach(function (x) { if (x.val > b) b = x.val; });
+          return b;
+        };
+        const stop = bestFor(dice, exactFor(dice));
+        const bust = bestFor(dice, CAT_IDS.map(function () { return 0; }));
+        const cands = [];
+        const plan = YachtAI.decide(sc, CAT_IDS, dice, 1, held, 0, aiExact(cur));
+        if (plan.hold) cands.push(plan.hold);
+        for (let i = 0; i < 5; i++) { const h = [true, true, true, true, true]; h[i] = false; cands.push(h); }
+        let best = null;
+        cands.forEach(function (h0) {
+          const h = h0.map(function (x, i) { return x || stuck[i]; });
+          const free = [0, 1, 2, 3, 4].filter(function (i) { return !h[i]; });
+          if (!free.length || free.length > 3) return;
+          const n = Math.pow(6, free.length);
+          let ev = 0;
+          for (let k = 0; k < n; k++) {
+            const d = dice.slice();
+            let x = k, boom = false;
+            free.forEach(function (i) { const v = 1 + (x % 6); x = Math.floor(x / 6); d[i] = v; if (v === 1) boom = true; });
+            ev += boom ? bust : bestFor(d, exactFor(d));
+          }
+          ev /= n;
+          if (!best || ev > best.ev) best = { ev: ev, hold: h };
+        });
+        return best && best.ev > stop + 0.5 ? best : null;
+      }
       function aiPowerPlan() {
         const cur = players[currentPlayerIdx];
         if (!matchAug || !cur) return null;
@@ -4358,7 +5261,69 @@
         if (!matchAug || !cur || encoreTurn) { done(); return; }
         const myMatch = matchId;
         const later = function (fn, ms) { aiTimer = setTimeout(function () { if (matchId === myMatch && gameActive) fn(); }, ms); };
-        if (charges(cur, 'swap') > 0) {
+        // 편승: start from the previous player's recorded dice when that beats a fresh turn
+        if (charges(cur, 'ride') > 0 && canUsePower('ride')) {
+          const sc = aiScores(cur), tm = aiTurnMods(cur), ch = charges(cur, 'ride');
+          const gain = YachtAI.valueAt(sc, CAT_IDS, lastRec.dice, Math.max(0, rollsMax - 1), tm, false) - YachtAI.valueAt(sc, CAT_IDS, dice, rollsMax, tm, true);
+          const turnsLeft = lastRound - round + 1;
+          const th = turnsLeft <= ch ? 0.5 : (ch >= 2 ? 6 : 8) * Math.min(1, turnsLeft / 6) + 2;
+          if (gain > th) { later(function () { if (!doRide(function () { aiResume(); })) done(); }, 600); return; }
+        }
+        // 도전장: a box of theirs it can probably match
+        if (charges(cur, 'gauntlet') > 0 && canUsePower('gauntlet')) {
+          const sc = aiScores(cur), base = aiTurnMods(cur);
+          const v0 = YachtAI.valueAt(sc, CAT_IDS, dice, rollsMax, base, true);
+          let best = null;
+          CATEGORIES.forEach(function (c, dci) {
+            const gi = gauntletInfo(currentPlayerIdx, c.id);
+            if (!gi) return;
+            const q = players[gi.q];
+            const qt = getPlayerTotals(q);
+            const bonusLoss = dci < 6 && qt.bonus && qt.upper - gi.val < 63 ? qt.amount : 0;
+            const w = players.length === 2 || gi.q === leaderOther(currentPlayerIdx) ? 1 : 0.6;
+            const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, base || {});
+            const src = m.sc || YachtAI.baseSC(), scd = new Float64Array(src.length);
+            for (let ci = 0; ci < 12; ci++) for (let d = 0; d < 252; d++) {
+              const k = ci * 252 + d, v = src[k];
+              scd[k] = ci === dci ? (v >= gi.val ? v + w * (gi.val + bonusLoss) : (v > 0 ? Math.floor(v / 2) : v)) : -1e6;
+            }
+            m.sc = scd;
+            const g = YachtAI.valueAt(sc, CAT_IDS, dice, rollsMax, m, true) - v0;
+            if (!best || g > best.g) best = { cat: c.id, g: g };
+          });
+          const turnsLeft = lastRound - round + 1;
+          if (best && (best.g > 5 || (best.g > 0.5 && turnsLeft <= 2))) {
+            later(function () { doGauntlet(best.cat); later(function () { aiPreTurn(done); }, 900); }, 600);
+            return;
+          }
+        }
+        // 시한폭탄: on the leader when their 20+ boxes are running out faster than ours
+        if (charges(cur, 'bomb') > 0 && canUsePower('bomb')) {
+          const t = leaderOther(currentPlayerIdx);
+          const hiOpen = function (q) { return ['choice', 'fourKind', 'fullHouse', 'largeStraight', 'yacht', 'sixes', 'fives'].filter(function (c) { return q.scores[c] === null; }).length; };
+          const turnsLeft = lastRound - round + 1;
+          if (t >= 0 && round >= 3 && (hiOpen(cur) - hiOpen(players[t]) >= 2 || turnsLeft <= 2)) {
+            later(function () { doBomb(); later(function () { aiPreTurn(done); }, 900); }, 600);
+            return;
+          }
+        }
+        // 끈끈이: glue a face the next player no longer needs
+        if (charges(cur, 'glue') > 0 && canUsePower('glue') && round >= 2) {
+          const t = nextOpponent(currentPlayerIdx), tq = players[t];
+          let bf = 0, bv = -1e9;
+          for (let f = 1; f <= 6; f++) {
+            let v = tq.scores[CAT_IDS[f - 1]] !== null ? 3 : -f / 2;
+            if (f === 1) v += 1;
+            if (f >= 5 && (tq.scores.choice === null || tq.scores.fourKind === null)) v -= 1.5;
+            if (v > bv) { bv = v; bf = f; }
+          }
+          const turnsLeft = lastRound - round + 1;
+          if (bf && bv > 1 && (Math.random() < 0.45 || turnsLeft <= charges(cur, 'glue') + 1)) {
+            later(function () { doGlue(bf); later(function () { aiPreTurn(done); }, 800); }, 600);
+            return;
+          }
+        }
+        if (charges(cur, 'swap') > 0 && canUsePower('swap')) {
           let best = null;
           CATEGORIES.forEach(function (c) { const sw = swapInfo(currentPlayerIdx, c.id); if (sw && (!best || sw.gain > best.gain)) best = { cat: c.id, gain: sw.gain }; });
           if (best && best.gain >= (round >= 10 ? 8 : 15)) {
@@ -4404,23 +5369,45 @@
         const cur = players[currentPlayerIdx];
         if (!cur || !(catId in cur.scores)) return;
         flags = flags || {};
+        if (duel && catId !== duel.cat) return; // 도전장: this turn's record goes into the challenged box only
+        if (twoferPend) { commitSecond(catId); return; }
         const old = cur.scores[catId];
         const filled = old !== null && old !== undefined;
         if (!filled && catId === sealCatFor(cur)) return;
-        const useOw = filled && !encoreTurn && !!flags.overwrite && charges(cur, 'overwrite') > 0;
+        const useOw = filled && !encoreTurn && !fuseBust && !duel && !!flags.overwrite && charges(cur, 'overwrite') > 0;
         if (filled && !encoreTurn && !useOw) return;
         const useJoker = !!flags.joker && charges(cur, 'joker') > 0;
         const useAllin = !!flags.allin && charges(cur, 'allin') > 0;
         const prevT = getPlayerTotals(cur);
         const trace = [];
         const base = calcCategoryScore(catId, dice);
-        const pts = scoreFor(cur, catId, dice, { roundNo: round, firstRoll: rollsMax - rollsLeft === 1, joker: useJoker, allin: useAllin, trace: trace });
+        let pts = scoreFor(cur, catId, dice, { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn, joker: useJoker, allin: useAllin, trace: trace });
+        // 도화선 went off: a zero (all-in still costs its 20)
+        if (fuseBust) { pts = useAllin ? -20 : 0; trace.length = 0; if (useAllin) trace.push('allin'); }
         if (useOw && pts <= old) return;
+        // 일석이조 armed: this record opens a second one with the same dice
+        const useTwofer = !!flags.twofer && charges(cur, 'twofer') > 0 && !filled && !encoreTurn && !duel && !fuseBust && pts > 0;
+        // 도전장: match or beat their box and it drops to 0, fall short and yours is halved
+        let duelRes = null;
+        if (duel && catId === duel.cat && !filled) {
+          const T = players[duel.q].scores[catId];
+          if (T !== null && T > 0) {
+            if (pts >= T) { players[duel.q].scores[catId] = 0; duelRes = { win: true, q: duel.q, val: T }; }
+            else { if (pts > 0) pts = Math.floor(pts / 2); duelRes = { win: false, q: duel.q, val: T }; }
+          }
+        }
         const keepOld = filled && pts <= old; // 앙코르 with nothing better: the box stays as it was
         if (useJoker && !keepOld && trace.indexOf('joker') !== -1) cur.ch.joker -= 1;
         if (useAllin && !keepOld) cur.ch.allin -= 1;
         if (useOw) cur.ch.overwrite -= 1;
         if (!keepOld) cur.scores[catId] = pts;
+        lastRec = { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo };
+        // 칠전팔기: a zero you wrote yourself into an empty box
+        const riseNow = !keepOld && !filled && !encoreTurn && augHas(cur, 'rise') && pts <= 0 && !cur.rise;
+        if (riseNow) cur.rise = 1;
+        // 만능 1 wakes on a record made with three or more 1s showing
+        const wakeNow = augHas(cur, 'wildOne') && !cur.wake && countsOf(dice)[1] >= 3;
+        if (wakeNow) cur.wake = 1;
         const newT = getPlayerTotals(cur);
         isScoring = true;
         selectedTile = null;
@@ -4431,6 +5418,20 @@
         fx('score', { pts: keepOld ? old : pts, catId: catId, pIdx: currentPlayerIdx });
         if (filled && !keepOld) fx('aug', { id: 'overwrite', cat: catId, from: old, to: pts, enc: encoreTurn ? 1 : 0, delay: 150 });
         if (!keepOld) trace.forEach(function (id, k) { fx('aug', { id: id, cat: catId, pts: pts, p: currentPlayerIdx, delay: 250 + k * 420 }); });
+        if (riseNow) fx('aug', { id: 'rise', p: currentPlayerIdx, cat: catId, phase: 'fall', delay: 350 });
+        if (duelRes) {
+          fx('aug', { id: 'gauntlet', p: currentPlayerIdx, q: duelRes.q, cat: catId, val: duelRes.val, pts: pts, phase: duelRes.win ? 'win' : 'lose', delay: 300 });
+          const tq = players[duelRes.q];
+          if (duelRes.win && augHas(tq, 'grandSlam') && QUEST.indexOf(catId) !== -1) fx('aug', { id: 'grandSlam', p: duelRes.q, cat: catId, phase: 'break', delay: 1400 });
+        }
+        const sealB = useTwofer ? sealCatFor(cur) : null;
+        const twoferOn = useTwofer && openCats(cur).some(function (id) { return id !== sealB && scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })) > 0; });
+        if (!encoreTurn && !twoferOn) resolveBombs(currentPlayerIdx, pts);
+        if (wakeNow) fx('aug', { id: 'wildOne', p: currentPlayerIdx, cat: catId, phase: 'wake', delay: 650 });
+        if (!keepOld && augHas(cur, 'grandSlam') && QUEST.indexOf(catId) !== -1) {
+          const qs = questState(cur);
+          fx('aug', { id: 'grandSlam', p: currentPlayerIdx, cat: catId, phase: pts > 0 ? 'lamp' : 'break', lit: qs.lit, delay: 450 });
+        }
         if (!keepOld && catId === 'yacht' && pts >= 50) {
           fx('banner', { title: augHas(cur, 'yachtClub') ? 'YACHT CLUB!' : 'YACHT!', sub: '+' + pts + '점', tier: 'hot' });
           fx('confetti', { big: true });
@@ -4445,11 +5446,58 @@
         renderAll();
 
         const myMatch = matchId;
+        if (twoferOn) {
+          // 일석이조: the turn stays open for the second box
+          twoferPend = { first: catId };
+          setTimeout(function () {
+            if (matchId !== myMatch || !twoferPend) return;
+            isScoring = false;
+            broadcastState();
+            renderAll();
+            fx('aug', { id: 'twofer', p: currentPlayerIdx, cat: catId, phase: 'first' });
+            if (typeof flags.twofer === 'string') setTimeout(function () { if (matchId === myMatch && twoferPend) commitScore(flags.twofer, {}); }, 900);
+          }, 650);
+          return;
+        }
         setTimeout(function () {
           if (matchId !== myMatch) return;
           isScoring = false;
           advanceTurn();
         }, 750 + Math.min(1400, trace.length * 300));
+      }
+      function twoferPairs(cur) {
+        const ok = openCats(cur).filter(function (id) { return id !== sealCatFor(cur) && scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })) > 0; });
+        return ok.length >= 2;
+      }
+      function commitSecond(B) {
+        const cur = players[currentPlayerIdx];
+        const A = twoferPend.first;
+        if (B === A || !(B in cur.scores) || cur.scores[B] !== null || B === sealCatFor(cur) || charges(cur, 'twofer') <= 0) return;
+        const trace = [];
+        const pts2 = scoreFor(cur, B, dice, { roundNo: round, firstRoll: false, second: true, trace: trace });
+        if (pts2 <= 0) return;
+        cur.ch.twofer -= 1;
+        const prevT = getPlayerTotals(cur);
+        cur.scores[B] = pts2;
+        const newT = getPlayerTotals(cur);
+        const ptsA = cur.scores[A] || 0;
+        twoferPend = null;
+        isScoring = true;
+        selectedTile = null;
+        armedReset();
+        setHighlight(null);
+        broadcastState();
+        fx('score', { pts: pts2, catId: B, pIdx: currentPlayerIdx });
+        trace.forEach(function (id, k) { fx('aug', { id: id, cat: B, pts: pts2, p: currentPlayerIdx, delay: 250 + k * 420 }); });
+        fx('aug', { id: 'twofer', p: currentPlayerIdx, cat: A, cat2: B, pts: ptsA + pts2, phase: 'second', delay: 150 });
+        if (B === 'yacht' && pts2 >= 50) { fx('banner', { title: 'YACHT!', sub: '+' + pts2 + '점', tier: 'hot' }); fx('confetti', { big: true }); }
+        else if (!prevT.bonus && newT.bonus) { fx('banner', { title: 'BONUS!', sub: '상단 ' + newT.need + '점 달성 · +' + newT.amount, tier: 'hot', sound: 'bonus' }); fx('confetti', { big: false }); }
+        if (augHas(cur, 'grandSlam') && QUEST.indexOf(B) !== -1) fx('aug', { id: 'grandSlam', p: currentPlayerIdx, cat: B, phase: 'lamp', lit: questState(cur).lit, delay: 900 });
+        lastRec = { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo };
+        resolveBombs(currentPlayerIdx, Math.max(ptsA, pts2));
+        renderAll();
+        const myMatch = matchId;
+        setTimeout(function () { if (matchId !== myMatch) return; isScoring = false; advanceTurn(); }, 1100 + Math.min(1400, trace.length * 300));
       }
 
       function advanceTurn() {
@@ -4563,7 +5611,7 @@
           let v = fut(mask, u);
           if (MOD) {
             if (MOD.boost) for (let ci = 0; ci < 12; ci++) if (!(mask & (1 << ci))) v += MOD.boost[ci];
-            if (MOD.bonus > 35 && u < 63) {
+            if (MOD.bonus !== 35 && u < 63) {
               let par = u;
               for (let ci = 0; ci < 6; ci++) if (!(mask & (1 << ci))) par += 3 * (ci + 1);
               v += (MOD.bonus - 35) * Math.max(0, Math.min(1, (par - 52) / 22));
@@ -4672,6 +5720,7 @@
             let val;
             if (ci < 6) { const nu = Math.max(0, Math.min(63, st.upper + s)); val = s + (st.upper < 63 && nu >= 63 ? bAmt : 0) + futX(bit, nu); }
             else val = s + futX(bit, st.upper);
+            if (MOD && MOD.adj) val += MOD.adj[ci];
             cis.push(ci); vals.push(val);
           }
           return { cis: cis, vals: vals };
@@ -4776,7 +5825,7 @@
 
         // loaded dice for the cheater bot: draw the free dice `tries` times (fractional = chance of
         // one extra draw) and keep the outcome with the best expected value for its scorecard
-        function luckyRoll(scores, ids, dice, held, rollsAfter, tries, mods) {
+        function luckyRoll(scores, ids, dice, held, rollsAfter, tries, mods, faces) {
           MOD = mods || null;
           const st = stateOf(scores, ids);
           const r = Math.max(0, Math.min(3, rollsAfter));
@@ -4785,7 +5834,7 @@
           let n = Math.floor(tries) + (Math.random() < tries % 1 ? 1 : 0);
           let best = null, bv = -1e9;
           for (let t = 0; t < Math.max(1, n); t++) {
-            const cand = dice.map(function (v, i) { return held[i] ? v : 1 + Math.floor(Math.random() * 6); });
+            const cand = dice.map(function (v, i) { return held[i] ? v : faces ? faces[i][Math.floor(Math.random() * 6)] : 1 + Math.floor(Math.random() * 6); });
             const v = E[diceIdx(cand)];
             if (v > bv) { bv = v; best = cand; }
           }
@@ -4849,8 +5898,13 @@
             if (!alive()) return;
             const f = aiFinalScore(cat);
             commitScore(f.cat, f.flags);
+            // safety net: if that record was refused, record plainly so the turn can't stall
+            if (!isScoring && !twoferPend && alive() && !isRolling && hasRolledThisTurn && players[currentPlayerIdx] === cur0) {
+              commitScore(YachtAI.decide(aiScores(cur0), CAT_IDS, dice, 0, null, 0, withExact(aiTurnMods(cur0), cur0)).category, {});
+            }
           }, ms);
         };
+        const cur0 = players[currentPlayerIdx];
         const step = function () {
           if (!alive()) return;
           rollDice(afterRoll);
@@ -4866,7 +5920,7 @@
               const next = function () { aiTimer = setTimeout(afterRoll, 650); };
               if (pw.kind === 'slam') {
                 const before = held.slice();
-                held = pw.hold;
+                held = pw.hold.map(function (h, i) { return h || stuck[i]; });
                 if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
                 renderDice();
                 aiTimer = setTimeout(function () { if (alive() && !doSlam(currentPlayerIdx, next)) afterRoll(true); }, 550);
@@ -4881,11 +5935,23 @@
             const plan = YachtAI.decide(aiScores(cur), CAT_IDS, dice, rollsLeft, held, aiTemp(), aiExact(cur));
             if (plan.category) { scoreSoon(plan.category, 850); return; }
             const before = held.slice();
-            held = plan.hold;
+            held = plan.hold.map(function (h, i) { return h || stuck[i]; });
+            if (held.every(Boolean)) { scoreSoon(null, 700); return; }
             if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
             renderDice();
             aiTimer = setTimeout(step, 750);
           } else {
+            // 도화선: push on when the odds beat stopping
+            if (charges(cur, 'fuse') > 0 && !fuseBust) {
+              const o = aiFuseOption(cur);
+              if (o) {
+                held = o.hold;
+                sfxHold(true);
+                renderDice();
+                aiTimer = setTimeout(function () { if (alive() && !usePower('fuse', -1, 0, afterRoll)) scoreSoon(null, 300); }, 750);
+                return;
+              }
+            }
             scoreSoon(null, 800);
           }
         };
@@ -5116,17 +6182,36 @@
           q.sealed = Number(p.sealed) || 0;
           q.skip = Number(p.skip) || 0;
           q.prophecy = p.prophecy && CAT_IDS.indexOf(String(p.prophecy)) !== -1 ? String(p.prophecy) : null;
+          const int = function (x, lo, hi, dflt) { x = Math.floor(Number(x)); return isFinite(x) && x >= lo && x <= hi ? x : dflt; };
+          q.hatch = int(p.hatch, 0, 99, 0); q.hatched = p.hatched ? 1 : 0; q.rise = p.rise ? 1 : 0; q.wake = p.wake ? 1 : 0;
+          q.glue = int(p.glue, 0, 6, 0); q.glueBy = int(p.glueBy, -1, 3, -1); q.bomb = int(p.bomb, -1, 3, -1); q.bombT = int(p.bombT, -1, 3, -1);
+          q.mim = p.mim && AUG[String(p.mim)] ? String(p.mim) : null;
           return q;
         });
         matchAug = !!d.augMode;
         draft = d.draft ? {
           round: Number(d.draft.round) || 1,
           offers: toArr(d.draft.offers).map(function (o) {
-            return { tier: Number(o && o.tier) || 1, cards: toArr(o && o.cards).map(String), rerolls: Number(o && o.rerolls) || 0, chosen: (o && o.chosen) || null, up: !!(o && o.up) };
+            const src = {};
+            if (o && o.src && typeof o.src === 'object') Object.keys(o.src).forEach(function (k) { if (AUG[k]) src[k] = Number(o.src[k]); });
+            return { tier: Number(o && o.tier) || 1, cards: toArr(o && o.cards).map(String), rerolls: Number(o && o.rerolls) || 0, chosen: (o && o.chosen) || null, up: !!(o && o.up), mirror: !!(o && o.mirror), src: src };
           })
         } : null;
         rollsMax = Number(d.rollsMax) || 3;
         rollSeq = Number(d.seq) || 0;
+        riseTurn = !!d.riseTurn;
+        const sv = toArr(d.stuck);
+        stuck = [0, 1, 2, 3, 4].map(function (i) { return !!sv[i]; });
+        fuseBust = !!d.fuseBust;
+        rideTurn = !!d.rideTurn;
+        restTurn = !!d.restTurn;
+        twoferPend = d.twoferPend && CAT_IDS.indexOf(String(d.twoferPend.first)) !== -1 ? { first: String(d.twoferPend.first) } : null;
+        turnNo = Number(d.turnNo) || 0;
+        duel = d.duel && CAT_IDS.indexOf(String(d.duel.cat)) !== -1 && Number(d.duel.q) >= 0 && Number(d.duel.q) < 4
+          ? { q: Number(d.duel.q), cat: String(d.duel.cat), val: Number(d.duel.val) || 0 } : null;
+        const lr = d.lastRec;
+        const lrd = lr ? toArr(lr.dice).map(Number) : [];
+        lastRec = lr && lrd.length === 5 && lrd.every(function (v) { return v >= 1 && v <= 6; }) ? { p: Number(lr.p) || 0, dice: lrd, seq: Number(lr.seq) || 0 } : null;
         lastRound = Number(d.lastRound) || 12;
         encoreTurn = !!d.encoreTurn;
         sealTurn = !!d.sealTurn;
@@ -5187,7 +6272,7 @@
         if (!cur || cur.peerId !== from || draft) return;
         if (data.action === 'roll') rollDice();
         else if (data.action === 'hold' && data.idx >= 0 && data.idx < 5) toggleHold(data.idx);
-        else if (data.action === 'score' && CATEGORIES.some(function (c) { return c.id === data.catId; })) commitScore(data.catId, { joker: !!data.joker, allin: !!data.allin, overwrite: !!data.overwrite });
+        else if (data.action === 'score' && CATEGORIES.some(function (c) { return c.id === data.catId; })) commitScore(data.catId, { joker: !!data.joker, allin: !!data.allin, overwrite: !!data.overwrite, twofer: !!data.twofer });
         else if (data.action === 'power' && POWER_DEFS[data.kind]) usePower(data.kind, Number(data.idx), Number(data.face), null, data.cat ? String(data.cat) : undefined);
       }
 
@@ -5585,6 +6670,8 @@
         lastScored = null; selectedTile = null; armedPower = null; armedReset();
         draft = null; rewindSnap = null; liveRoll = null;
         lastRound = 12; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
+        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
+        twoferPend = null; restTurn = false;
         matchId++;
         resetTotalAnims();
         if (use3D()) window.Dice3D.finishNow();
@@ -6589,7 +7676,11 @@
         gold: { color: new THREE.Color('#ffc94a'), metal: 0.6, rough: 0.22, emi: new THREE.Color('#2a1800') },
         lead: { color: new THREE.Color('#9aa1ad'), metal: 0.4, rough: 0.36, emi: null },
         curse: { color: new THREE.Color('#ff98a6'), metal: 0.05, rough: 0.3, emi: new THREE.Color('#4a0010') },
-        twin: { color: new THREE.Color('#bde8ff'), metal: 0.05, rough: 0.26, emi: new THREE.Color('#00202e') }
+        twin: { color: new THREE.Color('#bde8ff'), metal: 0.05, rough: 0.26, emi: new THREE.Color('#00202e') },
+        cocoon: { color: new THREE.Color('#f6f1e6'), metal: 0, rough: 0.92, emi: null },
+        wing: { color: new THREE.Color('#8fdcff'), metal: 0.45, rough: 0.25, emi: new THREE.Color('#002a3a') },
+        wild: { color: new THREE.Color('#e6d2ff'), metal: 0.2, rough: 0.22, emi: new THREE.Color('#2a0c4a') },
+        glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') }
       };
 
       const D = [];
