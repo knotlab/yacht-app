@@ -458,6 +458,35 @@
   /* ================= Augments: badges, list ================= */
   .seat-augs { position: absolute; right: 12px; bottom: -9px; z-index: 2; display: flex; gap: 3px; pointer-events: none; }
   .seats[data-count="3"] .seat-augs, .seats[data-count="4"] .seat-augs { right: 50%; transform: translateX(50%); }
+  .seat-augs .aug-badge { pointer-events: auto; cursor: help; }
+  .pad-augs { display: flex; justify-content: center; gap: 3px; margin-top: 5px; }
+  .pad-augs .aug-badge { width: 18px; height: 18px; cursor: help; }
+  .pad-augs .aug-badge svg { width: 12px; height: 12px; }
+  .podium-augs .aug-badge { cursor: help; }
+  .sheet-augs .dex-title { margin-top: 18px; }
+
+  /* augment tooltip: hover on desktop, tap on touch */
+  .aug-tip {
+    --tc: #d9dee6;
+    position: fixed; left: 0; top: 0; z-index: 96; width: max-content; max-width: min(260px, calc(100vw - 16px));
+    padding: 11px 13px 12px; border-radius: 14px; pointer-events: none;
+    background: linear-gradient(180deg, #23262e, #15171c);
+    box-shadow: 0 0 0 1.5px var(--tc), 0 14px 30px rgba(0, 0, 0, 0.6);
+    animation: tipIn 0.16s ease-out;
+  }
+  .aug-tip.t2 { --tc: var(--brass-hi); }
+  .aug-tip.t3 { --tc: #d9c2ff; box-shadow: 0 0 0 1.5px var(--tc), 0 0 18px rgba(176, 120, 255, 0.45), 0 14px 30px rgba(0, 0, 0, 0.6); }
+  @keyframes tipIn { from { opacity: 0; } to { opacity: 1; } }
+  .at-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+  .at-head .aug-badge { width: 30px; height: 30px; border-radius: 9px; }
+  .at-head .aug-badge svg { width: 20px; height: 20px; }
+  .at-tag { font: 400 9px var(--f-game); letter-spacing: 0.14em; color: var(--tc); }
+  .at-name { font: 400 16px var(--f-display); color: var(--text); line-height: 1.2; }
+  .at-desc { font: 600 12.5px var(--f-ui); color: #d4cdbd; line-height: 1.45; word-break: keep-all; }
+  .at-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 7px; padding-top: 7px; border-top: 1px dashed rgba(255, 255, 255, 0.12); font: 700 11px var(--f-ui); color: var(--text-dim); }
+  .at-foot b { color: var(--brass-hi); }
+  .at-arrow { position: absolute; top: -5px; width: 10px; height: 10px; background: #23262e; transform: rotate(45deg); box-shadow: -1.5px -1.5px 0 0 var(--tc); }
+  .aug-tip.above .at-arrow { top: auto; bottom: -5px; background: #15171c; box-shadow: 1.5px 1.5px 0 0 var(--tc); }
   .aug-badge {
     --cat: #3fe0a9; --tc: #c9d0da;
     position: relative; flex: none; width: 19px; height: 19px; border-radius: 6px; display: grid; place-items: center;
@@ -904,6 +933,7 @@
     <div class="b-sub">+50</div>
   </div>
   <div id="toast" class="toast" role="status" hidden></div>
+  <div id="augTip" class="aug-tip" role="tooltip" hidden></div>
 
   <div id="app">
     <!-- Rail: players + buttons -->
@@ -1137,6 +1167,7 @@
         <button class="x-btn" type="button" data-close="sheetOv" aria-label="닫기">✕</button>
       </div>
       <div id="sheetBody" class="pad"></div>
+      <div id="sheetAugs" class="aug-info sheet-augs" hidden></div>
     </div>
   </div>
 
@@ -1674,7 +1705,7 @@
           if (box.dataset.sig !== asig) {
             const before = box.dataset.sig ? box.dataset.sig.split(',') : [];
             box.dataset.sig = asig;
-            box.innerHTML = matchAug ? (p.aug || []).map(function (id) { return badgeHtml(id, before.indexOf(id) === -1); }).join('') : '';
+            box.innerHTML = matchAug ? (p.aug || []).map(function (id) { return badgeHtml(id, before.indexOf(id) === -1, idx); }).join('') : '';
           }
         });
       }
@@ -1835,11 +1866,13 @@
         }
       }
 
+      let lastSheetHtml = '', lastSheetAugHtml = '';
       function renderSheet() {
         if (sheetOv.hidden) return;
         const curCls = function (i) { return i === currentPlayerIdx && gameActive ? ' class="cur"' : ''; };
         let html = '<table class="pad-table"><thead><tr><th></th>' + players.map(function (p, i) {
-          return '<th' + curCls(i) + ' style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</th>';
+          const augs = matchAug && p.aug && p.aug.length ? '<div class="pad-augs">' + p.aug.map(function (id) { return badgeHtml(id, false, i); }).join('') + '</div>' : '';
+          return '<th' + curCls(i) + ' style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + augs + '</th>';
         }).join('') + '</tr></thead><tbody>';
         CATEGORIES.forEach(function (c, ci) {
           html += '<tr><th>' + c.name + '</th>' + players.map(function (p, i) {
@@ -1862,7 +1895,12 @@
         html += '<tr class="total"><th>TOTAL</th>' + players.map(function (p, i) {
           return '<td' + curCls(i) + '>' + getPlayerTotals(p).total + '</td>';
         }).join('') + '</tr></tbody></table>';
-        $('sheetBody').innerHTML = html;
+        // only touch the DOM when something changed, so a hovered badge isn't swapped out mid-tooltip
+        if (html !== lastSheetHtml) { lastSheetHtml = html; $('sheetBody').innerHTML = html; }
+        const sa = $('sheetAugs');
+        const ahtml = matchAug ? '<h3 class="dex-title">증강</h3>' + augListHtml() : '';
+        sa.hidden = !matchAug;
+        if (ahtml !== lastSheetAugHtml) { lastSheetAugHtml = ahtml; sa.innerHTML = ahtml; }
       }
 
       function renderAll() {
@@ -1875,6 +1913,7 @@
         renderSheet();
         updateChatUi();
         syncDraftUi();
+        if (tipFor && !tipFor.isConnected) hideAugTip();
       }
 
       // ================= Online sync =================
@@ -2183,11 +2222,12 @@
       function glyphSvg(id) {
         return '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (GLYPH[id] || '') + '</svg>';
       }
-      function badgeHtml(id, isNew) {
+      function badgeHtml(id, isNew, pIdx) {
         const a = AUG[id];
         if (!a) return '';
         const c = AUG_CATS[a.cat];
-        return '<span class="aug-badge t' + a.tier + (isNew ? ' pop' : '') + '" style="--cat:' + c.color + ';color:' + c.fg + '" title="' + esc(a.name) + '">' + glyphSvg(id) + '</span>';
+        return '<span class="aug-badge t' + a.tier + (isNew ? ' pop' : '') + '" style="--cat:' + c.color + ';color:' + c.fg + '" data-aug="' + id + '"' +
+          (pIdx >= 0 ? ' data-p="' + pIdx + '"' : '') + ' role="img" aria-label="' + esc(a.name) + '">' + glyphSvg(id) + '</span>';
       }
       function augHas(p, id) { return !!(matchAug && p && p.aug && p.aug.indexOf(id) !== -1); }
       function augCount(p, id) { return matchAug && p && p.aug ? p.aug.filter(function (x) { return x === id; }).length : 0; }
@@ -2518,7 +2558,7 @@
           row.className = 'dw-row';
           row.style.animationDelay = (i * 0.06) + 's';
           row.innerHTML = '<span class="dw-name" style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span>' +
-            (a ? '<span class="dw-pick">' + badgeHtml(a.id) + esc(a.name) + '</span>' : '<span class="dw-pick wait">고르는 중</span>');
+            (a ? '<span class="dw-pick">' + badgeHtml(a.id, false, i) + esc(a.name) + '</span>' : '<span class="dw-pick wait">고르는 중</span>');
           w.appendChild(row);
         });
       }
@@ -2595,12 +2635,9 @@
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'augReroll' }); return; }
         draftReroll(i);
       });
-      function openAugInfo() {
-        const body = $('augInfoBody');
-        body.innerHTML = '';
-        players.forEach(function (p, i) {
-          const sec = document.createElement('div');
-          sec.className = 'ai-player';
+      // every player's augments with descriptions and charges left (info overlay + scorepad)
+      function augListHtml() {
+        return players.map(function (p, i) {
           const t = getPlayerTotals(p);
           const notes = [];
           if (t.extra) notes.push('증강 점수 ' + signed(t.extra));
@@ -2608,15 +2645,74 @@
           const rows = (p.aug || []).map(function (id) {
             const a = AUG[id];
             const k = a.ch ? Object.keys(a.ch)[0] : null;
-            return '<div class="ai-row">' + badgeHtml(id) + '<div class="ai-txt"><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></div>' +
+            return '<div class="ai-row">' + badgeHtml(id, false, i) + '<div class="ai-txt"><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></div>' +
               '<span class="ai-n">' + (k ? '×' + charges(p, k) : '') + '</span></div>';
           }).join('');
-          sec.innerHTML = '<div class="ai-head"><span style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span><small>' + esc(notes.join(' · ')) + '</small></div>' +
-            (rows || '<div class="ai-empty">아직 없음</div>');
-          body.appendChild(sec);
-        });
+          return '<div class="ai-player"><div class="ai-head"><span style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span><small>' + esc(notes.join(' · ')) + '</small></div>' +
+            (rows || '<div class="ai-empty">아직 없음</div>') + '</div>';
+        }).join('');
+      }
+      function openAugInfo() {
+        hideAugTip();
+        $('augInfoBody').innerHTML = augListHtml();
         openOv($('augInfoOv'));
       }
+
+      // ---------- augment tooltip ----------
+      const augTip = $('augTip');
+      let tipFor = null, tipTimer = 0, tipPointer = 'mouse';
+      function showAugTip(el) {
+        const id = el.dataset.aug, a = AUG[id];
+        if (!a) return;
+        const pIdx = el.dataset.p !== undefined ? Number(el.dataset.p) : -1;
+        const p = players[pIdx], c = AUG_CATS[a.cat];
+        const k = a.ch ? Object.keys(a.ch)[0] : null;
+        tipFor = el;
+        clearTimeout(tipTimer);
+        augTip.className = 'aug-tip t' + a.tier;
+        augTip.innerHTML = '<span class="at-arrow"></span>' +
+          '<div class="at-head">' + badgeHtml(id) + '<div><div class="at-tag">' + TIER_NAME[a.tier] + ' · ' + c.ko + '</div><div class="at-name">' + esc(a.name) + '</div></div></div>' +
+          '<div class="at-desc">' + esc(a.desc) + '</div>' +
+          (p ? '<div class="at-foot"><span style="color:' + PLAYER_COLORS[pIdx % 4] + '">' + esc(p.name) + '</span>' + (k ? '<span>남은 횟수 <b>' + charges(p, k) + '</b></span>' : '') + '</div>' : '');
+        augTip.hidden = false;
+        const r = el.getBoundingClientRect();
+        const tw = augTip.offsetWidth, th = augTip.offsetHeight;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const x = Math.max(8, Math.min(vw - tw - 8, r.left + r.width / 2 - tw / 2));
+        const above = r.top + r.height / 2 > vh * 0.55 && r.top - th - 12 > 8;
+        const y = Math.max(8, Math.min(vh - th - 8, above ? r.top - th - 11 : r.bottom + 11));
+        augTip.classList.toggle('above', above);
+        augTip.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+        augTip.querySelector('.at-arrow').style.left = Math.max(10, Math.min(tw - 20, r.left + r.width / 2 - x - 5)) + 'px';
+      }
+      function hideAugTip() { clearTimeout(tipTimer); tipFor = null; augTip.hidden = true; }
+      document.addEventListener('pointerdown', function (e) { tipPointer = e.pointerType || 'mouse'; }, true);
+      document.addEventListener('pointerover', function (e) {
+        if (e.pointerType === 'touch') return;
+        const el = e.target.closest ? e.target.closest('[data-aug]') : null;
+        if (!el || el === tipFor || el.closest('.ai-row') || el.closest('.aug-tip')) return;
+        showAugTip(el);
+      });
+      document.addEventListener('pointerout', function (e) {
+        if (!tipFor || e.pointerType === 'touch') return;
+        const el = e.target.closest ? e.target.closest('[data-aug]') : null;
+        if (el !== tipFor || (e.relatedTarget && tipFor.contains(e.relatedTarget))) return;
+        hideAugTip();
+      });
+      // touch: tapping a badge shows its card for a moment (seat badges open the full list instead)
+      document.addEventListener('click', function (e) {
+        if (tipPointer !== 'touch') return;
+        const el = e.target.closest ? e.target.closest('.aug-badge[data-aug]') : null;
+        if (el && !el.closest('.seat') && !el.closest('.ai-row')) {
+          if (tipFor === el) { hideAugTip(); return; }
+          showAugTip(el);
+          tipTimer = setTimeout(hideAugTip, 3200);
+          return;
+        }
+        if (tipFor) hideAugTip();
+      }, true);
+      window.addEventListener('scroll', hideAugTip, true);
+      window.addEventListener('resize', hideAugTip);
       function buildAugDex() {
         const box = $('augDex');
         if (!box) return;
@@ -2765,7 +2861,12 @@
         if (armed.joker && charges(owner, 'joker') <= 0) armed.joker = false;
         if (armed.allin && charges(owner, 'allin') <= 0) armed.allin = false;
         bar.hidden = !keys.length;
-        const sig = keys.join(',');
+        const augFor = function (k) {
+          const ids = (owner && owner.aug) || [];
+          for (let i = 0; i < ids.length; i++) { const a = AUG[ids[i]]; if (a && a.ch && a.ch[k]) return ids[i]; }
+          return '';
+        };
+        const sig = me + '|' + keys.map(function (k) { return k + ':' + augFor(k); }).join(',');
         if (bar.dataset.sig !== sig) {
           bar.dataset.sig = sig;
           bar.innerHTML = '';
@@ -2774,6 +2875,7 @@
             b.type = 'button';
             b.className = 'pw-btn';
             b.dataset.pw = k;
+            if (augFor(k)) { b.dataset.aug = augFor(k); b.dataset.p = String(me); }
             b.setAttribute('aria-label', POWER_DEFS[k].label);
             b.innerHTML = glyphSvg(k) + '<span>' + POWER_DEFS[k].label + '</span><span class="pw-n"></span>';
             b.addEventListener('click', function () { handlePowerInput(k); });
@@ -3459,7 +3561,7 @@
           row.style.animationDelay = (0.15 + k * 0.12) + 's';
           row.innerHTML = '<span class="podium-rank">' + (k + 1) + '</span>' +
             '<span class="podium-name" style="color:' + PLAYER_COLORS[r.idx % 4] + '">' + esc(r.name) + '</span>' +
-            (matchAug ? '<span class="podium-augs">' + (players[r.idx].aug || []).map(function (id) { return badgeHtml(id); }).join('') + '</span>' : '') +
+            (matchAug ? '<span class="podium-augs">' + (players[r.idx].aug || []).map(function (id) { return badgeHtml(id, false, r.idx); }).join('') + '</span>' : '') +
             '<span class="podium-score" data-count="' + r.total + '">0</span>';
           podium.appendChild(row);
         });
@@ -4284,7 +4386,7 @@
         b.addEventListener('click', function () { sendChat(q); });
         $('chatQuick').appendChild(b);
       });
-      $('sheetBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(sheetOv); renderSheet(); });
+      $('sheetBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); hideAugTip(); openOv(sheetOv); renderSheet(); });
       $('resumeBtn').addEventListener('click', function () { closeOv(menuOv); if (!gameActive) openMode(); });
       $('newGameBtn').addEventListener('click', openMode);
       $('rulesBtn').addEventListener('click', function () { closeOv(menuOv); openOv(rulesOv); });
