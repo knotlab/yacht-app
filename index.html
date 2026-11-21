@@ -999,6 +999,29 @@
   .roll-pips i.extra:not(.off) { background: #ffb35a; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 179, 90, 0.9); }
   .die2d.flipping { animation: flip2d 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes flip2d { 0% { transform: rotateX(0); } 50% { transform: rotateX(180deg) translateY(-30%) scale(1.15); } 100% { transform: rotateX(360deg); } }
+  /* particle sprites (Kenney Particle Pack, CC0) - switched on by body.fx-tex once they have loaded */
+  .fx-p.dust { width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: radial-gradient(circle, var(--c, rgba(220, 205, 180, 0.65)) 0%, transparent 70%); }
+  .fx-p.magic, .fx-p.flare { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--c, #e6d4ff); clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  .fx-p.glow { width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: radial-gradient(circle, var(--c, rgba(255, 240, 200, 0.9)) 0%, transparent 65%); }
+  .fx-p.lightning { width: 6px; height: 26px; margin: -13px 0 0 -3px; background: var(--c, #ffe066); box-shadow: 0 0 10px var(--c, #ffe066); }
+  .fx-decal { width: 160px; height: 160px; margin: -80px 0 0 -80px; border-radius: 50%; background: radial-gradient(circle, var(--c, rgba(255, 230, 190, 0.5)) 0%, transparent 65%); }
+  .fx-burstimg { width: 220px; height: 220px; margin: -110px 0 0 -110px; background: url(fx/burst.png) center / contain no-repeat; }
+  body.fx-tex .fx-p.smoke, body.fx-tex .fx-p.dust, body.fx-tex .fx-p.star, body.fx-tex .fx-p.spark, body.fx-tex .fx-p.ember,
+  body.fx-tex .fx-p.magic, body.fx-tex .fx-p.flare, body.fx-tex .fx-p.glow, body.fx-tex .fx-p.lightning, body.fx-tex .fx-decal {
+    clip-path: none; border-radius: 0; box-shadow: none; background: var(--c, #fff);
+    -webkit-mask: var(--tex) center / contain no-repeat; mask: var(--tex) center / contain no-repeat;
+  }
+  body.fx-tex .fx-p.smoke { --tex: url(fx/smoke.png); width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+  body.fx-tex .fx-p.dust { --tex: url(fx/dust.png); width: 42px; height: 42px; margin: -21px 0 0 -21px; }
+  body.fx-tex .fx-p.star { --tex: url(fx/star.png); width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+  body.fx-tex .fx-p.spark { --tex: url(fx/spark.png); width: 16px; height: 34px; margin: -17px 0 0 -8px; }
+  body.fx-tex .fx-p.ember { --tex: url(fx/ember.png); width: 20px; height: 20px; margin: -10px 0 0 -10px; background: var(--c, #ffb04a); }
+  body.fx-tex .fx-p.magic { --tex: url(fx/twirl.png); width: 36px; height: 36px; margin: -18px 0 0 -18px; }
+  body.fx-tex .fx-p.flare { --tex: url(fx/flare.png); width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+  body.fx-tex .fx-p.glow { --tex: url(fx/glow.png); width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+  body.fx-tex .fx-p.lightning { --tex: url(fx/lightning.png); width: 32px; height: 32px; margin: -16px 0 0 -16px; }
+  body.fx-tex .fx-decal { --tex: url(fx/impact.png); }
+  body.fx-tex .fx-ring { border: 0; box-shadow: none; background: var(--c, #fff); width: 60px; height: 60px; margin: -30px 0 0 -30px; -webkit-mask: url(fx/ring.png) center / contain no-repeat; mask: url(fx/ring.png) center / contain no-repeat; }
   /* tiles under augments */
   .tile.is-prophecy { animation: prophecyGlow 1.6s ease-in-out infinite; }
   .tile.is-prophecy::after { content: "+10"; position: absolute; top: -9px; left: -6px; padding: 2px 6px; border-radius: 999px; background: #8f5cff; color: #fff; font: 400 9px var(--f-game); box-shadow: 0 0 10px rgba(185, 140, 255, 0.9); }
@@ -1339,15 +1362,67 @@
           comp.ratio.value = 6;
           comp.connect(audioCtx.destination);
           bus = audioCtx.createGain();
-          bus.gain.value = 0.9;
+          bus.gain.value = isMuted ? 0 : 0.9;
           bus.connect(comp);
           const len = Math.floor(audioCtx.sampleRate * 0.6);
           noiseBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
           const ch = noiseBuf.getChannelData(0);
           for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+          loadSamples();
         }
         if (audioCtx.state === 'suspended') audioCtx.resume().catch(function () {});
       }
+      // ---------- recorded samples (CC0 packs, see CREDITS.md), layered over the synth ----------
+      // sfx/<event>-<n>.mp3 load after the first tap. Until a file has decoded (or if it can't, e.g. offline or
+      // opened as a local file) the synthesized version of that sound plays instead.
+      const SFX_FILES = { badge: 1, bonus: 1, cardflip: 2, cards: 2, chat: 1, chime: 1, chips: 2, clack: 6, clock: 1, coins: 2, combo: 1, curse: 1, deal: 3, fail: 2, fire: 1, flip: 2, hold: 1, horn: 1, joker: 1, land: 2, lock: 2, magic: 1, petal: 1, pick: 1, powerup: 2, prophecy: 1, reroll: 2, rewind: 1, roll: 3, score_big: 2, score_small: 2, score_zero: 1, scribble: 2, shatter: 2, slam: 3, sparkle: 1, spotlight: 1, squeeze: 1, stamp: 2, straight: 1, swap: 1, thud: 2, tick: 2, tier1: 1, tier2: 1, tier3: 1, trophy: 1, turn: 1, unhold: 1, win: 1, wobble: 1, yacht: 1, zap: 1 };
+      const SFX_VOL = {
+        clack: 0.5, land: 0.55, roll: 0.7, tick: 0.45, hold: 0.6, unhold: 0.5, chat: 0.5, badge: 0.55, turn: 0.45,
+        score_small: 0.75, score_big: 0.85, score_zero: 0.55, combo: 0.6, deal: 0.6, cardflip: 0.6, pick: 0.7,
+        coins: 0.7, chips: 0.75, stamp: 0.8, thud: 0.9, slam: 1, clock: 0.6, horn: 0.7, curse: 0.75, magic: 0.7,
+        prophecy: 0.6, sparkle: 0.65, chime: 0.6, powerup: 0.6, wobble: 0.6, squeeze: 0.6, swap: 0.65, petal: 0.6,
+        zap: 0.6, fire: 0.7, shatter: 0.75, spotlight: 0.75, fail: 0.7, joker: 0.7, scribble: 0.7, flip: 0.6,
+        reroll: 0.55, rewind: 0.7, lock: 0.75, cards: 0.7, tier1: 0.7, tier2: 0.75, tier3: 0.8, yacht: 0.85,
+        straight: 0.75, bonus: 0.75, trophy: 0.7, win: 0.85
+      };
+      const sfxBuf = {};
+      let sfxLoading = false;
+      function loadSamples() {
+        if (sfxLoading || !audioCtx || !window.fetch || location.protocol === 'file:') return;
+        sfxLoading = true;
+        Object.keys(SFX_FILES).forEach(function (ev) {
+          sfxBuf[ev] = [];
+          for (let i = 1; i <= SFX_FILES[ev]; i++) {
+            fetch('sfx/' + ev + '-' + i + '.mp3')
+              .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.arrayBuffer(); })
+              .then(function (ab) { return new Promise(function (res, rej) { audioCtx.decodeAudioData(ab, res, rej); }); })
+              .then(function (b) { sfxBuf[ev].push(b); })
+              .catch(function () {});
+          }
+        });
+      }
+      // play one variant of a recorded event. false = not loaded, so the caller synthesizes instead.
+      // o: { vol, rate, vary (random pitch spread), delay }
+      function sample(ev, o) {
+        if (isMuted) return true;
+        if (!audioCtx) return false;
+        const list = sfxBuf[ev];
+        if (!list || !list.length) return false;
+        o = o || {};
+        try {
+          const src = audioCtx.createBufferSource();
+          src.buffer = list[Math.floor(Math.random() * list.length)];
+          const vary = o.vary != null ? o.vary : 0.05;
+          src.playbackRate.value = (o.rate || 1) * (1 + (Math.random() * 2 - 1) * vary);
+          const g = audioCtx.createGain();
+          g.gain.value = (o.vol != null ? o.vol : 1) * (SFX_VOL[ev] != null ? SFX_VOL[ev] : 0.75);
+          src.connect(g);
+          g.connect(bus);
+          src.start(audioCtx.currentTime + (o.delay || 0));
+          return true;
+        } catch (e) { return false; }
+      }
+
       function tone(freq, dur, type, vol, slide, delay) {
         if (isMuted || !audioCtx) return;
         try {
@@ -1387,6 +1462,10 @@
         const now = performance.now();
         if (now - lastClack < 16) return;
         lastClack = now;
+        if (kind === 'wall' && v > 6 && !REDUCED) restartAnim(tableEl, 'thump');
+        // recorded clacks: the harder the hit, the louder; heavy floor hits get the wooden knock
+        const loud = Math.min(1, 0.2 + v * 0.055);
+        if (sample(kind === 'floor' && v > 9 ? 'land' : 'clack', { vol: loud, vary: 0.14, rate: kind === 'wall' ? 0.82 : kind === 'floor' ? 0.92 : 1.05 })) { if (v > 12) buzz(8); return; }
         const vol = Math.min(0.5, 0.05 + v * 0.02);
         if (kind === 'die') {
           noise(2600 + Math.random() * 1800, 5, 0.04, vol, 'bandpass');
@@ -1403,19 +1482,22 @@
       }
       function sfxRattle() {
         ensureAudio();
+        if (sample('roll', { delay: 0.05 })) return;
         for (let i = 0; i < 9; i++) noise(2400 + Math.random() * 2000, 4, 0.03, 0.1 + Math.random() * 0.08, 'bandpass', i * 0.028 + Math.random() * 0.01);
         noise(500, 0.7, 0.28, 0.08, 'bandpass', 0, 2600);
       }
       function sfxHold(isHeld) {
         ensureAudio();
+        if (sample(isHeld ? 'hold' : 'unhold')) return;
         tone(isHeld ? 620 : 420, 0.07, 'sine', 0.09, isHeld ? 900 : 280);
         if (isHeld) tone(1240, 0.05, 'triangle', 0.03, 0, 0.03);
         else noise(900, 1, 0.05, 0.12, 'lowpass', 0.05);
       }
-      function sfxTick() { ensureAudio(); tone(980, 0.04, 'triangle', 0.05); }
-      function sfxLand(k) { tone(520 * Math.pow(2, (k * 2) / 12), 0.07, 'triangle', 0.045); }
+      function sfxTick() { ensureAudio(); if (sample('tick')) return; tone(980, 0.04, 'triangle', 0.05); }
+      function sfxLand(k) { if (sample('clack', { vol: 0.28, rate: 1.1 + k * 0.06, vary: 0.02 })) return; tone(520 * Math.pow(2, (k * 2) / 12), 0.07, 'triangle', 0.045); }
       function sfxScore(pts) {
         ensureAudio();
+        if (sample(pts >= 50 ? 'yacht' : pts >= 25 ? 'score_big' : pts > 0 ? 'score_small' : 'score_zero')) return;
         if (pts >= 50) {
           [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.1, 0, i * 0.07); });
           tone(2093, 0.5, 'sine', 0.04, 0, 0.36);
@@ -1427,14 +1509,16 @@
           tone(260, 0.28, 'sawtooth', 0.035, 130);
         }
       }
-      function sfxWhoosh() { ensureAudio(); noise(300, 0.8, 0.4, 0.13, 'bandpass', 0, 3200); }
+      function sfxWhoosh() { ensureAudio(); if (sample('turn')) return; noise(300, 0.8, 0.4, 0.13, 'bandpass', 0, 3200); }
       function sfxCombo(level) {
         ensureAudio();
+        if (sample('combo', { rate: level >= 2 ? 1.12 : 1 })) return;
         const base = level >= 2 ? 659 : 523;
         [0, 4, 7, 12].slice(0, 2 + level).forEach(function (s, i) { tone(base * Math.pow(2, s / 12), 0.14, 'square', 0.03, 0, i * 0.06); });
       }
       function sfxWin() {
         ensureAudio();
+        if (sample('win')) return;
         [523, 659, 784, 659, 784, 1046].forEach(function (f, i) { tone(f, 0.24, 'triangle', 0.1, 0, i * 0.11); });
       }
 
@@ -1453,6 +1537,7 @@
       let isScoring = false;
       let gameActive = false;
       let aiTimer = null;
+      let aiResume = null; // re-plans the bot's turn after someone knocks its dice
       let matchId = 0;
 
       // view-only
@@ -2045,7 +2130,7 @@
               sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null
             };
           }),
-          augMode: matchAug, draft: draft, rollsMax: rollsMax, lastRound: lastRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, lastRound: lastRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: dice, held: held, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
@@ -2066,12 +2151,13 @@
 
       function guestRoll(extra) {
         const vals = toArr(extra.values).map(Number), hv = toArr(extra.held).map(Boolean);
-        liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false };
+        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false };
         playRoll(vals, hv, function (finalV) {
-          liveRoll = null;
+          if (liveRoll === lr) liveRoll = null;
           renderDice();
+          renderPowers();
           postRollFx(finalV && finalV.length === 5 ? finalV : vals);
-        }, { knock: !!extra.knock });
+        }, { knock: !!extra.knock, sound: extra.power === 'reroll' ? 'reroll' : null });
         renderPowers();
       }
       function applyFx(kind, extra) {
@@ -2086,7 +2172,13 @@
           const vals = toArr(extra.values).map(Number);
           if (vals.length === 5) {
             if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; }
-            if (use3D()) { if (window.Dice3D.canSlam()) window.Dice3D.slam(vals); }
+            if (use3D()) {
+              if (window.Dice3D.canSlam()) window.Dice3D.slam(vals);
+              else {
+                const hv = liveRoll ? liveRoll.held : held;
+                window.Dice3D.knock(vals, hv.map(function (h) { return !h; }), { onImpact: sfxClack, onLand: sfxLand, onDone: function () { renderDice(); } });
+              }
+            }
             else if (fbRoll) { fbRoll.values = vals.slice(); fbRoll.ticks = 0; }
           }
         } else if (kind === 'hold') {
@@ -2100,6 +2192,7 @@
           buzz(extra.pts >= 25 ? [20, 30, 20] : 12);
         } else if (kind === 'banner') {
           showBanner(extra.title, extra.sub, extra.tier);
+          if (extra.sound) sample(extra.sound);
         } else if (kind === 'confetti') {
           fireConfetti(extra.big);
           if (extra.big) { flashScreen(); bigShake(); buzz([30, 40, 60]); }
@@ -2157,8 +2250,9 @@
       // ================= Rolling =================
       let fbRoll = null;   // 2D fallback roll in progress
       let liveRoll = null; // the roll on the table right now: { roller, held, values, rollsAfter, slammed }
+      let rollSeq = 0;     // bumps whenever the dice change, so late remote actions can be recognised
       function playRoll(values, heldSnap, done, mode) {
-        sfxRattle();
+        if (!(mode && mode.sound && sample(mode.sound))) sfxRattle();
         if (use3D()) {
           const willYacht = values.every(function (v) { return v === values[0]; }) && heldSnap.some(function (h) { return !h; });
           const opts = { drama: willYacht, onImpact: sfxClack, onLand: sfxLand, onDone: done };
@@ -2221,6 +2315,7 @@
         psychicDie = -1;
         if (hlIndices) setHighlight(null);
         const myMatch = matchId;
+        rollSeq++;
         const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null };
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra)); powerFx(extra); }
         else broadcastFx('roll', { values: next, held: heldSnap });
@@ -2229,7 +2324,7 @@
 
         aiConsiderSlam();
         playRoll(next, heldSnap, function (finalV) {
-          liveRoll = null;
+          if (liveRoll === roll) liveRoll = null;
           if (matchId !== myMatch) { renderDice(); return; }
           const v = finalV && finalV.length === 5 ? finalV : next;
           dice = v;
@@ -2239,7 +2334,7 @@
           postRollFx(v);
           augRollFx(roll.notes);
           if (typeof onComplete === 'function') onComplete();
-        }, { knock: !!(extra && extra.knock) });
+        }, { knock: !!(extra && extra.knock), sound: extra && extra.sound ? extra.sound : null });
         renderPowers(); // the slam window opens once the dice are actually moving
       }
 
@@ -2281,7 +2376,7 @@
         { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 주사위를 4번 굴릴 수 있습니다', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
         { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈이 점수 합산에서 2배로 계산됩니다', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
         { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1번·2번 주사위가 항상 같은 눈으로 나옵니다', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
-        { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상을 쾅! 2회 · 굴러가는 주사위(상대 것도)를 튕겨내거나, 내 턴에 멈춘 주사위를 다시 흔듭니다', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
+        { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상을 쾅! 2회 · 누가 굴렸든, 주사위가 구르기 시작해서 다시 굴리거나 기록하기 전까지 언제든 흔듭니다', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집기 2회', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 다시 굴리기 3회', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
         { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴린 결과를 취소하고 굴림 횟수를 돌려받기 2회', ch: { rewind: 2 }, ev: 12 },
@@ -2860,9 +2955,11 @@
       function augPickFx(extra) {
         const a = AUG[extra.id], p = players[extra.pIdx];
         if (!a || !p) return;
-        if (extra.pIdx === lastLocalPick) { lastLocalPick = -1; tone(1568, 0.12, 'triangle', 0.05); return; }
-        tone(a.tier >= 3 ? 1319 : 988, 0.12, 'triangle', 0.06);
-        tone(a.tier >= 3 ? 1976 : 1319, 0.18, 'triangle', 0.05, 0, 0.07);
+        if (extra.pIdx === lastLocalPick) { lastLocalPick = -1; if (!sample('badge')) tone(1568, 0.12, 'triangle', 0.05); return; }
+        if (!sample(a.tier >= 3 ? 'sparkle' : 'badge')) {
+          tone(a.tier >= 3 ? 1319 : 988, 0.12, 'triangle', 0.06);
+          tone(a.tier >= 3 ? 1976 : 1319, 0.18, 'triangle', 0.05, 0, 0.07);
+        }
         if (draftOv.hidden) showChip(p.name + ' · ' + a.name, a.tier >= 2 ? 'gold' : 'cool');
       }
       $('draftReroll').addEventListener('click', function () {
@@ -3126,6 +3223,31 @@
         e.style.height = r.height + 'px';
         setTimeout(function () { e.remove(); }, ms || 1000);
       }
+      // a big soft decal (impact scorch, flare, ring...) that pops and fades
+      function decalFx(pt, tex, color, size, dur) {
+        if (!pt) return;
+        const e = addFx('fx-decal', pt.x, pt.y);
+        if (tex) e.style.setProperty('--tex', 'url(fx/' + tex + '.png)');
+        e.style.setProperty('--c', color || 'rgba(255,230,190,0.7)');
+        if (size) { e.style.width = e.style.height = size + 'px'; e.style.margin = (-size / 2) + 'px 0 0 ' + (-size / 2) + 'px'; }
+        const turn = ((Math.random() - 0.5) * 50).toFixed(1);
+        playFx(e, [
+          { transform: 'scale(0.35) rotate(0deg)', opacity: 0.95 },
+          { transform: 'scale(1.08) rotate(' + turn + 'deg)', opacity: 0.85, offset: 0.25 },
+          { transform: 'scale(1.3) rotate(' + turn + 'deg)', opacity: 0 }
+        ], { duration: dur || 900, easing: 'ease-out' });
+      }
+      // particle sprites switch on once they've loaded (CSS shapes are the fallback)
+      (function preloadSprites() {
+        const names = ['smoke', 'dust', 'spark', 'star', 'magic', 'ember', 'glow', 'ring', 'ring_soft', 'impact', 'twirl', 'flare', 'lightning', 'burst'];
+        let left = names.length;
+        names.forEach(function (n) {
+          const im = new Image();
+          im.onload = function () { if (--left === 0) document.body.classList.add('fx-tex'); };
+          im.crossOrigin = 'anonymous'; // same rules as the CSS mask fetch, so file:// keeps the CSS shapes
+          im.src = 'fx/' + n + '.png';
+        });
+      })();
       function augIdForPower(p, k) {
         const ids = (p && p.aug) || [];
         for (let i = 0; i < ids.length; i++) { const a = AUG[ids[i]]; if (a && a.ch && a.ch[k]) return ids[i]; }
@@ -3133,28 +3255,36 @@
       }
 
       // ---------- effect sounds ----------
-      function sfxCoins(n) { ensureAudio(); for (let i = 0; i < (n || 6); i++) tone(1800 + Math.random() * 1600, 0.06, 'triangle', 0.035, 0, i * 0.045 + Math.random() * 0.02); }
-      function sfxStamp() { ensureAudio(); tone(70, 0.22, 'sine', 0.35, 40); noise(500, 0.8, 0.12, 0.35, 'lowpass'); }
-      function sfxThud() { ensureAudio(); tone(58, 0.32, 'sine', 0.45, 34); noise(300, 0.7, 0.22, 0.32, 'lowpass'); }
-      function sfxClockTicks() { ensureAudio(); for (let i = 0; i < 6; i++) tone(i % 2 ? 1300 : 900, 0.035, 'square', 0.04, 0, i * 0.16); tone(523, 0.5, 'triangle', 0.06, 262, 1.0); }
-      function sfxMagic() { ensureAudio(); [880, 1175, 1480, 1760, 2349].forEach(function (f, i) { tone(f, 0.26, 'sine', 0.045, 0, i * 0.05); }); noise(7000, 1, 0.5, 0.03, 'highpass', 0.05); }
-      function sfxRewind() { ensureAudio(); tone(1400, 0.45, 'sawtooth', 0.03, 180); noise(3000, 2, 0.45, 0.06, 'bandpass', 0, 300); }
-      function sfxLock() { ensureAudio(); tone(520, 0.08, 'square', 0.05); tone(260, 0.12, 'square', 0.05, 0, 0.06); noise(4500, 3, 0.1, 0.1, 'bandpass', 0.05); }
-      function sfxCurse() { ensureAudio(); tone(110, 0.6, 'sawtooth', 0.05, 80); tone(116, 0.6, 'sawtooth', 0.04, 84); }
-      function sfxHorn() { ensureAudio(); tone(98, 0.95, 'sawtooth', 0.07); tone(147, 0.95, 'sawtooth', 0.05); tone(196, 0.6, 'triangle', 0.04, 0, 0.5); }
-      function sfxCard() { ensureAudio(); noise(2600, 1.5, 0.08, 0.12, 'bandpass', 0, 5000); }
-      function sfxLaugh() { ensureAudio(); [660, 880, 700, 940, 740, 1000].forEach(function (f, i) { tone(f, 0.09, 'square', 0.035, 0, i * 0.08); }); }
-      function sfxSad() { ensureAudio(); [392, 370, 349].forEach(function (f, i) { tone(f, 0.3, 'sawtooth', 0.045, f * 0.97, i * 0.32); }); tone(330, 0.7, 'sawtooth', 0.045, 240, 0.96); }
-      function sfxZap() { ensureAudio(); tone(300, 0.18, 'sawtooth', 0.05, 2400); noise(5000, 1, 0.15, 0.06, 'highpass'); }
-      function sfxPetal() { ensureAudio(); [1046, 1318, 1568].forEach(function (f, i) { tone(f, 0.3, 'sine', 0.04, 0, i * 0.07); }); }
-      function sfxSqueeze() { ensureAudio(); tone(700, 0.22, 'square', 0.04, 160); }
-      function sfxShatter() { ensureAudio(); for (let i = 0; i < 7; i++) noise(5000 + Math.random() * 3000, 4, 0.08, 0.1, 'bandpass', i * 0.025); tone(1900, 0.2, 'triangle', 0.04, 600); }
-      function sfxSpot() { ensureAudio(); [523, 784, 1046, 1568].forEach(function (f, i) { tone(f, 0.5, 'triangle', 0.05, 0, i * 0.04); }); }
-      function sfxFire() { ensureAudio(); noise(800, 0.7, 0.8, 0.12, 'bandpass', 0, 2400); tone(220, 0.5, 'sawtooth', 0.04, 440); }
-      function sfxDeal() { ensureAudio(); noise(1800, 1.2, 0.12, 0.09, 'bandpass', 0, 600); }
-      function sfxFlip() { ensureAudio(); tone(1200, 0.04, 'triangle', 0.05); noise(3000, 3, 0.05, 0.06, 'bandpass'); }
+      function sfxCoins(n) { ensureAudio(); if (sample('coins')) return; for (let i = 0; i < (n || 6); i++) tone(1800 + Math.random() * 1600, 0.06, 'triangle', 0.035, 0, i * 0.045 + Math.random() * 0.02); }
+      function sfxStamp() { ensureAudio(); if (sample('stamp')) return; tone(70, 0.22, 'sine', 0.35, 40); noise(500, 0.8, 0.12, 0.35, 'lowpass'); }
+      function sfxThud() { ensureAudio(); if (sample('thud')) return; tone(58, 0.32, 'sine', 0.45, 34); noise(300, 0.7, 0.22, 0.32, 'lowpass'); }
+      function sfxClockTicks() {
+        ensureAudio();
+        if (sfxBuf.clock && sfxBuf.clock.length) {
+          for (let i = 0; i < 6; i++) sample('clock', { delay: i * 0.17, rate: i % 2 ? 1.18 : 1, vary: 0 });
+          if (!sample('chime', { delay: 1.05 })) tone(523, 0.5, 'triangle', 0.06, 262, 1.0);
+          return;
+        }
+        for (let i = 0; i < 6; i++) tone(i % 2 ? 1300 : 900, 0.035, 'square', 0.04, 0, i * 0.16); tone(523, 0.5, 'triangle', 0.06, 262, 1.0); }
+      function sfxMagic() { ensureAudio(); if (sample('magic')) return; [880, 1175, 1480, 1760, 2349].forEach(function (f, i) { tone(f, 0.26, 'sine', 0.045, 0, i * 0.05); }); noise(7000, 1, 0.5, 0.03, 'highpass', 0.05); }
+      function sfxRewind() { ensureAudio(); if (sample('rewind')) return; tone(1400, 0.45, 'sawtooth', 0.03, 180); noise(3000, 2, 0.45, 0.06, 'bandpass', 0, 300); }
+      function sfxLock() { ensureAudio(); if (sample('lock')) return; tone(520, 0.08, 'square', 0.05); tone(260, 0.12, 'square', 0.05, 0, 0.06); noise(4500, 3, 0.1, 0.1, 'bandpass', 0.05); }
+      function sfxCurse() { ensureAudio(); if (sample('curse')) return; tone(110, 0.6, 'sawtooth', 0.05, 80); tone(116, 0.6, 'sawtooth', 0.04, 84); }
+      function sfxHorn() { ensureAudio(); if (sample('horn')) return; tone(98, 0.95, 'sawtooth', 0.07); tone(147, 0.95, 'sawtooth', 0.05); tone(196, 0.6, 'triangle', 0.04, 0, 0.5); }
+      function sfxCard() { ensureAudio(); if (sample('cards')) return; noise(2600, 1.5, 0.08, 0.12, 'bandpass', 0, 5000); }
+      function sfxLaugh() { ensureAudio(); if (sample('joker')) return; [660, 880, 700, 940, 740, 1000].forEach(function (f, i) { tone(f, 0.09, 'square', 0.035, 0, i * 0.08); }); }
+      function sfxSad() { ensureAudio(); if (sample('fail')) return; [392, 370, 349].forEach(function (f, i) { tone(f, 0.3, 'sawtooth', 0.045, f * 0.97, i * 0.32); }); tone(330, 0.7, 'sawtooth', 0.045, 240, 0.96); }
+      function sfxZap() { ensureAudio(); if (sample('zap')) return; tone(300, 0.18, 'sawtooth', 0.05, 2400); noise(5000, 1, 0.15, 0.06, 'highpass'); }
+      function sfxPetal() { ensureAudio(); if (sample('petal')) return; [1046, 1318, 1568].forEach(function (f, i) { tone(f, 0.3, 'sine', 0.04, 0, i * 0.07); }); }
+      function sfxSqueeze() { ensureAudio(); if (sample('squeeze')) return; tone(700, 0.22, 'square', 0.04, 160); }
+      function sfxShatter() { ensureAudio(); if (sample('shatter')) return; for (let i = 0; i < 7; i++) noise(5000 + Math.random() * 3000, 4, 0.08, 0.1, 'bandpass', i * 0.025); tone(1900, 0.2, 'triangle', 0.04, 600); }
+      function sfxSpot() { ensureAudio(); if (sample('spotlight')) return; [523, 784, 1046, 1568].forEach(function (f, i) { tone(f, 0.5, 'triangle', 0.05, 0, i * 0.04); }); }
+      function sfxFire() { ensureAudio(); if (sample('fire')) return; noise(800, 0.7, 0.8, 0.12, 'bandpass', 0, 2400); tone(220, 0.5, 'sawtooth', 0.04, 440); }
+      function sfxDeal() { ensureAudio(); if (sample('deal')) return; noise(1800, 1.2, 0.12, 0.09, 'bandpass', 0, 600); }
+      function sfxFlip() { ensureAudio(); if (sample('cardflip')) return; tone(1200, 0.04, 'triangle', 0.05); noise(3000, 3, 0.05, 0.06, 'bandpass'); }
       function sfxTier(t) {
         ensureAudio();
+        if (sample('tier' + Math.max(1, Math.min(3, t)))) return;
         if (t >= 3) {
           [659, 831, 988, 1319, 1661, 1976].forEach(function (f, i) { tone(f, 0.32, 'sine', 0.06, 0, i * 0.06); });
           noise(6000, 1, 0.6, 0.05, 'highpass', 0.1);
@@ -3167,6 +3297,7 @@
       }
       function sfxPick() {
         ensureAudio();
+        if (sample('pick')) return;
         noise(400, 0.8, 0.35, 0.1, 'bandpass', 0, 3000);
         [784, 1175, 1568].forEach(function (f, i) { tone(f, 0.18, 'sine', 0.06, 0, 0.1 + i * 0.06); });
       }
@@ -3180,7 +3311,7 @@
           case 'loaded': {
             const pt = diePt(0);
             if (use3D()) window.Dice3D.ring(0, '#c3c9d3', 20);
-            burst(pt && { x: pt.x, y: pt.y + pt.r.height * 0.25 }, { shape: 'smoke', count: 9, angle: -Math.PI / 2, spread: Math.PI * 1.2, dist: 55, color: 'rgba(185,192,204,0.8)', dur: 1000, spin: 90 });
+            burst(pt && { x: pt.x, y: pt.y + pt.r.height * 0.25 }, { shape: 'dust', count: 10, angle: -Math.PI / 2, spread: Math.PI * 1.2, dist: 60, color: 'rgba(190,196,206,0.85)', dur: 1000, spin: 90 });
             sfxThud();
             augPop('loaded', pt, '6');
             break;
@@ -3189,6 +3320,7 @@
             const pt = diePt(4);
             if (use3D()) { window.Dice3D.ring(4, '#ff2a4a', 16); window.Dice3D.aura(4, '#ff3355', 1300); }
             burst(pt, { shape: 'smoke', count: 8, dist: 50, color: 'rgba(200,20,50,0.55)', dur: 1100, spin: 60 });
+            decalFx(pt, 'smoke', 'rgba(170,10,40,0.6)', 120, 1200);
             burst(pt, { shape: 'glyph', html: glyphSvg('curse'), count: 3, angle: -Math.PI / 2, spread: 1.2, dist: 70, color: '#ff8090', size: 1.1, dur: 1200, spin: 40 });
             screenFx('curse', 1000);
             sfxCurse();
@@ -3198,16 +3330,18 @@
           case 'twins': {
             const p0 = diePt(0), p1 = diePt(1);
             beamFx(p0, p1, '#8fe3ff');
+            burst(p0, { shape: 'glow', count: 2, dist: 8, color: 'rgba(160,230,255,0.8)', dur: 700 });
+            burst(p1, { shape: 'glow', count: 2, dist: 8, color: 'rgba(160,230,255,0.8)', dur: 700 });
             burst(p0, { shape: 'star', count: 6, dist: 46, color: '#bdf0ff', dur: 700 });
             burst(p1, { shape: 'star', count: 6, dist: 46, color: '#bdf0ff', dur: 700 });
-            tone(1318, 0.12, 'sine', 0.05); tone(1760, 0.16, 'sine', 0.05, 0, 0.07);
+            if (!sample('chime')) { tone(1318, 0.12, 'sine', 0.05); tone(1760, 0.16, 'sine', 0.05, 0, 0.07); }
             if (p0 && p1) augPop('twins', { x: (p0.x + p1.x) / 2, y: p0.y, r: p0.r });
             break;
           }
           case 'golden': {
             const d = diePt(2), t = tilePt(e.cat);
             if (use3D()) window.Dice3D.ring(2, '#ffd25a', 16);
-            stream(d, t, { shape: 'coin', count: 9, arc: 60, onEnd: function () { burst(t, { shape: 'star', count: 8, dist: 40, color: '#ffe08a', dur: 600 }); } });
+            stream(d, t, { shape: 'coin', count: 9, arc: 60, onEnd: function () { burst(t, { shape: 'flare', count: 5, dist: 34, color: '#ffe08a', dur: 700 }); } });
             sfxCoins(9);
             augPop('golden', t, '×2');
             break;
@@ -3216,19 +3350,21 @@
             const r = ptOf(rollBtn);
             burst(r, { shape: 'spark', count: 12, dist: 70, color: '#ffb35a', dur: 700 });
             augPop('fourth', r, '');
-            tone(988, 0.1, 'triangle', 0.06); tone(1480, 0.14, 'triangle', 0.05, 0, 0.06);
+            if (!sample('powerup')) { tone(988, 0.1, 'triangle', 0.06); tone(1480, 0.14, 'triangle', 0.05, 0, 0.06); }
             break;
           }
           case 'aceRebel': {
             const t = tilePt('ones');
             for (let i = 0; i < 5; i++) if (dice[i] === 1) burst(diePt(i), { shape: 'star', count: 7, dist: 60, color: ['#ff5b72', '#ffd77a'], dur: 800 });
             burst(t, { shape: 'star', count: 10, dist: 55, color: '#ff5b72', dur: 800 });
-            [880, 1175, 1568].forEach(function (f, k) { tone(f, 0.14, 'square', 0.03, 0, k * 0.06); });
+            if (!sample('sparkle')) [880, 1175, 1568].forEach(function (f, k) { tone(f, 0.14, 'square', 0.03, 0, k * 0.06); });
             augPop('aceRebel', t, '×6');
             break;
           }
           case 'yachtClub': {
             screenFx('waves', 2800, '<div class="w1"></div><div class="w2"></div><div class="boat">' + glyphSvg('yachtClub') + '</div>');
+            const yt = tilePt('yacht');
+            if (yt) { const bi = addFx('fx-burstimg', yt.x, yt.y); playFx(bi, [{ transform: 'scale(0.2) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.1) rotate(40deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.4) rotate(90deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }); }
             sfxHorn();
             augPop('yachtClub', tilePt('yacht'), '+100', { dur: 2400 });
             break;
@@ -3246,7 +3382,8 @@
           case 'joker': {
             const t = tilePt(e.cat);
             tileOverlay(e.cat, 'joker', 1100);
-            burst(t, { shape: 'star', count: 18, dist: 80, color: ['#a77bff', '#7cf29c', '#ffc94d', '#ff5b72'], dur: 1000 });
+            burst(t, { shape: 'star', count: 14, dist: 80, color: ['#a77bff', '#7cf29c', '#ffc94d', '#ff5b72'], dur: 1000 });
+            burst(t, { shape: 'magic', count: 4, dist: 40, color: ['#a77bff', '#7cf29c'], dur: 1000, spin: 360 });
             sfxLaugh();
             augPop('joker', t, '');
             break;
@@ -3255,6 +3392,7 @@
             const b = ptOf(bonusEl);
             glyphPop(b, 'bonusHunter', { size: 72, color: '#ffd77a' });
             burst(b, { shape: 'coin', count: 14, dist: 90, dur: 1000 });
+            decalFx(b, 'flare', 'rgba(255,215,122,0.9)', 170, 1100);
             sfxCoins(12);
             augPop('bonusHunter', b, '+70', { delay: 300 });
             break;
@@ -3263,15 +3401,17 @@
             const t = tilePt(e.cat);
             tileOverlay(e.cat, 'erase', 1000, '<i></i><i></i><i></i>');
             burst(t, { shape: 'smoke', count: 7, dist: 40, color: 'rgba(255,255,255,0.7)', dur: 700, spin: 30, size: 0.6 });
-            noise(3500, 2, 0.25, 0.08, 'bandpass', 0, 1800);
+            if (!sample('scribble')) noise(3500, 2, 0.25, 0.08, 'bandpass', 0, 1800);
             augPop(e.enc ? 'encore' : 'overwrite', t, e.from + ' → ' + e.to);
             break;
           }
           case 'prophecy': {
             const t = tilePt(e.cat);
-            if (e.phase === 'turn') { ringFx(t, '#b98cff', 2.2); tone(1568, 0.25, 'sine', 0.035); break; }
+            if (e.phase === 'turn') { ringFx(t, '#b98cff', 2.2); if (!sample('prophecy', { vol: 0.45 })) tone(1568, 0.25, 'sine', 0.035); break; }
             burst(t, { shape: 'star', count: 14, dist: 70, color: ['#b98cff', '#e6d4ff'], dur: 900 });
             glyphPop(t, 'prophecy', { size: 46, color: '#e6d4ff' });
+            burst(t, { shape: 'magic', count: 4, dist: 50, color: '#d6bcff', dur: 1000, spin: 360 });
+            sample('prophecy');
             sfxMagic();
             augPop('prophecy', t, '+10', { label: '예언 적중' });
             break;
@@ -3279,7 +3419,7 @@
           case 'shaky': {
             restartAnim(tableEl, 'fx-tremble');
             const r = ptOf(rollBtn);
-            tone(330, 0.5, 'sine', 0.05, 300); tone(336, 0.5, 'sine', 0.04, 306);
+            if (!sample('wobble')) { tone(330, 0.5, 'sine', 0.05, 300); tone(336, 0.5, 'sine', 0.04, 306); }
             augPop('shaky', r, '굴림 ' + e.rolls + '번');
             break;
           }
@@ -3305,7 +3445,7 @@
             const a1 = seatPt(e.p), b1 = seatPt(e.q);
             stream(a1, b1, { shape: 'card', html: String(e.a), count: 1, arc: 90, dur: 900, color: '#141519' });
             stream(b1, a1, { shape: 'card', html: String(e.b), count: 1, arc: -60, dur: 900, color: '#e0314b' });
-            sfxCard(); setTimeout(sfxCard, 200);
+            if (sample('swap')) setTimeout(sfxCard, 260); else { sfxCard(); setTimeout(sfxCard, 200); }
             augPop('swap', tilePt(e.cat), e.a + ' ↔ ' + e.b, { delay: 500 });
             break;
           }
@@ -3321,6 +3461,7 @@
             const t = tilePt(e.cat);
             if (e.pts > 0) {
               burst(t, { shape: 'chip', count: 16, dist: 90, color: ['#e0314b', '#141519', '#3fe0a9', '#ffc94d'], dur: 1000 });
+              sample('chips');
               sfxCoins(10);
               augPop('allin', t, '×2');
             } else {
@@ -3333,7 +3474,7 @@
           case 'speedrun': {
             const t = tilePt(e.cat);
             tileOverlay(e.cat, 'zap', 700);
-            burst(t, { shape: 'spark', count: 12, dist: 70, color: '#ffe066', dur: 600 });
+            burst(t, { shape: 'lightning', count: 8, dist: 64, color: '#ffe066', dur: 600 });
             sfxZap();
             augPop('speedrun', t, '+6');
             break;
@@ -3344,14 +3485,16 @@
               stream({ x: window.innerWidth / 2, y: -20 }, s, { shape: 'coin', count: 12, arc: -40, dur: 900 });
               sfxCoins(12);
               augPop('debt', s, '+30', { delay: 500 });
-            } else if (e.phase === 'paid') stampFx(s, '상환 완료', '#3fe0a9');
-            else stampFx(s, '연체 -50', '#ff5b72');
+            } else if (e.phase === 'paid') { stampFx(s, '상환 완료', '#3fe0a9'); sample('bonus', { vol: 0.6 }); }
+            else { stampFx(s, '연체 -50', '#ff5b72'); sfxSad(); }
             break;
           }
           case 'comeback': {
             const s = seatPt(e.p);
             burst(s, { shape: 'ember', count: 28, angle: -Math.PI / 2, spread: 1.4, dist: 120, dur: 1300 });
+            decalFx(s, 'flare', 'rgba(255,160,70,0.85)', 150, 1200);
             sfxFire();
+            sample('powerup', { rate: 0.85, delay: 0.15 });
             showBanner('역전!', (who ? who.name : '') + ' +40', 'hot');
             break;
           }
@@ -3385,10 +3528,11 @@
             if (e.phase === 'pick') {
               const a2 = seatPt(e.p), b2 = seatPt(e.q);
               stream(a2, b2, { shape: 'glyph', html: glyphSvg('timeThief'), count: 1, arc: 70, dur: 800, color: '#ffc28a', size: 1.5, onEnd: function () { ringFx(b2, '#ff9f5a', 2.4); } });
-              tone(660, 0.2, 'triangle', 0.05, 330);
+              if (!sample('magic', { rate: 0.75 })) tone(660, 0.2, 'triangle', 0.05, 330);
             } else {
               const s = seatPt(e.q);
               burst(s, { shape: 'shard', count: 16, dist: 80, dur: 900 });
+              decalFx(s, 'impact', 'rgba(255,159,90,0.6)', 130, 900);
               sfxShatter();
               showBanner('턴 강탈', (players[e.q] ? players[e.q].name : '') + (e.cat ? ' · ' + catKo(e.cat) + ' 0점' : ''), 'cool');
               if (e.cat) ringFx(tilePt(e.cat), '#ff9f5a', 2);
@@ -3405,7 +3549,7 @@
       }
 
       // ================= Augment powers =================
-      // slam: during anyone's roll, or on your own turn with the dice resting · flip / reroll / psychic: pick a die
+      // slam: anyone, from the start of a roll until the roller rolls again or records · flip / reroll / psychic: pick a die
       // rewind: undo the last roll · seal: lock the next opponent's best box · swap: trade a box with an opponent
       // overwrite / joker / allin: toggles that change the next record
       const POWER_DEFS = {
@@ -3422,6 +3566,7 @@
       };
       const POWER_KEYS = ['slam', 'flip', 'reroll', 'psychic', 'rewind', 'seal', 'swap', 'overwrite', 'joker', 'allin'];
       let armedPower = null; // a die-target / tile power waiting for a tap
+      let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
       let flipIdx = -1;      // 2D fallback: die doing a flip
       function armedReset() { armed.joker = false; armed.allin = false; armed.overwrite = false; psychicDie = -1; }
@@ -3476,17 +3621,25 @@
         return currentPlayerIdx;
       }
       function slamOpen() { return !!liveRoll && !liveRoll.slammed && (use3D() ? window.Dice3D.canSlam() : !!fbRoll); }
+      // the slam window: from the moment the dice start rolling until the roller rolls again or records a box.
+      // Anyone with a charge may slam - moving dice get knocked mid-air, resting dice get shaken off the felt.
       function canSlam(pIdx) {
         const p = players[pIdx];
-        if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0) return false;
-        if (isRolling) return slamOpen();
-        // resting dice: your own turn, after the first roll, with something free to shake
-        return pIdx === currentPlayerIdx && hasRolledThisTurn && !isScoring && !turnLost && held.some(function (h) { return !h; });
+        if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost) return false;
+        if (isRolling) return (isOnlineMatch && onlineRole === 'guest') || slamOpen() || slamSettling();
+        return hasRolledThisTurn && held.some(function (h) { return !h; });
       }
+      // dice that finished bouncing and are sliding back into their slots still count as "on the table"
+      function slamSettling() { return !!liveRoll && use3D() && window.Dice3D.isAnimating() && !window.Dice3D.canSlam(); }
       // authoritative (local / host)
       function doSlam(pIdx, onComplete) {
         if (!canSlam(pIdx)) return false;
         const p = players[pIdx];
+        if (isRolling && !slamOpen()) {
+          // settling: land the dice now (the roll completes synchronously) and knock them from the table
+          window.Dice3D.finishNow();
+          if (isRolling || !canSlam(pIdx)) return false;
+        }
         if (isRolling) {
           // the moving dice get knocked and land on fresh values
           const roller = players[liveRoll.roller];
@@ -3508,8 +3661,11 @@
         // resting dice: the free ones jump off the felt and land again - no roll spent
         p.ch.slam -= 1;
         const cur = players[currentPlayerIdx];
+        let done = onComplete;
+        // someone knocked the bot's dice: drop whatever it had planned and re-plan once they land
+        if (cur && cur.isAI && (pIdx !== currentPlayerIdx || typeof onComplete !== 'function')) { clearTimeout(aiTimer); done = aiResume; }
         const next = rollValues(cur, dice, held, false);
-        tossDice(next, held.slice(), { power: 'slam', pIdx: pIdx, knock: true }, onComplete, lastRollNotes);
+        tossDice(next, held.slice(), { power: 'slam', pIdx: pIdx, knock: true }, done, lastRollNotes);
         return true;
       }
       function slamFx(pIdx) {
@@ -3519,7 +3675,9 @@
         wordFx(st, '쾅!');
         ringFx(st, '#ffd77a', 6);
         ringFx(st, '#ffffff', 4.5, 120);
-        if (st) burst({ x: st.x, y: st.r.bottom - 24 }, { shape: 'smoke', count: 12, angle: -Math.PI / 2, spread: Math.PI, dist: 90, color: 'rgba(230,220,200,0.55)', dur: 1000, spin: 80 });
+        decalFx(st, 'impact', 'rgba(255,225,180,0.5)', 280, 1100);
+        decalFx(st, 'ring_soft', 'rgba(255,240,210,0.55)', 360, 650);
+        if (st) burst({ x: st.x, y: st.r.bottom - 24 }, { shape: 'dust', count: 14, angle: -Math.PI / 2, spread: Math.PI, dist: 100, color: 'rgba(235,222,196,0.7)', dur: 1100, spin: 120 });
         const p = players[pIdx];
         if (p && pIdx !== powerOwnerIdx()) showChip(p.name + ' 쾅!', 'gold');
       }
@@ -3537,7 +3695,7 @@
         if (kind === 'reroll') {
           const next = dice.slice();
           next[idx] = rollOne(cur, idx);
-          tossDice(next, [0, 1, 2, 3, 4].map(function (i) { return i !== idx; }), { power: kind, pIdx: currentPlayerIdx, idx: idx, knock: true }, onComplete);
+          tossDice(next, [0, 1, 2, 3, 4].map(function (i) { return i !== idx; }), { power: kind, pIdx: currentPlayerIdx, idx: idx, knock: true, sound: 'reroll' }, onComplete);
           return true;
         }
         flipDie(idx, kind === 'flip' ? 7 - dice[idx] : face, kind, onComplete);
@@ -3549,6 +3707,7 @@
         isRolling = true;
         selectedTile = null; armedPower = null; psychicDie = -1;
         if (hlIndices) setHighlight(null);
+        rollSeq++;
         const extra = { power: kind, pIdx: currentPlayerIdx, idx: idx, value: v, flip: true };
         dice[idx] = v;
         animateFlip(extra, function () {
@@ -3579,6 +3738,7 @@
         rollsLeft = rewindSnap.rollsLeft;
         hasRolledThisTurn = rewindSnap.hasRolled;
         rewindSnap = null;
+        rollSeq++;
         armedPower = null; psychicDie = -1; selectedTile = null;
         setHighlight(null);
         fx('power', { power: 'rewind', pIdx: currentPlayerIdx, still: true });
@@ -3623,6 +3783,8 @@
       }
       function sfxSlam() {
         ensureAudio();
+        // the recorded bang plus a sub-bass punch and a wooden knock under it
+        if (sample('slam', { vary: 0.04 })) { tone(64, 0.32, 'sine', 0.32, 34); sample('thud', { vol: 0.55, delay: 0.015 }); return; }
         tone(90, 0.32, 'sine', 0.4, 38);
         noise(260, 0.8, 0.22, 0.5, 'lowpass');
         noise(1400, 1.2, 0.12, 0.18, 'bandpass', 0.02);
@@ -3638,14 +3800,18 @@
           sfxRewind();
         } else if (k === 'psychic') {
           screenFx('psy', 1000);
+          decalFx(pt, 'twirl', 'rgba(185,140,255,0.85)', 130, 1100);
           glyphPop(pt && { x: pt.x, y: pt.y - 50 }, 'psychic', { size: 50, color: '#e6d4ff', delay: 80 });
-          setTimeout(function () { burst(diePt(extra.idx), { shape: 'star', count: 14, dist: 70, color: ['#b98cff', '#ffffff'], dur: 900 }); }, 950);
+          setTimeout(function () {
+            burst(diePt(extra.idx), { shape: 'star', count: 12, dist: 70, color: ['#b98cff', '#ffffff'], dur: 900 });
+            burst(diePt(extra.idx), { shape: 'magic', count: 3, dist: 30, color: '#d6bcff', dur: 900, spin: 300 });
+          }, 950);
           sfxMagic();
         } else if (k === 'flip') {
           setTimeout(function () { burst(diePt(extra.idx), { shape: 'spark', count: 10, dist: 55, color: '#ffffff', dur: 600 }); }, 560);
-          noise(1200, 1, 0.3, 0.1, 'bandpass', 0, 4000);
+          if (!sample('flip')) noise(1200, 1, 0.3, 0.1, 'bandpass', 0, 4000);
         } else if (k === 'reroll') {
-          tone(760, 0.18, 'triangle', 0.08, 380);
+          if (!sfxBuf.reroll || !sfxBuf.reroll.length) tone(760, 0.18, 'triangle', 0.08, 380);
           ringFx(pt, '#ff8fa0', 2.2);
         }
         const augId = augIdForPower(p, k);
@@ -3701,6 +3867,8 @@
         if (def.kind === 'live') {
           const me = powerOwnerIdx();
           if (me < 0 || !canSlam(me)) return;
+          if (performance.now() - lastSlamTap < 600) return;
+          lastSlamTap = performance.now();
           if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'slam' }); return; }
           doSlam(me);
           return;
@@ -3957,7 +4125,11 @@
           const gain = idx === roll.roller ? st.mean - st.outcome : st.outcome - st.mean;
           const scale = Math.max(0, lastRound - round) / 11;
           if (gain < 3 + 6 * scale) return;
-          setTimeout(function () { if (matchId === myMatch && liveRoll === roll) { doSlam(idx); renderAll(); } }, 380 + Math.random() * 520);
+          setTimeout(function () {
+            if (matchId !== myMatch || liveRoll !== roll || roll.slammed) return;
+            if (idx === roll.roller && !slamOpen()) return; // its own dice: only while they're in the air
+            if (doSlam(idx)) renderAll();
+          }, 380 + Math.random() * 520);
         });
       }
 
@@ -3998,10 +4170,10 @@
           fx('banner', { title: augHas(cur, 'yachtClub') ? 'YACHT CLUB!' : 'YACHT!', sub: '+' + pts + '점', tier: 'hot' });
           fx('confetti', { big: true });
         } else if (!keepOld && catId === 'largeStraight' && pts >= 30) {
-          fx('banner', { title: 'STRAIGHT!', sub: '라지 스트레이트 +' + pts, tier: 'cool' });
+          fx('banner', { title: 'STRAIGHT!', sub: '라지 스트레이트 +' + pts, tier: 'cool', sound: 'straight' });
           fx('confetti', { big: false });
         } else if (!prevT.bonus && newT.bonus) {
-          fx('banner', { title: 'BONUS!', sub: '상단 ' + newT.need + '점 달성 · +' + newT.amount, tier: 'hot' });
+          fx('banner', { title: 'BONUS!', sub: '상단 ' + newT.need + '점 달성 · +' + newT.amount, tier: 'hot', sound: augHas(cur, 'bonusHunter') ? 'trophy' : 'bonus' });
           fx('confetti', { big: false });
           if (augHas(cur, 'bonusHunter')) fx('aug', { id: 'bonusHunter', p: currentPlayerIdx, delay: 500 });
         }
@@ -4418,6 +4590,7 @@
           if (!alive()) return;
           rollDice(afterRoll);
         };
+        aiResume = function () { clearTimeout(aiTimer); if (alive()) aiTimer = setTimeout(function () { afterRoll(); }, 600); };
         const afterRoll = function (skipPower) {
           if (!alive()) return;
           if (!hasRolledThisTurn) { aiTimer = setTimeout(step, 700); return; }
@@ -4684,6 +4857,7 @@
           })
         } : null;
         rollsMax = Number(d.rollsMax) || 3;
+        rollSeq = Number(d.seq) || 0;
         lastRound = Number(d.lastRound) || 12;
         encoreTurn = !!d.encoreTurn;
         sealTurn = !!d.sealTurn;
@@ -4736,7 +4910,10 @@
         const who = players.findIndex(function (p) { return p.peerId === from; });
         if (data.action === 'augPick') { if (who >= 0) draftPick(who, String(data.id)); return; }
         if (data.action === 'augReroll') { if (who >= 0) draftReroll(who); return; }
-        if (data.action === 'slam') { if (who >= 0 && doSlam(who)) renderAll(); return; }
+        // an action aimed at dice that have changed since the guest saw them is dropped
+        const stale = data.seq != null && Number(data.seq) !== rollSeq;
+        if (data.action === 'slam') { if (who >= 0 && !stale && doSlam(who)) renderAll(); return; }
+        if (stale && (data.action === 'score' || data.action === 'hold' || data.action === 'power')) return;
         const cur = players[currentPlayerIdx];
         if (!cur || cur.peerId !== from || draft) return;
         if (data.action === 'roll') rollDice();
@@ -4746,6 +4923,7 @@
       }
 
       function sendAction(msg) {
+        msg.seq = rollSeq;
         if (transport === 'p2p') {
           msg.type = 'ACTION';
           try { hostConn.send(msg); } catch (e) { showToast('전송 실패'); }
@@ -5066,8 +5244,7 @@
         if (quiet) return;
         seatBubble(m.from, text);
         if (!mine) {
-          tone(880, 0.06, 'sine', 0.05);
-          tone(1320, 0.07, 'sine', 0.04, 0, 0.05);
+          if (!sample('chat')) { tone(880, 0.06, 'sine', 0.05); tone(1320, 0.07, 'sine', 0.04, 0, 0.05); }
           if (chatOv.hidden) { chatUnread++; updateChatUi(); }
         }
       }
@@ -5324,6 +5501,7 @@
         isMuted = !isMuted;
         try { localStorage.setItem('yachtDeluxe.muted', isMuted ? '1' : '0'); } catch (e) {}
         paintMute();
+        if (audioCtx && bus) bus.gain.setTargetAtTime(isMuted ? 0 : 0.9, audioCtx.currentTime, 0.02); // also silences sounds already playing
         if (!isMuted) { ensureAudio(); tone(660, 0.08, 'sine', 0.08); }
       }
       muteBtn.addEventListener('click', toggleMute);
