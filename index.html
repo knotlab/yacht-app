@@ -289,6 +289,8 @@
   .pw-btn:disabled { opacity: 0.32; }
   .pw-n { display: flex; gap: 3px; }
   .pw-n i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pw-btn.is-live { color: #fff; background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 0 22px rgba(224, 49, 75, 0.75); animation: pwLive 0.45s ease-in-out infinite alternate; }
+  @keyframes pwLive { from { transform: scale(1); } to { transform: scale(1.08); } }
   .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 0 18px rgba(255, 215, 122, 0.7); }
   .slot-btn.target, .die2d.target { cursor: pointer; }
   .slot-btn.target::after, .die2d.target::after {
@@ -754,7 +756,7 @@
         <div id="roundCap" class="cap cap-r">ROUND 1/12</div>
         <div id="comboChip" class="combo-chip" hidden></div>
         <div id="powers" class="powers" hidden>
-          <button type="button" class="pw-btn" data-pw="slam" aria-label="쾅: 고정 안 한 주사위를 공짜로 다시 굴림">
+          <button type="button" class="pw-btn" data-pw="slam" aria-label="쾅: 주사위가 굴러가는 중에 책상을 때림">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.2 5.6L20 5l-2.6 5.4L23 12l-5.6 1.6L20 19l-5.8-2.6L12 22l-2.2-5.6L4 19l2.6-5.4L1 12l5.6-1.6L4 5l5.8 2.6z"/></svg>
             <span>쾅</span><span class="pw-n"></span>
           </button>
@@ -1673,12 +1675,30 @@
       }
       function fx(kind, extra) { applyFx(kind, extra || {}); broadcastFx(kind, extra); }
 
+      function guestRoll(extra) {
+        const vals = toArr(extra.values).map(Number), hv = toArr(extra.held).map(Boolean);
+        liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false };
+        playRoll(vals, hv, function (finalV) {
+          liveRoll = null;
+          renderDice();
+          postRollFx(finalV && finalV.length === 5 ? finalV : vals);
+        });
+        renderPowers();
+      }
       function applyFx(kind, extra) {
         if (kind === 'roll') {
-          playRoll(extra.values, extra.held, function () { renderDice(); postRollFx(extra.values); });
+          guestRoll(extra);
         } else if (kind === 'power') {
           powerFx(extra);
-          playRoll(extra.values, extra.held, function () { renderDice(); postRollFx(extra.values); });
+          guestRoll(extra);
+        } else if (kind === 'slam') {
+          slamFx(extra.pIdx);
+          const vals = toArr(extra.values).map(Number);
+          if (vals.length === 5) {
+            if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; }
+            if (use3D()) { if (window.Dice3D.canSlam()) window.Dice3D.slam(vals); }
+            else if (fbRoll) { fbRoll.values = vals.slice(); fbRoll.ticks = 0; }
+          }
         } else if (kind === 'hold') {
           sfxHold(extra.held);
         } else if (kind === 'score') {
@@ -1737,6 +1757,8 @@
       }
 
       // ================= Rolling =================
+      let fbRoll = null;   // 2D fallback roll in progress
+      let liveRoll = null; // the roll on the table right now: { roller, held, values, rollsAfter, slammed }
       function playRoll(values, heldSnap, done) {
         sfxRattle();
         if (use3D()) {
@@ -1744,20 +1766,21 @@
           window.Dice3D.roll(values, heldSnap, { drama: willYacht, onImpact: sfxClack, onLand: sfxLand, onDone: done });
           return;
         }
-        let ticks = 0;
+        const fb = fbRoll = { values: values.slice(), held: heldSnap.slice(), ticks: 0 };
         displayDice = dice.slice();
         fallbackRolling = true;
         const iv = setInterval(function () {
           for (let i = 0; i < 5; i++) if (!heldSnap[i]) displayDice[i] = 1 + Math.floor(Math.random() * 6);
           renderDice();
           sfxClack(4 + Math.random() * 4, 'die');
-          if (++ticks >= 8) {
+          if (++fb.ticks >= 8) {
             clearInterval(iv);
-            displayDice = values.slice();
+            if (fbRoll === fb) fbRoll = null;
+            displayDice = fb.values.slice();
             fallbackRolling = false;
             renderDice();
             displayDice = null;
-            done();
+            done(fb.values.slice());
           }
         }, 60);
       }
@@ -1783,20 +1806,25 @@
         armedPower = null;
         if (hlIndices) setHighlight(null);
         const myMatch = matchId;
+        liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false };
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra)); powerFx(extra); }
         else broadcastFx('roll', { values: next, held: heldSnap });
         broadcastState();
         renderAll();
 
-        playRoll(next, heldSnap, function () {
+        aiConsiderSlam();
+        playRoll(next, heldSnap, function (finalV) {
+          liveRoll = null;
           if (matchId !== myMatch) { renderDice(); return; }
-          dice = next;
+          const v = finalV && finalV.length === 5 ? finalV : next;
+          dice = v;
           isRolling = false;
           broadcastState();
           renderAll();
-          postRollFx(next);
+          postRollFx(v);
           if (typeof onComplete === 'function') onComplete();
         });
+        renderPowers(); // the slam window opens once the dice are actually moving
       }
 
       function postRollFx(values) {
@@ -1817,10 +1845,10 @@
       }
 
       // ================= Power mode =================
-      // slam: re-roll every die that isn't held without spending a roll
+      // slam: hit the table while dice are rolling (anyone's roll) - the moving dice get knocked and re-land
       // reroll: re-roll one chosen die · flip: turn one chosen die to its opposite face (7 - n)
       const POWERS = {
-        slam: { label: '쾅!', charges: 1, target: false },
+        slam: { label: '쾅!', charges: 2, target: false },
         reroll: { label: 'REROLL', charges: 2, target: true },
         flip: { label: 'FLIP', charges: 2, target: true }
       };
@@ -1831,9 +1859,58 @@
       function canUsePower(kind) {
         const cur = players[currentPlayerIdx];
         if (!matchPowers || !POWERS[kind] || !gameActive || !cur || !cur.pw || !(cur.pw[kind] > 0)) return false;
-        if (!hasRolledThisTurn || isRolling || isScoring) return false;
-        if (kind === 'slam' && held.every(Boolean)) return false;
+        if (kind === 'slam' || !hasRolledThisTurn || isRolling || isScoring) return false;
         return true;
+      }
+      // whose power charges this screen spends: the local human (hot-seat: whoever's turn it is)
+      function powerOwnerIdx() {
+        if (isOnlineMatch) return players.findIndex(function (p) { return p.peerId === myPeerId; });
+        if (matchMode === 'ai') return players.findIndex(function (p) { return !p.isAI; });
+        return currentPlayerIdx;
+      }
+      function slamOpen() { return !!liveRoll && !liveRoll.slammed && (use3D() ? window.Dice3D.canSlam() : !!fbRoll); }
+      function canSlam(pIdx) {
+        const p = players[pIdx];
+        return matchPowers && gameActive && isRolling && !!p && !!p.pw && p.pw.slam > 0 && slamOpen();
+      }
+      // authoritative (local / host)
+      function doSlam(pIdx) {
+        if (!canSlam(pIdx)) return false;
+        let vals = null;
+        if (use3D()) vals = window.Dice3D.slam(null);
+        else if (fbRoll) { fbRoll.values = fbRoll.values.map(function (v, i) { return fbRoll.held[i] ? v : 1 + Math.floor(Math.random() * 6); }); fbRoll.ticks = 0; vals = fbRoll.values.slice(); }
+        if (!vals) return false;
+        players[pIdx].pw.slam -= 1;
+        liveRoll.slammed = true;
+        liveRoll.values = vals.slice();
+        slamFx(pIdx);
+        broadcastFx('slam', { values: vals, pIdx: pIdx });
+        broadcastState();
+        renderPowers();
+        return true;
+      }
+      function slamFx(pIdx) {
+        sfxSlam(); bigShake(); flashScreen(); buzz([40, 30, 50]);
+        if (!REDUCED) restartAnim(tableEl, 'thump');
+        const p = players[pIdx];
+        showChip(p && pIdx !== powerOwnerIdx() ? p.name + ' 쾅!' : '쾅!', 'gold');
+      }
+      // AI peeks at where the dice will land and slams when that is unusually good for an opponent
+      // (or unusually bad for itself)
+      function aiConsiderSlam() {
+        const roll = liveRoll;
+        if (!matchPowers || !roll || isOnlineMatch) return;
+        const roller = players[roll.roller];
+        if (!roller || roll.held.every(Boolean)) return;
+        const myMatch = matchId;
+        players.forEach(function (p, idx) {
+          if (!p.isAI || !p.pw || !(p.pw.slam > 0)) return;
+          const st = YachtAI.rollStats(roller.scores, CAT_IDS, roll.values, roll.held, roll.rollsAfter);
+          const gain = idx === roll.roller ? st.mean - st.outcome : st.outcome - st.mean;
+          const scale = Math.max(0, 12 - round) / 11;
+          if (gain < 2 + 5 * scale) return; // roughly the luckiest ~10% of rolls early, ~20% late
+          setTimeout(function () { if (matchId === myMatch && liveRoll === roll) { doSlam(idx); renderAll(); } }, 380 + Math.random() * 520);
+        });
       }
       // authoritative (local / host); returns false when the power can't be used
       function usePower(kind, idx, onComplete) {
@@ -1841,7 +1918,7 @@
         if (POWERS[kind].target && !(idx >= 0 && idx < 5)) return false;
         const cur = players[currentPlayerIdx];
         cur.pw[kind] -= 1;
-        const free = [0, 1, 2, 3, 4].map(function (i) { return kind === 'slam' ? !held[i] : i === idx; });
+        const free = [0, 1, 2, 3, 4].map(function (i) { return i === idx; });
         const next = dice.map(function (v, i) {
           if (!free[i]) return v;
           return kind === 'flip' ? 7 - v : 1 + Math.floor(Math.random() * 6);
@@ -1857,19 +1934,21 @@
       }
       function powerFx(extra) {
         const k = extra.power;
-        if (k === 'slam') { sfxSlam(); bigShake(); flashScreen(); buzz([40, 30, 50]); showChip('쾅!', 'gold'); }
-        else { tone(k === 'flip' ? 520 : 760, 0.18, 'triangle', 0.08, k === 'flip' ? 1040 : 380); showChip(POWERS[k] ? POWERS[k].label : 'POWER'); buzz(15); }
+        { tone(k === 'flip' ? 520 : 760, 0.18, 'triangle', 0.08, k === 'flip' ? 1040 : 380); showChip(POWERS[k] ? POWERS[k].label : 'POWER'); buzz(15); }
       }
       function renderPowers() {
         const bar = $('powers');
-        const cur = players[currentPlayerIdx];
-        bar.hidden = !(matchPowers && gameActive && cur && cur.pw);
+        const me = powerOwnerIdx();
+        const owner = players[me];
+        bar.hidden = !(matchPowers && gameActive && owner && owner.pw);
         if (bar.hidden) return;
         const mine = isMyTurn();
         if (!mine || (armedPower && !canUsePower(armedPower))) armedPower = null;
         bar.querySelectorAll('.pw-btn').forEach(function (b) {
-          const k = b.dataset.pw, n = cur.pw[k] || 0;
-          b.disabled = !(mine && canUsePower(k));
+          const k = b.dataset.pw, n = owner.pw[k] || 0;
+          const ok = k === 'slam' ? canSlam(me) : (mine && canUsePower(k));
+          b.disabled = !ok;
+          b.classList.toggle('is-live', k === 'slam' && ok);
           b.classList.toggle('is-arm', armedPower === k);
           const dots = b.querySelector('.pw-n');
           if (dots.childElementCount !== n) dots.innerHTML = new Array(n + 1).join('<i></i>');
@@ -1877,6 +1956,13 @@
       }
       function handlePowerInput(kind) {
         ensureAudio();
+        if (kind === 'slam') {
+          const me = powerOwnerIdx();
+          if (me < 0 || !canSlam(me)) return;
+          if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'slam' }); return; }
+          doSlam(me);
+          return;
+        }
         if (!isMyTurn() || !canUsePower(kind)) return;
         if (POWERS[kind].target) {
           armedPower = armedPower === kind ? null : kind;
@@ -1889,8 +1975,7 @@
         usePower(kind);
       }
       // AI: use a power when it beats carrying on by more than saving it is worth
-      // (simulated: hard bot ~191 -> ~226 with powers)
-      const PW_COST = { slam: 15, reroll: 8, flip: 6 };
+      const PW_COST = { reroll: 8, flip: 6 };
       function aiPowerPlan() {
         const cur = players[currentPlayerIdx];
         if (!matchPowers || !cur || !cur.pw) return null;
@@ -1898,13 +1983,12 @@
         const scale = Math.max(0, 12 - round) / 11;
         let best = null, gain = 0.3;
         POWER_KEYS.forEach(function (k) {
-          if (!(cur.pw[k] > 0)) return;
-          if (k === 'slam' && o.slam.hold.every(Boolean)) return;
+          if (k === 'slam' || !(cur.pw[k] > 0)) return;
           const g = o[k].value - o.none - PW_COST[k] * scale;
           if (g > gain) { gain = g; best = k; }
         });
         if (!best) return null;
-        return best === 'slam' ? { kind: 'slam', hold: o.slam.hold } : { kind: best, idx: o[best].idx };
+        return { kind: best, idx: o[best].idx };
       }
 
       // ================= Scoring a category =================
@@ -2167,6 +2251,21 @@
           return hold;
         }
 
+        // a roll in progress: value of where it lands vs. the average re-roll of the moving dice
+        function rollStats(scores, ids, dice, held, rollsAfter) {
+          const st = stateOf(scores, ids);
+          finalValues(st.mask, st.upper);
+          let E = E0;
+          if (rollsAfter >= 1) { keepValues(E0, K1); diceValues(K1, E1); E = E1; }
+          if (rollsAfter >= 2) { keepValues(E1, K2); diceValues(K2, E2); E = E2; }
+          const c = [0, 0, 0, 0, 0, 0, 0];
+          for (let i = 0; i < 5; i++) if (held[i]) c[dice[i]]++;
+          const k = CODE[codeOf(c)];
+          let mean = 0;
+          for (let t = TS[k]; t < TS[k + 1]; t++) mean += TPa[t] * E[TDa[t]];
+          return { outcome: E[diceIdx(dice)], mean: mean };
+        }
+
         // power mode: expected value of each power right now (none = carry on without one)
         const K3 = new Float64Array(KC.length);
         function powerOptions(scores, ids, dice, rollsLeft, held) {
@@ -2232,7 +2331,7 @@
           return true;
         }
 
-        return { decide: decide, luckyRoll: luckyRoll, powerOptions: powerOptions, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
+        return { decide: decide, luckyRoll: luckyRoll, powerOptions: powerOptions, rollStats: rollStats, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
       })();
       /* AI-CORE:END */
       const CAT_IDS = CATEGORIES.map(function (c) { return c.id; });
@@ -2271,10 +2370,7 @@
               aiTimer = setTimeout(function () {
                 if (!alive()) return;
                 const fire = function () { if (alive() && !usePower(pw.kind, pw.idx, function () { aiTimer = setTimeout(afterRoll, 650); })) afterRoll(true); };
-                if (pw.hold && pw.hold.some(function (h, i) { return h !== held[i]; })) {
-                  held = pw.hold; sfxHold(true); renderDice();
-                  aiTimer = setTimeout(fire, 550);
-                } else fire();
+                fire();
               }, 700);
               return;
             }
@@ -2548,6 +2644,11 @@
       // host side: a guest asked to roll / hold / score — only honoured on their own turn
       function handleRemoteAction(data, from) {
         if (!gameActive || !isOnlineMatch) return;
+        if (data.action === 'slam') {
+          const who = players.findIndex(function (p) { return p.peerId === from; });
+          if (who >= 0 && doSlam(who)) renderAll();
+          return;
+        }
         const cur = players[currentPlayerIdx];
         if (!cur || cur.peerId !== from) return;
         if (data.action === 'roll') rollDice();
@@ -3459,7 +3560,8 @@
       }
 
       // ---------- physics ----------
-      function runSim(heldArr, rollingIdx) {
+      // init (slam): start each rolling die from its current pose and kick it off the table
+      function runSim(heldArr, rollingIdx, init) {
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -50, 0) });
         world.allowSleep = false;
         world.solver.iterations = 12;
@@ -3502,14 +3604,26 @@
         const zSpan = Math.max(1, bounds.zNear - bounds.zFar - 1.4);
         const bodies = rollingIdx.map((dieI, k) => {
           const b = new CANNON.Body({ mass: 1, material: dieM, shape: box, linearDamping: 0.1, angularDamping: 0.14 });
-          b.position.set(
-            dir * (bounds.halfX - 0.75) + (Math.random() - 0.5) * 0.3,
-            k % 2 ? 3.7 : 1.9,
-            bounds.zFar + 0.7 + (n > 1 ? (k * zSpan) / (n - 1) : zSpan / 2)
-          );
-          b.quaternion.setFromEuler(Math.random() * 6.283, Math.random() * 6.283, Math.random() * 6.283);
-          b.velocity.set(-dir * (7 + Math.random() * 6), -1 + Math.random() * 3, (Math.random() - 0.5) * 6);
-          b.angularVelocity.set((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32);
+          if (init) {
+            const st = init[k];
+            b.position.set(
+              Math.max(-bounds.halfX + 0.6, Math.min(bounds.halfX - 0.6, st.p.x)),
+              Math.max(0.55, st.p.y),
+              Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, st.p.z))
+            );
+            b.quaternion.set(st.q.x, st.q.y, st.q.z, st.q.w);
+            b.velocity.set(st.v.x * 0.5 + (Math.random() - 0.5) * 7, 10 + Math.random() * 6, st.v.z * 0.5 + (Math.random() - 0.5) * 5);
+            b.angularVelocity.set((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34);
+          } else {
+            b.position.set(
+              dir * (bounds.halfX - 0.75) + (Math.random() - 0.5) * 0.3,
+              k % 2 ? 3.7 : 1.9,
+              bounds.zFar + 0.7 + (n > 1 ? (k * zSpan) / (n - 1) : zSpan / 2)
+            );
+            b.quaternion.setFromEuler(Math.random() * 6.283, Math.random() * 6.283, Math.random() * 6.283);
+            b.velocity.set(-dir * (7 + Math.random() * 6), -1 + Math.random() * 3, (Math.random() - 0.5) * 6);
+            b.angularVelocity.set((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32);
+          }
           b.tag = 'die';
           b.dieIndex = dieI;
           b.addEventListener('collide', (e) => {
@@ -3552,9 +3666,9 @@
         });
         return { frames, steps, impacts, tops, ok };
       }
-      function simulate(heldArr, rollingIdx) {
+      function simulate(heldArr, rollingIdx, init) {
         let res = null;
-        for (let attempt = 0; attempt < 6; attempt++) { res = runSim(heldArr, rollingIdx); if (res.ok) break; }
+        for (let attempt = 0; attempt < 6; attempt++) { res = runSim(heldArr, rollingIdx, init); if (res.ok) break; }
         return res;
       }
 
@@ -3588,6 +3702,49 @@
         if (document.hidden) finishNow();
       }
       document.addEventListener('visibilitychange', () => { if (document.hidden && (anim || gather)) finishNow(); });
+
+      // table slam while the dice are moving: every rolling die is knocked up from where it is now and
+      // re-simulated. forced = values to land on (online guests mirror the host); otherwise physics decides.
+      function slam(forced) {
+        const a = anim;
+        if (!a || a.playhead >= a.steps - 3) return null;
+        const ph = Math.min(a.playhead, a.steps - 1);
+        const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, a.steps - 1);
+        const init = a.rolling.map((i, k) => {
+          const F = a.frames[k], o0 = f0 * 7, o1 = f1 * 7, d = D[i];
+          return {
+            p: d.group.position.clone(), q: d.group.quaternion.clone(),
+            v: new THREE.Vector3((F[o1] - F[o0]) * 60, (F[o1 + 1] - F[o0 + 1]) * 60, (F[o1 + 2] - F[o0 + 2]) * 60)
+          };
+        });
+        const sim = simulate(D.map((d) => d.held), a.rolling, init);
+        const values = a.values.slice();
+        a.rolling.forEach((i, k) => {
+          const d = D[i];
+          if (forced) {
+            values[i] = forced[i];
+            d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(forced[i])], sim.tops[k]);
+          } else {
+            // the face that ends up on top, through this die's current mesh offset
+            const local = sim.tops[k].clone().applyQuaternion(d.mesh.quaternion.clone().invert());
+            let best = 0, bd = -2;
+            FACE_N.forEach((nrm, j) => { const dd = nrm.dot(local); if (dd > bd) { bd = dd; best = j; } });
+            values[i] = FACE_V[best];
+          }
+          d.startP.copy(d.group.position);
+          d.startQ.copy(d.group.quaternion);
+          spawnRing(d.group.position.x, d.group.position.z, 14);
+        });
+        const yacht = values.every((v) => v === values[0]);
+        anim = {
+          frames: sim.frames, steps: sim.steps, impacts: sim.impacts, ii: 0,
+          playhead: 0, timeScale: 1, rolling: a.rolling, values, opts: a.opts,
+          drama: yacht && !REDUCED, dramaStart: Math.max(12, sim.steps * 0.42),
+          centroid: new THREE.Vector3()
+        };
+        if (!REDUCED) shake = 0.4;
+        return values;
+      }
       function applyFrame(a, ph) {
         const last = a.steps - 1;
         const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, last), t = ph - f0;
@@ -3645,12 +3802,12 @@
           d.tween = { fromP: d.group.position.clone(), fromQ: worldQ, toQ: d.baseQuat.clone(), t0: clock + delay, dur, hop: 0.6, onEnd: () => { if (a.opts.onLand) a.opts.onLand(k); } };
           maxEnd = Math.max(maxEnd, delay + dur);
         });
-        gather = { at: clock + maxEnd + 0.04, cb: a.opts.onDone };
+        gather = { at: clock + maxEnd + 0.04, cb: a.opts.onDone, values: a.values.slice() };
       }
       function finishNow() {
         if (anim) { anim.playhead = anim.steps - 1; applyFrame(anim, anim.steps - 1); beginGather(); }
         D.forEach((d) => { if (d.tween) d.tween = null; });
-        if (gather) { const cb = gather.cb; gather = null; if (cb) cb(); }
+        if (gather) { const g = gather; gather = null; if (g.cb) g.cb(g.values); }
       }
       function targetPos(d, out) {
         out.copy(slots[d.i]);
@@ -3700,7 +3857,7 @@
           d.ring.material.color.copy(GOLD).lerp(d.hlColor, d.hlVis * (1 - d.heldVis * 0.5));
           d.ring.material.opacity = Math.max(d.heldVis * 0.75, d.hlVis * (0.5 + 0.2 * Math.sin(clock * 8)));
         });
-        if (gather && clock >= gather.at) { const cb = gather.cb; gather = null; if (cb) cb(); }
+        if (gather && clock >= gather.at) { const g = gather; gather = null; if (g.cb) g.cb(g.values); }
       }
       function updateFx() {
         fxRings.forEach((r) => {
@@ -3756,6 +3913,8 @@
       window.Dice3D = {
         ok: true,
         roll,
+        slam,
+        canSlam: () => !!anim && anim.playhead < anim.steps - 3,
         setState,
         finishNow,
         isAnimating: () => !!(anim || gather),
