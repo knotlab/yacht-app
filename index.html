@@ -1162,6 +1162,18 @@
   .pe-dice img { width: 100%; height: 100%; object-fit: contain; }
   .pe-dice .dz-mini { width: 54px; height: 54px; padding: 8px; }
   .pe-label { margin-top: 16px; }
+  .pe-lore {
+    margin: -4px 0 14px; padding: 10px 13px 11px; border-radius: 14px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.18));
+    box-shadow: inset 3px 0 0 var(--brass), inset 0 0 0 1px rgba(224, 169, 59, 0.22);
+  }
+  .pe-lore.pop { animation: loreIn 0.3s ease-out; }
+  @keyframes loreIn { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .pe-lore-name { font: 400 16px var(--f-display); color: var(--brass-hi); margin-right: 8px; }
+  .pe-lore-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font: 700 10.5px var(--f-ui); color: #2a1a04; background: var(--brass-hi); vertical-align: 2px; }
+  .pe-lore-txt { margin: 6px 0 0; font: italic 500 13px/1.5 var(--f-ui); color: #d9d3c5; }
+  .pe-lore-txt::before { content: "“"; color: var(--brass); margin-right: 2px; }
+  .pe-lore-txt::after { content: "”"; color: var(--brass); margin-left: 2px; }
   #peName { width: 100%; }
   .pe-avs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
   .pe-av-btn {
@@ -1527,19 +1539,19 @@
       // ---------- dice designs (shared with the 3D module, which builds the face textures from these) ----------
       // body: face gradient · pip/one: pip gradient stops (hi, mid, lo) · css: 2D fallback [background, pip, 1-pip]
       const DICE_DESIGNS = window.DICE_DESIGNS = [
-        { id: 'classic', name: '클래식', tag: '상아빛 정통', body: ['#fffdf7', '#ebe3d0'], pip: ['#3a3d45', '#15171c', '#050608'], one: ['#ff7a8c', '#e0314b', '#7a0f22'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.28, metal: 0.02 }, css: ['linear-gradient(145deg,#fffdf7,#e5dccb)', '#15171c', '#e0314b'] },
-        { id: 'onyx', name: '오닉스', tag: '흑요석 · 금박 눈', body: ['#3a3c44', '#0a0b0e'], core: 'rgba(255,255,255,0.06)', pip: ['#fff4c2', '#e8b44a', '#6e4a10'], one: ['#fff4c2', '#e8b44a', '#6e4a10'], oneScale: 1.1, rim: 'rgba(255,236,170,0.4)', mat: { rough: 0.14, metal: 0.05, env: 0.9 }, css: ['linear-gradient(145deg,#3a3c44,#0b0c0f)', '#e8b44a', '#ffd77a'] },
-        { id: 'ruby', name: '카지노', tag: '반투명 붉은 셀룰로이드', body: ['#ff4d5f', '#7c0718'], core: 'rgba(255,190,190,0.5)', pip: ['#ffffff', '#f4f4f4', '#c4c4c4'], one: ['#ffffff', '#f4f4f4', '#c4c4c4'], rim: 'rgba(90,0,10,0.35)', mat: { rough: 0.08, metal: 0, env: 1.1 }, css: ['linear-gradient(145deg,#ff5a6a,#8c0a1e)', '#ffffff', '#ffffff'] },
-        { id: 'jade', name: '비취', tag: '구름결 옥돌', body: ['#93e2b8', '#1b7550'], pattern: 'veins', cloud: 'rgba(230,255,240,0.28)', vein: 'rgba(235,255,242,0.4)', pip: ['#fff8e1', '#e3c983', '#7d6427'], one: ['#fff8e1', '#e3c983', '#7d6427'], rim: 'rgba(255,255,255,0.35)', mat: { rough: 0.16, metal: 0.02, env: 0.7 }, css: ['linear-gradient(145deg,#93e2b8,#1f7a52)', '#f3e2a8', '#f3e2a8'] },
-        { id: 'marble', name: '대리석', tag: '흰 대리석 · 금빛 1', body: ['#fbfbf9', '#d6d6d2'], pattern: 'veins', cloud: 'rgba(255,255,255,0.5)', vein: 'rgba(70,76,88,0.55)', pip: ['#4a4d55', '#1d1f24', '#08090b'], one: ['#f3d98a', '#c4952f', '#5e4310'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.2, metal: 0.02, env: 0.55 }, css: ['linear-gradient(145deg,#fbfbf9,#d6d6d2)', '#1d1f24', '#c4952f'] },
-        { id: 'wood', name: '원목', tag: '호두나무 · 낙인 눈', body: ['#dfa86c', '#9a5d2b'], pattern: 'wood', pip: ['#5e3818', '#3a1f0b', '#1a0c03'], one: ['#5e3818', '#3a1f0b', '#1a0c03'], rim: 'rgba(255,225,180,0.35)', mat: { rough: 0.62, metal: 0 }, css: ['linear-gradient(145deg,#dfa86c,#9a5d2b)', '#3a1f0b', '#3a1f0b'] },
-        { id: 'neon', name: '네온', tag: '어둠 속에서 빛나는 눈', body: ['#221b42', '#07060f'], pattern: 'grid', grid: 'rgba(140,110,255,0.2)', pip: ['#eaffff', '#5ff6ff', '#0a9ab8'], one: ['#ffe3f8', '#ff4fd8', '#9c0f84'], glow: 1.5, mat: { rough: 0.35, metal: 0 }, css: ['linear-gradient(145deg,#221b42,#07060f)', '#5ff6ff', '#ff4fd8'] },
-        { id: 'galaxy', name: '갤럭시', tag: '성운 · 별 눈', body: ['#4b2386', '#0a0f33'], pattern: 'stars', shape: 'star', pip: ['#ffffff', '#ebe6ff', '#9d8fff'], one: ['#fff8d1', '#ffd25e', '#c08310'], glow: 0.85, mat: { rough: 0.3, metal: 0.04, env: 0.35 }, css: ['linear-gradient(145deg,#4b2386,#0a0f33)', '#ebe6ff', '#ffd25e'] },
-        { id: 'sakura', name: '벚꽃', tag: '파스텔 · 하트 눈', body: ['#fff4f8', '#ffc0d5'], pattern: 'petals', shape: 'heart', pip: ['#ff9cbc', '#e8417a', '#991446'], one: ['#ff9cbc', '#e8417a', '#991446'], mat: { rough: 0.32, metal: 0 }, css: ['linear-gradient(145deg,#fff4f8,#ffc0d5)', '#e8417a', '#e8417a'] },
-        { id: 'frost', name: '서리', tag: '얼음 결정', body: ['#f5fcff', '#a9dcf2'], pattern: 'frost', pip: ['#5a82b5', '#1d3a5e', '#0a1a30'], one: ['#a8f3ff', '#22b2dc', '#0a5876'], rim: 'rgba(255,255,255,0.7)', mat: { rough: 0.12, metal: 0.04, env: 0.85 }, css: ['linear-gradient(145deg,#f5fcff,#a9dcf2)', '#1d3a5e', '#22b2dc'] },
-        { id: 'candy', name: '캔디', tag: '면마다 다른 색', body: ['#ffb8c5', '#ff7a93'], faces: { 1: ['#ffb8c5', '#ff7a93'], 2: ['#ffe6a3', '#ffc23a'], 3: ['#bff2ca', '#58cf78'], 4: ['#b5e3ff', '#4aaaf0'], 5: ['#e0caff', '#a477f0'], 6: ['#ffd4ad', '#ff9650'] }, pip: ['#ffffff', '#ffffff', '#ececec'], one: ['#ffffff', '#ffffff', '#ececec'], pipShadow: true, mat: { rough: 0.24, metal: 0, env: 0.4 }, css: ['linear-gradient(145deg,#e0caff,#ff7a93)', '#ffffff', '#ffffff'] },
-        { id: 'steel', name: '스틸', tag: '헤어라인 금속', body: ['#f2f4f7', '#8f97a2'], pattern: 'brushed', pip: ['#454b55', '#16191e', '#040506'], one: ['#ff9090', '#d42a2a', '#5a0808'], rim: 'rgba(255,255,255,0.75)', mat: { rough: 0.3, metal: 0.8, env: 1.15 }, css: ['linear-gradient(145deg,#f2f4f7,#8f97a2)', '#16191e', '#d42a2a'] },
-        { id: 'pixel', name: '픽셀', tag: '8비트 도트', body: ['#fff3cc', '#f3dc94'], pattern: 'pixel', shape: 'square', flat: true, pip: ['#2b2b2b', '#2b2b2b', '#2b2b2b'], one: ['#e0314b', '#e0314b', '#e0314b'], mat: { rough: 0.55, metal: 0 }, css: ['linear-gradient(145deg,#fff3cc,#f3dc94)', '#2b2b2b', '#e0314b'] }
+        { id: 'classic', name: '클래식', tag: '근본', lore: '모든 판은 이 주사위로 시작됐다. 1은 언제나 빨갛다.', body: ['#fffdf7', '#ebe3d0'], pip: ['#3a3d45', '#15171c', '#050608'], one: ['#ff7a8c', '#e0314b', '#7a0f22'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.28, metal: 0.02 }, css: ['linear-gradient(145deg,#fffdf7,#e5dccb)', '#15171c', '#e0314b'] },
+        { id: 'onyx', name: '오닉스', tag: '검은 금장', lore: '굴릴 때마다 금가루가 떨어진다는 소문이 있다. 확인한 사람은 없다.', body: ['#3a3c44', '#0a0b0e'], core: 'rgba(255,255,255,0.06)', pip: ['#fff4c2', '#e8b44a', '#6e4a10'], one: ['#fff4c2', '#e8b44a', '#6e4a10'], oneScale: 1.1, rim: 'rgba(255,236,170,0.4)', mat: { rough: 0.14, metal: 0.05, env: 0.9 }, css: ['linear-gradient(145deg,#3a3c44,#0b0c0f)', '#e8b44a', '#ffd77a'] },
+        { id: 'ruby', name: '카지노', tag: '하우스 엣지', lore: '딜러 테이블에서 슬쩍 집어 왔다. 아직 안 들켰다.', body: ['#ff4d5f', '#7c0718'], core: 'rgba(255,190,190,0.5)', pip: ['#ffffff', '#f4f4f4', '#c4c4c4'], one: ['#ffffff', '#f4f4f4', '#c4c4c4'], rim: 'rgba(90,0,10,0.35)', mat: { rough: 0.08, metal: 0, env: 1.1 }, css: ['linear-gradient(145deg,#ff5a6a,#8c0a1e)', '#ffffff', '#ffffff'] },
+        { id: 'jade', name: '비취', tag: '황실 보물', lore: '황제가 아끼던 옥으로 깎았다. 떨어뜨리면 곤장 백 대.', body: ['#93e2b8', '#1b7550'], pattern: 'veins', cloud: 'rgba(230,255,240,0.28)', vein: 'rgba(235,255,242,0.4)', pip: ['#fff8e1', '#e3c983', '#7d6427'], one: ['#fff8e1', '#e3c983', '#7d6427'], rim: 'rgba(255,255,255,0.35)', mat: { rough: 0.16, metal: 0.02, env: 0.7 }, css: ['linear-gradient(145deg,#93e2b8,#1f7a52)', '#f3e2a8', '#f3e2a8'] },
+        { id: 'marble', name: '대리석', tag: '신전 출토', lore: '신전 기둥 깎고 남은 돌. 1만큼은 금으로 박았다.', body: ['#fbfbf9', '#d6d6d2'], pattern: 'veins', cloud: 'rgba(255,255,255,0.5)', vein: 'rgba(70,76,88,0.55)', pip: ['#4a4d55', '#1d1f24', '#08090b'], one: ['#f3d98a', '#c4952f', '#5e4310'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.2, metal: 0.02, env: 0.55 }, css: ['linear-gradient(145deg,#fbfbf9,#d6d6d2)', '#1d1f24', '#c4952f'] },
+        { id: 'wood', name: '원목', tag: '할아버지 서랍', lore: '할아버지 서랍 속 그 주사위. 손때까지 그대로다.', body: ['#dfa86c', '#9a5d2b'], pattern: 'wood', pip: ['#5e3818', '#3a1f0b', '#1a0c03'], one: ['#5e3818', '#3a1f0b', '#1a0c03'], rim: 'rgba(255,225,180,0.35)', mat: { rough: 0.62, metal: 0 }, css: ['linear-gradient(145deg,#dfa86c,#9a5d2b)', '#3a1f0b', '#3a1f0b'] },
+        { id: 'neon', name: '네온', tag: '야간 전용', lore: '불을 끄면 진짜 실력이 나온다. 눈이 빛나니까.', body: ['#221b42', '#07060f'], pattern: 'grid', grid: 'rgba(140,110,255,0.2)', pip: ['#eaffff', '#5ff6ff', '#0a9ab8'], one: ['#ffe3f8', '#ff4fd8', '#9c0f84'], glow: 1.5, mat: { rough: 0.35, metal: 0 }, css: ['linear-gradient(145deg,#221b42,#07060f)', '#5ff6ff', '#ff4fd8'] },
+        { id: 'galaxy', name: '갤럭시', tag: '우주 한정판', lore: '굴리면 별똥별이 떨어진다. 소원은 당연히 야추.', body: ['#4b2386', '#0a0f33'], pattern: 'stars', shape: 'star', pip: ['#ffffff', '#ebe6ff', '#9d8fff'], one: ['#fff8d1', '#ffd25e', '#c08310'], glow: 0.85, mat: { rough: 0.3, metal: 0.04, env: 0.35 }, css: ['linear-gradient(145deg,#4b2386,#0a0f33)', '#ebe6ff', '#ffd25e'] },
+        { id: 'sakura', name: '벚꽃', tag: '봄 한정', lore: '봄에만 판다더니 아직도 판다. 하트 뜨면 괜히 설렌다.', body: ['#fff4f8', '#ffc0d5'], pattern: 'petals', shape: 'heart', pip: ['#ff9cbc', '#e8417a', '#991446'], one: ['#ff9cbc', '#e8417a', '#991446'], mat: { rough: 0.32, metal: 0 }, css: ['linear-gradient(145deg,#fff4f8,#ffc0d5)', '#e8417a', '#e8417a'] },
+        { id: 'frost', name: '서리', tag: '꽁꽁', lore: '쥐면 손이 시리다. 굴리면 상대 표정이 더 시리다.', body: ['#f5fcff', '#a9dcf2'], pattern: 'frost', pip: ['#5a82b5', '#1d3a5e', '#0a1a30'], one: ['#a8f3ff', '#22b2dc', '#0a5876'], rim: 'rgba(255,255,255,0.7)', mat: { rough: 0.12, metal: 0.04, env: 0.85 }, css: ['linear-gradient(145deg,#f5fcff,#a9dcf2)', '#1d3a5e', '#22b2dc'] },
+        { id: 'candy', name: '캔디', tag: '먹지 마세요', lore: '면마다 맛이 다르게 생겼다. 핥아봤자 플라스틱이다.', body: ['#ffb8c5', '#ff7a93'], faces: { 1: ['#ffb8c5', '#ff7a93'], 2: ['#ffe6a3', '#ffc23a'], 3: ['#bff2ca', '#58cf78'], 4: ['#b5e3ff', '#4aaaf0'], 5: ['#e0caff', '#a477f0'], 6: ['#ffd4ad', '#ff9650'] }, pip: ['#ffffff', '#ffffff', '#ececec'], one: ['#ffffff', '#ffffff', '#ececec'], pipShadow: true, mat: { rough: 0.24, metal: 0, env: 0.4 }, css: ['linear-gradient(145deg,#e0caff,#ff7a93)', '#ffffff', '#ffffff'] },
+        { id: 'steel', name: '스틸', tag: '파괴 불가', lore: '떨어뜨려도 안 깨진다. 대신 테이블이 깨진다.', body: ['#f2f4f7', '#8f97a2'], pattern: 'brushed', pip: ['#454b55', '#16191e', '#040506'], one: ['#ff9090', '#d42a2a', '#5a0808'], rim: 'rgba(255,255,255,0.75)', mat: { rough: 0.3, metal: 0.8, env: 1.15 }, css: ['linear-gradient(145deg,#f2f4f7,#8f97a2)', '#16191e', '#d42a2a'] },
+        { id: 'pixel', name: '픽셀', tag: '오락실 감성', lore: '동전 넣고 한 판 더. 눈까지 네모나게 각졌다.', body: ['#fff3cc', '#f3dc94'], pattern: 'pixel', shape: 'square', flat: true, pip: ['#2b2b2b', '#2b2b2b', '#2b2b2b'], one: ['#e0314b', '#e0314b', '#e0314b'], mat: { rough: 0.55, metal: 0 }, css: ['linear-gradient(145deg,#fff3cc,#f3dc94)', '#2b2b2b', '#e0314b'] }
       ];
       const DESIGN_BY_ID = {};
       DICE_DESIGNS.forEach(function (dz) { DESIGN_BY_ID[dz.id] = dz; });
@@ -6958,7 +6970,8 @@
       }
       function renderProfEdit() {
         const e = profEditing;
-        let h = '<div class="pe-hero"><span class="pe-av" aria-hidden="true"></span><span class="pe-dice" aria-hidden="true"></span></div>';
+        let h = '<div class="pe-hero"><span class="pe-av" aria-hidden="true"></span><span class="pe-dice" aria-hidden="true"></span></div>' +
+          '<div class="pe-lore" aria-live="polite"><b class="pe-lore-name"></b><span class="pe-lore-tag"></span><p class="pe-lore-txt"></p></div>';
         h += '<label class="field-label" for="peName">이름</label><input id="peName" class="text-in" type="text" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="off">';
         h += '<div class="field-label pe-label" id="peAvLbl">아바타</div><div class="pe-avs" role="radiogroup" aria-labelledby="peAvLbl">';
         AVATARS.forEach(function (a, k) {
@@ -6994,6 +7007,13 @@
           } catch (e) { url = null; }
         }
         hero.innerHTML = url ? '<img alt="" src="' + url + '">' : miniDie(id, 6) + miniDie(id, 1);
+        const dz = designOf(id), lore = profBody.querySelector('.pe-lore');
+        if (lore) {
+          lore.querySelector('.pe-lore-name').textContent = dz.name + ' 주사위';
+          lore.querySelector('.pe-lore-tag').textContent = dz.tag;
+          lore.querySelector('.pe-lore-txt').textContent = dz.lore || '';
+          restartAnim(lore, 'pop');
+        }
         const av = profBody.querySelector('.pe-av');
         if (av) av.textContent = profEditing.av;
       }
