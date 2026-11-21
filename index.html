@@ -567,7 +567,8 @@
   .dice2d { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; gap: 3%; padding: 0 5%; }
   .die2d {
     position: relative; width: min(15%, 84px); aspect-ratio: 1; border-radius: 20%;
-    display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 14%; place-items: center;
+    /* padding % is measured against the row, not the die: scale it off the die's own width */
+    display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: calc(min(15%, 84px) * 0.14); place-items: center;
     background: linear-gradient(145deg, #fffdf7, #e5dccb);
     box-shadow: 0 9px 16px rgba(0, 0, 0, 0.45), inset 0 -4px 0 rgba(0, 0, 0, 0.12);
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1040,6 +1041,143 @@
   .tile.is-swap .t-val { color: #d9c2ff; font-size: 0.8em; }
   .tile.is-dim { filter: brightness(0.45); }
 
+  /* ================= Profiles & dice designs ================= */
+  .seat-coin.has-av { background: radial-gradient(circle at 35% 28%, #3a3f49 0%, #15171c 100%); box-shadow: inset 0 0 0 2px var(--pc), 0 0 0 2px rgba(0, 0, 0, 0.5); }
+  .seat-coin.has-av::after { display: none; }
+  .seat-coin.has-av .seat-ini { font-size: 22px; line-height: 1; font-family: system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif; }
+  @media (max-width: 560px) { .seats[data-count="3"] .seat-coin.has-av .seat-ini, .seats[data-count="4"] .seat-coin.has-av .seat-ini { font-size: 18px; } }
+  .podium-av, .lobby-av { margin-right: 6px; font-family: system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif; }
+
+  /* 2D dice in a player's design (no-WebGL fallback) + CSS mini dice used as placeholders */
+  .die2d.dz, .die2d.dz.held { background: var(--dz-bg); }
+  .die2d.dz i, .dz-mini i { background: var(--dz-pip); }
+  .die2d.dz i.r, .dz-mini i.r { background: var(--dz-one); }
+  .die2d.dz i.o, .dz-mini i.o { background: transparent; box-shadow: none; }
+  .die2d.dz.glow i:not(.o), .dz-mini.glow i:not(.o) { box-shadow: 0 0 6px var(--dz-pip); }
+  .die2d.dz.glow i.r, .dz-mini.glow i.r { box-shadow: 0 0 8px var(--dz-one); }
+  .sh-square i { border-radius: 2px; }
+  .sh-star i:not(.o) { border-radius: 0; width: 96%; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  .dz-mini {
+    display: inline-grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); place-items: center;
+    width: 34px; height: 34px; padding: 5px; border-radius: 24%;
+    background: var(--dz-bg);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), inset 0 -3px 0 rgba(0, 0, 0, 0.16);
+  }
+  .dz-mini i { width: 74%; aspect-ratio: 1; border-radius: 50%; }
+  .dz-mini i.r { width: 92%; }
+  [data-thumb] img { display: block; width: 100%; height: 100%; object-fit: contain; animation: thumbIn 0.25s ease-out; }
+  @keyframes thumbIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
+
+  /* title-screen profile card */
+  .prof-card {
+    display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 14px; padding: 9px 12px 9px 9px;
+    border-radius: 20px; text-align: left; color: var(--text);
+    background: linear-gradient(180deg, #262a31, #1a1c21);
+    box-shadow: 0 4px 0 #08090b, inset 0 0 0 1px rgba(224, 169, 59, 0.38);
+    animation: rowIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) 0.06s both;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .prof-card:active { transform: translateY(3px); box-shadow: 0 1px 0 #08090b, inset 0 0 0 1px rgba(224, 169, 59, 0.38); }
+  .pc-av {
+    flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+    font: 26px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    background: radial-gradient(circle at 35% 28%, #3a3f49, #15171c);
+    box-shadow: inset 0 0 0 2px rgba(224, 169, 59, 0.6), 0 3px 0 #08090b;
+  }
+  .pc-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .pc-name { font: 400 18px var(--f-display); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-sub { font: 600 11.5px var(--f-ui); color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc-thumb { flex: none; width: 48px; height: 48px; display: grid; place-items: center; }
+  .pc-go { flex: none; width: 18px; height: 18px; color: var(--brass-hi); }
+
+  /* profile panel */
+  .overlay.prof-ov { z-index: 46; }
+  .prof-panel .panel-title { flex: 1; min-width: 0; }
+  .prof-panel .panel-head { justify-content: flex-start; }
+  .prof-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+  .prof-item {
+    display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 5px; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  .prof-item.is-on { background: rgba(255, 215, 122, 0.07); box-shadow: inset 0 0 0 2px var(--brass-hi), 0 0 18px rgba(255, 215, 122, 0.12); }
+  .prof-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 4px; border-radius: 15px; text-align: left; color: var(--text); }
+  .prof-tag, .prof-use { flex: none; padding: 7px 11px; border-radius: 999px; font: 700 12px var(--f-ui); white-space: nowrap; }
+  .prof-tag { color: #2a1a04; background: var(--brass-hi); }
+  .prof-use { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+  .prof-new { width: 100%; }
+  .prof-hint { margin: 12px 2px 0; font: 500 12px var(--f-ui); color: var(--text-dim); line-height: 1.55; }
+  .pe-hero {
+    display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 14px; padding: 6px 10px; border-radius: 20px;
+    background: radial-gradient(ellipse at 50% 75%, #176b54 0%, #0b3a2d 70%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 -24px 40px rgba(0, 0, 0, 0.35);
+  }
+  .pe-av {
+    flex: none; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center;
+    font: 42px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    background: radial-gradient(circle at 35% 28%, #3a3f49, #15171c);
+    box-shadow: inset 0 0 0 3px var(--brass-hi), 0 6px 14px rgba(0, 0, 0, 0.45);
+  }
+  .pe-dice { flex: none; width: min(170px, 46vw); aspect-ratio: 1; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .pe-dice img { width: 100%; height: 100%; object-fit: contain; }
+  .pe-dice .dz-mini { width: 54px; height: 54px; padding: 8px; }
+  .pe-label { margin-top: 16px; }
+  #peName { width: 100%; }
+  .pe-avs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .pe-av-btn {
+    aspect-ratio: 1; border-radius: 12px; display: grid; place-items: center;
+    font: 23px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    background: rgba(255, 255, 255, 0.05); transition: transform 0.12s;
+  }
+  .pe-av-btn.is-on { background: rgba(255, 215, 122, 0.18); box-shadow: inset 0 0 0 2px var(--brass-hi); transform: scale(1.06); }
+  .pe-dz { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pe-dz-btn {
+    min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 9px; border-radius: 15px;
+    color: var(--text); background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
+  }
+  .pe-dz-btn.is-on { background: rgba(255, 215, 122, 0.12); box-shadow: inset 0 0 0 2px var(--brass-hi), 0 0 16px rgba(255, 215, 122, 0.18); transform: translateY(-2px); }
+  .pe-dz-img { width: 66px; height: 66px; display: grid; place-items: center; }
+  .pe-dz-img .dz-mini { width: 46px; height: 46px; padding: 7px; }
+  .pe-dz-name { font: 400 14px var(--f-display); }
+  .pe-dz-tag { font: 500 10px var(--f-ui); color: var(--text-dim); text-align: center; line-height: 1.3; }
+  .pe-foot {
+    position: sticky; bottom: -20px; z-index: 1; display: flex; gap: 10px;
+    margin: 16px -20px -20px; padding: 14px 20px 20px;
+    background: linear-gradient(180deg, rgba(18, 20, 24, 0) 0%, #121418 35%);
+  }
+  .pe-foot .btn-ruby { flex: 1; }
+  .pe-del { flex: none; color: #ff95a4; }
+  .pe-del.is-armed { color: #fff; background: linear-gradient(180deg, #c8283f, #8e1328); }
+
+  /* seats in the new-game panel */
+  .name-row { position: relative; }
+  .name-chip {
+    flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    font: 400 12px var(--f-game); color: #101114; background: var(--pc, #4fd1ff);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 3px 0 #08090b;
+  }
+  .name-row.has-prof .name-chip, #onlineAv {
+    font: 22px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+    background: radial-gradient(circle at 35% 28%, #3a3f49, #15171c);
+    box-shadow: inset 0 0 0 2px var(--pc, var(--brass-hi)), 0 3px 0 #08090b;
+  }
+  .name-dz { flex: none; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 13px; background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+  .name-dz > span { width: 42px; height: 42px; display: grid; place-items: center; }
+  .name-dz .dz-mini { width: 30px; height: 30px; padding: 4px; }
+  .prof-pick {
+    position: relative; z-index: 6; width: 100%; margin: -3px 0 3px;
+    display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 16px;
+    background: #1b1e24; box-shadow: 0 0 0 1px rgba(224, 169, 59, 0.45), 0 16px 34px rgba(0, 0, 0, 0.65);
+    animation: pickIn 0.18s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+  @keyframes pickIn { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .prof-pick button { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 11px; color: var(--text); text-align: left; }
+  .prof-pick button:hover { background: rgba(255, 255, 255, 0.06); }
+  .prof-pick button.is-on { background: rgba(255, 215, 122, 0.1); box-shadow: inset 0 0 0 1.5px var(--brass); }
+  .pp-av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 18px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif; background: rgba(255, 255, 255, 0.07); }
+  .pp-av.pp-sym { font: 400 14px var(--f-game); color: var(--text-dim); }
+  .pp-name { flex: 1; min-width: 0; font: 600 14px var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pp-at { flex: none; font: 400 11px var(--f-game); color: var(--text-dim); }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   }
@@ -1118,6 +1256,7 @@
         <div class="logo-main">YACHT</div>
         <div class="logo-sub">DICE DELUXE</div>
       </div>
+      <button id="tProfile" class="prof-card" type="button" aria-label="프로필"></button>
       <div class="btn-stack">
         <button id="tResume" class="btn btn-brass" type="button" hidden>이어하기</button>
         <button id="tPlayAi" class="btn btn-ruby btn-xl" type="button">AI 대전</button>
@@ -1184,8 +1323,8 @@
       </div>
 
       <div id="onlineSetup" hidden>
-        <label class="field-label" for="onlineNickname">내 닉네임</label>
-        <div class="name-row" style="margin-bottom:12px"><input id="onlineNickname" class="text-in" type="text" maxlength="12" value="플레이어" /></div>
+        <label class="field-label" for="onlineNickname">내 프로필</label>
+        <div id="onlineNameRow" class="name-row" style="margin-bottom:12px"><button id="onlineAv" class="name-chip" type="button" aria-label="온라인에서 쓸 프로필 고르기" aria-haspopup="true"></button><input id="onlineNickname" class="text-in" type="text" maxlength="12" value="플레이어" autocomplete="off" /></div>
         <div id="onlineChoice">
           <div id="netSeg" class="seg">
             <button type="button" class="seg-btn" data-net="fb">서버</button>
@@ -1216,6 +1355,20 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Profiles -->
+  <div id="profileOv" class="overlay prof-ov" hidden>
+    <div class="panel prof-panel">
+      <div class="panel-head">
+        <button id="profBack" class="x-btn" type="button" aria-label="뒤로" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h2 id="profTitle" class="panel-title">프로필</h2>
+        <button class="x-btn" type="button" data-close="profileOv" aria-label="닫기">✕</button>
+      </div>
+      <div id="profBody"></div>
     </div>
   </div>
 
@@ -1329,6 +1482,112 @@
       ];
       const UPPER_FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
       const PLAYER_COLORS = ['#4fd1ff', '#ff6b8b', '#ffc94d', '#7cf29c'];
+
+      // ---------- dice designs (shared with the 3D module, which builds the face textures from these) ----------
+      // body: face gradient · pip/one: pip gradient stops (hi, mid, lo) · css: 2D fallback [background, pip, 1-pip]
+      const DICE_DESIGNS = window.DICE_DESIGNS = [
+        { id: 'classic', name: '클래식', tag: '상아빛 정통', body: ['#fffdf7', '#ebe3d0'], pip: ['#3a3d45', '#15171c', '#050608'], one: ['#ff7a8c', '#e0314b', '#7a0f22'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.28, metal: 0.02 }, css: ['linear-gradient(145deg,#fffdf7,#e5dccb)', '#15171c', '#e0314b'] },
+        { id: 'onyx', name: '오닉스', tag: '흑요석 · 금박 눈', body: ['#3a3c44', '#0a0b0e'], core: 'rgba(255,255,255,0.06)', pip: ['#fff4c2', '#e8b44a', '#6e4a10'], one: ['#fff4c2', '#e8b44a', '#6e4a10'], oneScale: 1.1, rim: 'rgba(255,236,170,0.4)', mat: { rough: 0.14, metal: 0.05, env: 0.9 }, css: ['linear-gradient(145deg,#3a3c44,#0b0c0f)', '#e8b44a', '#ffd77a'] },
+        { id: 'ruby', name: '카지노', tag: '반투명 붉은 셀룰로이드', body: ['#ff4d5f', '#7c0718'], core: 'rgba(255,190,190,0.5)', pip: ['#ffffff', '#f4f4f4', '#c4c4c4'], one: ['#ffffff', '#f4f4f4', '#c4c4c4'], rim: 'rgba(90,0,10,0.35)', mat: { rough: 0.08, metal: 0, env: 1.1 }, css: ['linear-gradient(145deg,#ff5a6a,#8c0a1e)', '#ffffff', '#ffffff'] },
+        { id: 'jade', name: '비취', tag: '구름결 옥돌', body: ['#93e2b8', '#1b7550'], pattern: 'veins', cloud: 'rgba(230,255,240,0.28)', vein: 'rgba(235,255,242,0.4)', pip: ['#fff8e1', '#e3c983', '#7d6427'], one: ['#fff8e1', '#e3c983', '#7d6427'], rim: 'rgba(255,255,255,0.35)', mat: { rough: 0.16, metal: 0.02, env: 0.7 }, css: ['linear-gradient(145deg,#93e2b8,#1f7a52)', '#f3e2a8', '#f3e2a8'] },
+        { id: 'marble', name: '대리석', tag: '흰 대리석 · 금빛 1', body: ['#fbfbf9', '#d6d6d2'], pattern: 'veins', cloud: 'rgba(255,255,255,0.5)', vein: 'rgba(70,76,88,0.55)', pip: ['#4a4d55', '#1d1f24', '#08090b'], one: ['#f3d98a', '#c4952f', '#5e4310'], rim: 'rgba(255,255,255,0.6)', mat: { rough: 0.2, metal: 0.02, env: 0.55 }, css: ['linear-gradient(145deg,#fbfbf9,#d6d6d2)', '#1d1f24', '#c4952f'] },
+        { id: 'wood', name: '원목', tag: '호두나무 · 낙인 눈', body: ['#dfa86c', '#9a5d2b'], pattern: 'wood', pip: ['#5e3818', '#3a1f0b', '#1a0c03'], one: ['#5e3818', '#3a1f0b', '#1a0c03'], rim: 'rgba(255,225,180,0.35)', mat: { rough: 0.62, metal: 0 }, css: ['linear-gradient(145deg,#dfa86c,#9a5d2b)', '#3a1f0b', '#3a1f0b'] },
+        { id: 'neon', name: '네온', tag: '어둠 속에서 빛나는 눈', body: ['#221b42', '#07060f'], pattern: 'grid', grid: 'rgba(140,110,255,0.2)', pip: ['#eaffff', '#5ff6ff', '#0a9ab8'], one: ['#ffe3f8', '#ff4fd8', '#9c0f84'], glow: 1.5, mat: { rough: 0.35, metal: 0 }, css: ['linear-gradient(145deg,#221b42,#07060f)', '#5ff6ff', '#ff4fd8'] },
+        { id: 'galaxy', name: '갤럭시', tag: '성운 · 별 눈', body: ['#4b2386', '#0a0f33'], pattern: 'stars', shape: 'star', pip: ['#ffffff', '#ebe6ff', '#9d8fff'], one: ['#fff8d1', '#ffd25e', '#c08310'], glow: 0.85, mat: { rough: 0.3, metal: 0.04, env: 0.35 }, css: ['linear-gradient(145deg,#4b2386,#0a0f33)', '#ebe6ff', '#ffd25e'] },
+        { id: 'sakura', name: '벚꽃', tag: '파스텔 · 하트 눈', body: ['#fff4f8', '#ffc0d5'], pattern: 'petals', shape: 'heart', pip: ['#ff9cbc', '#e8417a', '#991446'], one: ['#ff9cbc', '#e8417a', '#991446'], mat: { rough: 0.32, metal: 0 }, css: ['linear-gradient(145deg,#fff4f8,#ffc0d5)', '#e8417a', '#e8417a'] },
+        { id: 'frost', name: '서리', tag: '얼음 결정', body: ['#f5fcff', '#a9dcf2'], pattern: 'frost', pip: ['#5a82b5', '#1d3a5e', '#0a1a30'], one: ['#a8f3ff', '#22b2dc', '#0a5876'], rim: 'rgba(255,255,255,0.7)', mat: { rough: 0.12, metal: 0.04, env: 0.85 }, css: ['linear-gradient(145deg,#f5fcff,#a9dcf2)', '#1d3a5e', '#22b2dc'] },
+        { id: 'candy', name: '캔디', tag: '면마다 다른 색', body: ['#ffb8c5', '#ff7a93'], faces: { 1: ['#ffb8c5', '#ff7a93'], 2: ['#ffe6a3', '#ffc23a'], 3: ['#bff2ca', '#58cf78'], 4: ['#b5e3ff', '#4aaaf0'], 5: ['#e0caff', '#a477f0'], 6: ['#ffd4ad', '#ff9650'] }, pip: ['#ffffff', '#ffffff', '#ececec'], one: ['#ffffff', '#ffffff', '#ececec'], pipShadow: true, mat: { rough: 0.24, metal: 0, env: 0.4 }, css: ['linear-gradient(145deg,#e0caff,#ff7a93)', '#ffffff', '#ffffff'] },
+        { id: 'steel', name: '스틸', tag: '헤어라인 금속', body: ['#f2f4f7', '#8f97a2'], pattern: 'brushed', pip: ['#454b55', '#16191e', '#040506'], one: ['#ff9090', '#d42a2a', '#5a0808'], rim: 'rgba(255,255,255,0.75)', mat: { rough: 0.3, metal: 0.8, env: 1.15 }, css: ['linear-gradient(145deg,#f2f4f7,#8f97a2)', '#16191e', '#d42a2a'] },
+        { id: 'pixel', name: '픽셀', tag: '8비트 도트', body: ['#fff3cc', '#f3dc94'], pattern: 'pixel', shape: 'square', flat: true, pip: ['#2b2b2b', '#2b2b2b', '#2b2b2b'], one: ['#e0314b', '#e0314b', '#e0314b'], mat: { rough: 0.55, metal: 0 }, css: ['linear-gradient(145deg,#fff3cc,#f3dc94)', '#2b2b2b', '#e0314b'] }
+      ];
+      const DESIGN_BY_ID = {};
+      DICE_DESIGNS.forEach(function (dz) { DESIGN_BY_ID[dz.id] = dz; });
+      const AVATARS = ['🦊', '🐯', '🐼', '🐸', '🐙', '🦄', '🐲', '🐧', '🦉', '🐻', '🐰', '🐱', '🐶', '🦁', '🐵', '🦖', '🐳', '🦈', '👾', '🤖', '👻', '🎃', '🌵', '🍀', '🔥', '⚡', '🌙', '⭐', '🍒', '👑'];
+      // every bot level has its own face and dice, so you can tell whose turn it is at a glance
+      const AI_LOOK = { easy: { av: '🐣', dice: 'candy' }, normal: { av: '🤖', dice: 'steel' }, hard: { av: '🦉', dice: 'onyx' }, cheat: { av: '😈', dice: 'neon' } };
+
+      // ---------- profiles (this device only) ----------
+      const PROF_KEY = 'yachtDeluxe.profiles';
+      const PROF_MAX = 8;
+      function newProfId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+      function cleanName(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, 12); }
+      function validAv(a) { return AVATARS.indexOf(a) !== -1 ? a : null; }
+      function validDice(d) { return typeof d === 'string' && Object.prototype.hasOwnProperty.call(DESIGN_BY_ID, d) ? d : null; }
+      function designOf(id) { return DESIGN_BY_ID[validDice(id) || 'classic']; }
+      function cleanStats(st) {
+        st = st || {};
+        const n = function (x) { x = Math.floor(Number(x)); return isFinite(x) && x > 0 ? x : 0; };
+        return { games: n(st.games), wins: n(st.wins), best: n(st.best), yachts: n(st.yachts), total: n(st.total) };
+      }
+      function cleanProf(o) {
+        if (!o || typeof o !== 'object') return null;
+        return {
+          id: typeof o.id === 'string' && /^[a-z0-9]{2,24}$/i.test(o.id) ? o.id : newProfId(),
+          name: cleanName(o.name) || '플레이어',
+          av: validAv(o.av) || AVATARS[0],
+          dice: validDice(o.dice) || 'classic',
+          stats: cleanStats(o.stats)
+        };
+      }
+      function saveProfiles() { try { localStorage.setItem(PROF_KEY, JSON.stringify(profStore)); } catch (e) {} }
+      function readProfiles() {
+        let raw = null;
+        try { raw = JSON.parse(localStorage.getItem(PROF_KEY) || 'null'); } catch (e) { raw = null; }
+        const seen = {};
+        const list = (raw && Array.isArray(raw.list) ? raw.list : []).map(cleanProf).filter(function (q) {
+          if (!q || seen[q.id]) return false;
+          seen[q.id] = true;
+          return true;
+        }).slice(0, PROF_MAX);
+        if (!list.length) return null;
+        return { list: list, active: list.some(function (q) { return q.id === raw.active; }) ? raw.active : list[0].id };
+      }
+      const profStore = (function () {
+        const st = readProfiles();
+        if (st) return st;
+        // first visit: one ready-made profile, carrying over the best score kept before profiles existed
+        let best = 0;
+        try { best = Math.max(parseInt(localStorage.getItem('yachtDeluxe.best') || '0', 10) || 0, parseInt(localStorage.getItem('yachtDeluxe.bestAug') || '0', 10) || 0); } catch (e) {}
+        const first = cleanProf({ name: '플레이어', av: AVATARS[Math.floor(Math.random() * 16)], dice: 'classic', stats: { best: best } });
+        const fresh = { list: [first], active: first.id };
+        try { localStorage.setItem(PROF_KEY, JSON.stringify(fresh)); } catch (e) {}
+        return fresh;
+      })();
+      // another tab may have written since we loaded: pick that up (objects are replaced, so always look profiles up by id)
+      function reloadProfiles() {
+        const st = readProfiles();
+        if (!st) return false;
+        profStore.list = st.list;
+        profStore.active = st.active;
+        return true;
+      }
+      function mutateProfiles(fn) { reloadProfiles(); fn(); saveProfiles(); }
+      let onlineProfId = null; // the profile an online room was joined with (its look, name and stats)
+      function profById(id) {
+        for (let i = 0; i < profStore.list.length; i++) if (profStore.list[i].id === id) return profStore.list[i];
+        return null;
+      }
+      function activeProfile() { return profById(profStore.active) || profStore.list[0]; }
+      function myLook() { const q = (onlineProfId && profById(onlineProfId)) || activeProfile(); return { av: q.av, dice: q.dice }; }
+      function playerLook(prof, name) {
+        return prof
+          ? { name: prof.name, isAI: false, scores: freshScores(), profId: prof.id, av: prof.av, dice: prof.dice }
+          : { name: name, isAI: false, scores: freshScores(), profId: null, av: null, dice: 'classic' };
+      }
+      // the dice on the table always wear the design of whoever is rolling
+      function tableDesign() {
+        const cur = players[currentPlayerIdx];
+        if (cur) return validDice(cur.dice) || 'classic';
+        return activeProfile().dice;
+      }
+      // a CSS die (2D fallback and placeholder until the 3D portrait is ready)
+      function miniDie(id, v) {
+        const dz = designOf(id);
+        v = v || 5;
+        let h = '<span class="dz-mini sh-' + (dz.shape || 'round') + (dz.glow ? ' glow' : '') + '" style="--dz-bg:' + dz.css[0] + ';--dz-pip:' + dz.css[1] + ';--dz-one:' + dz.css[2] + '">';
+        for (let c = 0; c < 9; c++) h += '<i class="' + (PIP_MAP[v].indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
+        return h + '</span>';
+      }
       const PIP_MAP = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
       const REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -1588,7 +1847,7 @@
       const rulesOv = $('rulesOv');
       const sheetOv = $('sheetOv');
       const resultOv = $('resultOv');
-      const OVERLAYS = [titleOv, menuOv, modeOv, rulesOv, sheetOv, resultOv, $('augInfoOv')];
+      const OVERLAYS = [titleOv, menuOv, modeOv, rulesOv, sheetOv, resultOv, $('augInfoOv'), $('profileOv')];
       const muteBtn = $('muteBtn');
 
       const namesEl = $('names');
@@ -1862,7 +2121,7 @@
       // ================= Rendering =================
       function renderSeats() {
         document.body.classList.toggle('aug-on', matchAug && gameActive);
-        const sig = players.map(function (p) { return (p.isAI ? 'ai:' : '') + p.name + (p.peerId || ''); }).join('|');
+        const sig = players.map(function (p) { return (p.isAI ? 'ai:' : '') + p.name + (p.peerId || '') + (p.av || ''); }).join('|');
         if (seatsEl.dataset.sig !== sig) {
           seatsEl.dataset.sig = sig;
           seatsEl.innerHTML = '';
@@ -1881,7 +2140,8 @@
           if (!s) return;
           s.classList.toggle('is-turn', idx === currentPlayerIdx && gameActive);
           const clash = initials.filter(function (x) { return x === initials[idx]; }).length > 1;
-          s.querySelector('.seat-ini').textContent = clash && !p.isAI ? (idx + 1) + 'P' : initials[idx];
+          s.querySelector('.seat-coin').classList.toggle('has-av', !!p.av);
+          s.querySelector('.seat-ini').textContent = p.av ? p.av : (clash && !p.isAI ? (idx + 1) + 'P' : initials[idx]);
           s.querySelector('.seat-name').textContent = p.name + (isOnlineMatch && p.peerId === myPeerId ? ' (나)' : '');
           s.querySelector('.seat-score').textContent = String(displayedTotal(idx, getPlayerTotals(p).total));
           const box = s.querySelector('.seat-augs');
@@ -1915,6 +2175,7 @@
           const D3 = window.Dice3D;
           if (!D3.isAnimating()) D3.setState(dice, held);
           if (D3.setSkins) D3.setSkins(diceSkins());
+          if (D3.setDesign) D3.setDesign(tableDesign());
           D3.setDim(gameActive && !hasRolledThisTurn && !isRolling);
           if (!canClick) D3.setHover(-1);
           diceGrid.className = 'slot-layer';
@@ -1935,15 +2196,18 @@
         } else {
           const shown = displayDice || dice;
           const skins2d = diceSkins();
+          const dz2d = tableDesign() !== 'classic' ? designOf(tableDesign()) : null;
           diceGrid.className = 'dice2d';
           diceGrid.innerHTML = '';
           for (let i = 0; i < 5; i++) {
             const v = shown[i];
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] : '') + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '');
+            const dzOn = dz2d && !skins2d[i];
+            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
+            if (dzOn) btn.style.cssText = '--dz-bg:' + dz2d.css[0] + ';--dz-pip:' + dz2d.css[1] + ';--dz-one:' + dz2d.css[2];
             let h = '';
             for (let c = 0; c < 9; c++) h += '<i class="' + (PIP_MAP[v].indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
             if (held[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
@@ -2126,7 +2390,7 @@
         const payload = JSON.parse(JSON.stringify({
           players: players.map(function (p) {
             return {
-              name: p.name, peerId: p.peerId, scores: p.scores, aug: p.aug || [], ch: p.ch || {}, extra: p.extra || 0, shake: p.shake || 0, boxUp: p.boxUp || 0,
+              name: p.name, peerId: p.peerId, av: p.av || null, dice: p.dice || 'classic', scores: p.scores, aug: p.aug || [], ch: p.ch || {}, extra: p.extra || 0, shake: p.shake || 0, boxUp: p.boxUp || 0,
               sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null
             };
           }),
@@ -2199,7 +2463,8 @@
         } else if (kind === 'turn') {
           setTimeout(function () { showTurnSweep(extra.name, extra.idx); sfxWhoosh(); }, 80);
         } else if (kind === 'end') {
-          setTimeout(showResult, extra.delay || 900);
+          const mid = matchId;
+          setTimeout(function () { if (matchId === mid && !gameActive) showResult(); }, extra.delay || 900);
         } else if (kind === 'chip') {
           showChip(extra.text, extra.tone);
         } else if (kind === 'augPick') {
@@ -4650,7 +4915,7 @@
           row.className = 'podium-row' + (k === 0 ? ' first' : '');
           row.style.animationDelay = (0.15 + k * 0.12) + 's';
           row.innerHTML = '<span class="podium-rank">' + (k + 1) + '</span>' +
-            '<span class="podium-name" style="color:' + PLAYER_COLORS[r.idx % 4] + '">' + esc(r.name) + '</span>' +
+            '<span class="podium-name" style="color:' + PLAYER_COLORS[r.idx % 4] + '">' + (players[r.idx].av ? '<span class="podium-av">' + esc(players[r.idx].av) + '</span>' : '') + esc(r.name) + '</span>' +
             (matchAug ? '<span class="podium-augs">' + (players[r.idx].aug || []).map(function (id) { return badgeHtml(id, false, r.idx); }).join('') + '</span>' : '') +
             '<span class="podium-score" data-count="' + r.total + '">0</span>';
           podium.appendChild(row);
@@ -4664,6 +4929,7 @@
         };
         requestAnimationFrame(loop);
 
+        recordProfileStats(ranked);
         const bestLine = $('bestLine');
         bestLine.textContent = '';
         const mine = players.filter(function (p) { return !p.isAI && (!isOnlineMatch || p.peerId === myPeerId); })
@@ -4691,7 +4957,8 @@
         broadcastState();
         broadcastFx('end', { delay: wait });
         renderAll();
-        setTimeout(showResult, wait);
+        const mid = matchId;
+        setTimeout(function () { if (matchId === mid && !gameActive) showResult(); }, wait);
       }
 
       // ================= Online (Firebase Realtime Database) =================
@@ -4812,6 +5079,8 @@
         resetChat();
         onlineChoice.hidden = false;
         onlineLobby.hidden = true;
+        onlineProfId = null;
+        lockOnlineId(false);
         startOnlineBtn.hidden = true;
       }
 
@@ -4820,7 +5089,7 @@
         lobbyMembers.forEach(function (m, idx) {
           const row = document.createElement('div');
           row.className = 'lobby-item';
-          row.innerHTML = '<span style="color:' + PLAYER_COLORS[idx % 4] + '">' + esc(m.name) + (m.isHost ? ' · 방장' : '') + (m.peerId === myPeerId ? ' (나)' : '') + '</span><span class="lobby-ok">접속됨</span>';
+          row.innerHTML = '<span style="color:' + PLAYER_COLORS[idx % 4] + '">' + (validAv(m.av) ? '<span class="lobby-av">' + esc(m.av) + '</span>' : '') + esc(m.name) + (m.isHost ? ' · 방장' : '') + (m.peerId === myPeerId ? ' (나)' : '') + '</span><span class="lobby-ok">접속됨</span>';
           lobbyList.appendChild(row);
         });
         if (onlineRole === 'host') startOnlineBtn.disabled = lobbyMembers.length < 2;
@@ -4829,7 +5098,7 @@
       function readMembers(snap) {
         const v = snap.val() || {};
         return Object.keys(v).map(function (id) {
-          return { peerId: id, name: String(v[id].name || '').slice(0, 12) || '게스트', isHost: !!v[id].isHost, joinedAt: v[id].joinedAt || 0 };
+          return { peerId: id, name: String(v[id].name || '').slice(0, 12) || '게스트', isHost: !!v[id].isHost, joinedAt: v[id].joinedAt || 0, av: validAv(v[id].av), dice: validDice(v[id].dice) };
         }).sort(function (a, b) { return (b.isHost - a.isHost) || (a.joinedAt - b.joinedAt); });
       }
 
@@ -4837,7 +5106,7 @@
         const wasActive = gameActive && isOnlineMatch;
         isOnlineMatch = true;
         players = toArr(d.players).map(function (p) {
-          const q = { name: String(p.name || '플레이어'), isAI: false, peerId: p.peerId, scores: Object.assign(freshScores(), p.scores || {}) };
+          const q = { name: String(p.name || '플레이어'), isAI: false, peerId: p.peerId, av: validAv(p.av), dice: validDice(p.dice) || 'classic', scores: Object.assign(freshScores(), p.scores || {}) };
           q.aug = toArr(p.aug).map(String).filter(function (id) { return !!AUG[id]; });
           q.ch = {};
           if (p.ch) Object.keys(p.ch).forEach(function (k) { q.ch[k] = Number(p.ch[k]) || 0; });
@@ -4947,7 +5216,7 @@
         try { peer = new Peer(code, { debug: 0 }); } catch (e) { onlineStatus.textContent = netError(); return; }
         peer.on('open', function (id) {
           myPeerId = id;
-          lobbyMembers = [{ peerId: id, name: nick, isHost: true }];
+          lobbyMembers = [Object.assign({ peerId: id, name: nick, isHost: true }, myLook())];
           displayRoomCode.textContent = code;
           onlineStatus.textContent = '';
           renderLobby();
@@ -4966,7 +5235,7 @@
             if (data.type === 'JOIN') {
               const gName = String(data.name || '').trim().slice(0, 12) || ('게스트 ' + lobbyMembers.length);
               guestConns.push({ peerId: conn.peer, conn: conn });
-              lobbyMembers.push({ peerId: conn.peer, name: gName, isHost: false });
+              lobbyMembers.push({ peerId: conn.peer, name: gName, isHost: false, av: validAv(data.av), dice: validDice(data.dice) });
               renderLobby();
               p2pSend({ type: 'LOBBY', members: lobbyMembers });
               sfxCombo(1);
@@ -5008,12 +5277,17 @@
           hostConn.on('open', function () {
             onlineStatus.textContent = '방장 대기 중';
             updateChatUi();
-            try { hostConn.send({ type: 'JOIN', name: nick }); } catch (e) {}
+            try { hostConn.send(Object.assign({ type: 'JOIN', name: nick }, myLook())); } catch (e) {}
           });
           hostConn.on('data', function (data) {
             if (!data || !data.type) return;
             if (data.type === 'REJECT') { showToast(data.reason || '입장 불가'); cleanupPeer(false); }
-            else if (data.type === 'LOBBY') { lobbyMembers = data.members || []; renderLobby(); }
+            else if (data.type === 'LOBBY') {
+              lobbyMembers = toArr(data.members).filter(Boolean).map(function (m) {
+                return { peerId: String(m.peerId || ''), name: cleanName(m.name) || '게스트', isHost: !!m.isHost, av: validAv(m.av), dice: validDice(m.dice) };
+              });
+              renderLobby();
+            }
             else if (data.type === 'STATE') applyRemoteState(data);
             else if (data.type === 'FX') applyFx(data.kind, data.extra || {});
             else if (data.type === 'CHAT') pushChat(data.m, false);
@@ -5033,8 +5307,11 @@
       async function createOnlineRoom() {
         ensureAudio();
         cleanupPeer(true);
+        syncOnlineName();
+        onlineProfId = activeProfile().id;
         const nick = (onlineNickname.value || '').trim().slice(0, 12) || '방장';
         onlineChoice.hidden = true;
+        lockOnlineId(true);
         onlineLobby.hidden = false;
         startOnlineBtn.hidden = false;
         startOnlineBtn.disabled = true;
@@ -5058,6 +5335,7 @@
           const members = {};
           members[myId] = { name: nick, joinedAt: TS(), isHost: true };
           await withTimeout(roomRef.set({ meta: { hostId: myId, createdAt: TS(), hostOnline: true }, members: members }), 10000);
+          roomRef.child('members/' + myId).update(myLook()).catch(function () {});
           roomRef.child('meta/hostOnline').onDisconnect().set(false);
           displayRoomCode.textContent = code;
           hostAttach();
@@ -5074,8 +5352,11 @@
         const code = normCode(codeOverride || joinRoomInput.value);
         if (!code) { showToast('방 코드를 입력하세요'); return; }
         cleanupPeer(true);
+        syncOnlineName();
+        onlineProfId = activeProfile().id;
         const nick = (onlineNickname.value || '').trim().slice(0, 12) || '게스트';
         onlineChoice.hidden = true;
+        lockOnlineId(true);
         onlineLobby.hidden = false;
         startOnlineBtn.hidden = true;
         displayRoomCode.textContent = code;
@@ -5101,6 +5382,7 @@
             onlineRole = 'host';
             startOnlineBtn.hidden = false;
             await roomRef.child('members/' + myId).update({ name: nick, isHost: true });
+            roomRef.child('members/' + myId).update(myLook()).catch(function () {});
             await roomRef.child('meta/hostOnline').set(true);
             roomRef.child('meta/hostOnline').onDisconnect().set(false);
             hostAttach();
@@ -5129,6 +5411,7 @@
           const meRef = roomRef.child('members/' + myId);
           if (members[myId]) await meRef.update({ name: nick });
           else await meRef.set({ name: nick, joinedAt: TS(), isHost: false });
+          meRef.update(myLook()).catch(function () {});
           meRef.onDisconnect().remove();
 
           listen(roomRef.child('members'), 'value', function (snap) { lobbyMembers = readMembers(snap); renderLobby(); });
@@ -5320,13 +5603,23 @@
         matchAug = ruleMode === 'aug';
         players = [];
         if (namesOverride) {
-          namesOverride.forEach(function (n) { players.push({ name: n, isAI: false, scores: freshScores() }); });
+          namesOverride.forEach(function (n) {
+            const o = typeof n === 'string' ? { name: n } : (n || {});
+            const prof = o.profId ? profById(o.profId) : null;
+            players.push(playerLook(prof, cleanName(o.name) || '플레이어'));
+          });
         } else {
           namesEl.querySelectorAll('input').forEach(function (inp, idx) {
-            players.push({ name: (inp.value || '').trim().slice(0, 12) || ('플레이어 ' + (idx + 1)), isAI: false, scores: freshScores() });
+            const pid = rowProf[idx];
+            const typed = cleanName(inp.value);
+            if (pid && typed) { const q0 = profById(pid); if (q0 && typed !== q0.name) mutateProfiles(function () { const q = profById(pid); if (q) q.name = typed; }); }
+            players.push(playerLook(pid ? profById(pid) : null, typed || ('플레이어 ' + (idx + 1))));
           });
         }
-        if (matchMode === 'ai') players.push({ name: AI_LEVELS[aiLevel].name, isAI: true, level: aiLevel, scores: freshScores() });
+        if (matchMode === 'ai') {
+          const look = AI_LOOK[aiLevel] || {};
+          players.push({ name: AI_LEVELS[aiLevel].name, isAI: true, level: aiLevel, scores: freshScores(), av: look.av || null, dice: look.dice || 'classic' });
+        }
         players.forEach(freshAugState);
         resetTurnState();
         OVERLAYS.forEach(closeOv);
@@ -5338,7 +5631,7 @@
         isOnlineMatch = true;
         matchMode = 'online';
         matchAug = ruleMode === 'aug';
-        players = lobbyMembers.map(function (m) { return { name: m.name, isAI: false, peerId: m.peerId, scores: freshScores() }; });
+        players = lobbyMembers.map(function (m) { return { name: m.name, isAI: false, peerId: m.peerId, scores: freshScores(), av: validAv(m.av), dice: validDice(m.dice) || 'classic' }; });
         players.forEach(freshAugState);
         resetTurnState();
         OVERLAYS.forEach(closeOv);
@@ -5354,33 +5647,389 @@
           } else showToast('방장만 새 게임을 시작할 수 있어요');
           return;
         }
-        startNewMatch(players.filter(function (p) { return !p.isAI; }).map(function (p) { return p.name; }), matchMode);
+        startNewMatch(players.filter(function (p) { return !p.isAI; }).map(function (p) { return { name: p.name, profId: p.profId || null }; }), matchMode);
       }
 
+      // ---------- seats in the new-game panel: each one is a saved profile or a guest ----------
+      let rowProf = [profStore.active, null, null, null];
       function renderNames() {
         const count = selectedMode === 'ai' ? 1 : localCount;
-        const prev = Array.prototype.map.call(namesEl.querySelectorAll('input'), function (i) { return i.value; });
+        rowProf = rowProf.map(function (id, k) { return id && profById(id) && rowProf.indexOf(id) === k ? id : null; });
+        const prev = {};
+        namesEl.querySelectorAll('input[data-guest]').forEach(function (inp) { prev[inp.dataset.row] = inp.value; });
+        closePick();
         namesEl.innerHTML = '';
         for (let i = 0; i < count; i++) {
+          const prof = rowProf[i] ? profById(rowProf[i]) : null;
           const row = document.createElement('div');
-          row.className = 'name-row';
-          const dot = document.createElement('label');
-          dot.className = 'name-dot';
-          dot.style.background = PLAYER_COLORS[i];
-          dot.textContent = (i + 1) + 'P';
-          dot.htmlFor = 'playerName' + i;
+          row.className = 'name-row' + (prof ? ' has-prof' : '');
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'name-chip';
+          chip.style.setProperty('--pc', PLAYER_COLORS[i]);
+          chip.setAttribute('aria-label', (i + 1) + 'P 프로필 고르기');
+          chip.setAttribute('aria-haspopup', 'true');
+          chip.textContent = prof ? prof.av : (i + 1) + 'P';
+          chip.addEventListener('click', function (e) { e.stopPropagation(); openPick(i, row); });
           const input = document.createElement('input');
           input.type = 'text';
           input.id = 'playerName' + i;
           input.className = 'text-in';
           input.maxLength = 12;
-          input.value = prev[i] != null ? prev[i] : (selectedMode === 'ai' ? '나' : '플레이어 ' + (i + 1));
-          row.appendChild(dot);
+          input.autocomplete = 'off';
+          input.setAttribute('aria-label', (i + 1) + 'P 이름');
+          if (prof) {
+            input.value = prof.name;
+            const pid = prof.id;
+            input.addEventListener('change', function () {
+              const n = cleanName(input.value);
+              if (!n) { const q = profById(pid); input.value = q ? q.name : prof.name; return; }
+              mutateProfiles(function () { const q = profById(pid); if (q) q.name = n; });
+              renderTitleProfile();
+            });
+          } else {
+            input.dataset.guest = '1';
+            input.dataset.row = String(i);
+            input.value = prev[i] != null ? prev[i] : '플레이어 ' + (i + 1);
+          }
+          row.appendChild(chip);
           row.appendChild(input);
+          if (prof) {
+            const dzBtn = document.createElement('button');
+            dzBtn.type = 'button';
+            dzBtn.className = 'name-dz';
+            dzBtn.setAttribute('aria-label', prof.name + ' 프로필 · 주사위 디자인 바꾸기');
+            dzBtn.innerHTML = '<span data-thumb="' + prof.dice + '">' + miniDie(prof.dice) + '</span>';
+            dzBtn.addEventListener('click', function () { sfxTick(); openProfiles(); startEdit(prof.id); });
+            row.appendChild(dzBtn);
+          }
           namesEl.appendChild(row);
         }
+        fillThumbs(namesEl);
         $('countVal').textContent = String(localCount);
       }
+      // the online seat is always the default profile
+      function syncOnlineName() {
+        const n = cleanName(onlineNickname.value);
+        if (!n || n === activeProfile().name) return;
+        mutateProfiles(function () { activeProfile().name = n; });
+        renderTitleProfile();
+      }
+      // while a room is open the online identity is fixed: the room only ever saw the one it joined with
+      function lockOnlineId(on) { $('onlineAv').disabled = on; onlineNickname.disabled = on; }
+      function renderOnlineProfile() {
+        const q = activeProfile();
+        $('onlineAv').textContent = q.av;
+        if (document.activeElement !== onlineNickname) onlineNickname.value = q.name;
+      }
+
+      let pickEl = null;
+      function closePick() { if (pickEl) { pickEl.remove(); pickEl = null; } }
+      function openPick(row, rowEl) {
+        if (pickEl && pickEl.dataset.row === String(row)) { closePick(); return; }
+        closePick();
+        sfxTick();
+        const online = row === 'online';
+        const cur = online ? profStore.active : rowProf[row];
+        const el = document.createElement('div');
+        el.className = 'prof-pick';
+        el.dataset.row = String(row);
+        el.setAttribute('role', 'menu');
+        let h = '';
+        profStore.list.forEach(function (q) {
+          const at = online ? -1 : rowProf.indexOf(q.id);
+          h += '<button type="button" role="menuitem" data-pid="' + q.id + '"' + (q.id === cur ? ' class="is-on"' : '') + '><span class="pp-av">' + q.av + '</span><span class="pp-name">' + esc(q.name) + '</span>' +
+            (at !== -1 && at !== row ? '<span class="pp-at">' + (at + 1) + 'P</span>' : '') + '</button>';
+        });
+        if (!online) h += '<button type="button" role="menuitem" data-pid="-"' + (!cur ? ' class="is-on"' : '') + '><span class="pp-av pp-sym">?</span><span class="pp-name">게스트</span></button>';
+        if (profStore.list.length < PROF_MAX) h += '<button type="button" role="menuitem" data-pid="+"><span class="pp-av pp-sym">+</span><span class="pp-name">새 프로필</span></button>';
+        el.innerHTML = h;
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const b = e.target.closest('button');
+          if (!b) return;
+          const pid = b.dataset.pid;
+          closePick();
+          if (pid === '+') {
+            profAfterSave = function (id) { assignRow(row, id); };
+            openOv(profileOv);
+            startEdit(null);
+            return;
+          }
+          assignRow(row, pid === '-' ? null : pid);
+        });
+        rowEl.after(el); // in the flow, so the scrolling panel never clips it
+        pickEl = el;
+      }
+      function assignRow(row, id) {
+        sfxTick();
+        if (row === 'online') {
+          if (id && profById(id)) { setActiveProfile(id); renderOnlineProfile(); }
+          return;
+        }
+        if (id) rowProf = rowProf.map(function (r, k) { return r === id && k !== row ? null : r; });
+        rowProf[row] = id;
+        renderNames();
+      }
+      function setActiveProfile(id) {
+        const old = profStore.active;
+        mutateProfiles(function () { if (profById(id)) profStore.active = id; });
+        id = profStore.active;
+        // seat 1 follows the default profile unless it was set to someone else on purpose
+        if (!rowProf[0] || rowProf[0] === old) { rowProf = rowProf.map(function (r) { return r === id ? null : r; }); rowProf[0] = id; }
+        onProfilesChanged();
+      }
+      document.addEventListener('click', function (e) { if (pickEl && !pickEl.contains(e.target)) closePick(); });
+
+      // ---------- profile panel ----------
+      const profileOv = $('profileOv');
+      const profBody = $('profBody');
+      let profEditing = null;   // { id | null, name, av, dice } while the editor is open
+      let profAfterSave = null; // set when the editor was opened from a seat's picker
+      let profDelArm = false;
+      let statsMatch = -1;
+
+      let thumbQueue = [];
+      let thumbBusy = false;
+      function designThumb(id) {
+        try { return window.Dice3D.portrait({ zoom: 0.5, dice: [{ v: 5, ry: 0.65, tx: 0.55, tz: 0.35, design: designOf(id).id }] }, 128); } catch (e) { return null; }
+      }
+      // swap CSS placeholders for rendered 3D dice, a few per frame
+      function fillThumbs(root) {
+        if (!(window.Dice3D && window.Dice3D.portrait)) return;
+        root.querySelectorAll('[data-thumb]').forEach(function (el) { thumbQueue.push(el); });
+        if (thumbBusy) return;
+        thumbBusy = true;
+        const step = function () {
+          let n = 0;
+          while (thumbQueue.length && n < 3) {
+            const el = thumbQueue.shift();
+            if (!el.isConnected || el.dataset.done === el.dataset.thumb) continue;
+            const url = designThumb(el.dataset.thumb);
+            if (url) { el.innerHTML = '<img alt="" src="' + url + '">'; el.dataset.done = el.dataset.thumb; }
+            n++;
+          }
+          if (thumbQueue.length) requestAnimationFrame(step);
+          else thumbBusy = false;
+        };
+        requestAnimationFrame(step);
+      }
+      function statLine(st) {
+        if (!st.games) return '아직 기록 없음';
+        return st.games + '판 · ' + st.wins + '승 · 최고 ' + st.best + (st.yachts ? ' · 야추 ' + st.yachts : '');
+      }
+      const CHEVRON = '<svg class="pc-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+      function renderTitleProfile() {
+        const el = $('tProfile');
+        if (!el) return;
+        const q = activeProfile();
+        const dz = designOf(q.dice);
+        el.innerHTML = '<span class="pc-av">' + q.av + '</span><span class="pc-meta"><span class="pc-name"></span><span class="pc-sub">' +
+          esc(dz.name) + ' 주사위 · ' + statLine(q.stats) + '</span></span><span class="pc-thumb" data-thumb="' + dz.id + '">' + miniDie(dz.id) + '</span>' + CHEVRON;
+        el.querySelector('.pc-name').textContent = q.name;
+        el.setAttribute('aria-label', '프로필: ' + q.name);
+        fillThumbs(el);
+      }
+      function openProfiles() {
+        profEditing = null;
+        profAfterSave = null;
+        closePick();
+        renderProfiles();
+        openOv(profileOv);
+      }
+      function renderProfiles() {
+        $('profTitle').textContent = profEditing ? (profEditing.id ? '프로필 편집' : '새 프로필') : '프로필';
+        $('profBack').hidden = !profEditing;
+        if (profEditing) { renderProfEdit(); return; }
+        let h = '<div class="prof-list">';
+        profStore.list.forEach(function (q) {
+          const on = q.id === profStore.active;
+          h += '<div class="prof-item' + (on ? ' is-on' : '') + '">' +
+            '<button type="button" class="prof-main" data-act="edit" data-id="' + q.id + '">' +
+              '<span class="pc-av">' + q.av + '</span>' +
+              '<span class="pc-meta"><span class="pc-name">' + esc(q.name) + '</span><span class="pc-sub">' + esc(designOf(q.dice).name) + ' · ' + statLine(q.stats) + '</span></span>' +
+              '<span class="pc-thumb" data-thumb="' + q.dice + '">' + miniDie(q.dice) + '</span>' +
+            '</button>' +
+            (on ? '<span class="prof-tag">기본</span>' : '<button type="button" class="prof-use" data-act="use" data-id="' + q.id + '">기본으로</button>') +
+          '</div>';
+        });
+        h += '</div>';
+        h += '<button type="button" class="btn btn-brass prof-new" data-act="new"' + (profStore.list.length >= PROF_MAX ? ' disabled' : '') + '>새 프로필 만들기</button>';
+        h += '<p class="prof-hint">기본 프로필로 AI 대전과 온라인을 합니다. 같이 하기에서는 자리마다 프로필을 고를 수 있고, 내 차례에는 내 주사위로 굴립니다.</p>';
+        profBody.innerHTML = h;
+        fillThumbs(profBody);
+      }
+      function startEdit(id) {
+        const q = id ? profById(id) : null;
+        profEditing = q ? { id: q.id, name: q.name, av: q.av, dice: q.dice }
+          : { id: null, name: '', av: AVATARS[Math.floor(Math.random() * AVATARS.length)], dice: 'classic' };
+        profDelArm = false;
+        renderProfiles();
+        profBody.scrollTop = 0;
+        const panel = profileOv.querySelector('.panel');
+        if (panel) panel.scrollTop = 0;
+      }
+      function renderProfEdit() {
+        const e = profEditing;
+        let h = '<div class="pe-hero"><span class="pe-av" aria-hidden="true"></span><span class="pe-dice" aria-hidden="true"></span></div>';
+        h += '<label class="field-label" for="peName">이름</label><input id="peName" class="text-in" type="text" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="off">';
+        h += '<div class="field-label pe-label" id="peAvLbl">아바타</div><div class="pe-avs" role="radiogroup" aria-labelledby="peAvLbl">';
+        AVATARS.forEach(function (a, k) {
+          h += '<button type="button" role="radio" class="pe-av-btn' + (a === e.av ? ' is-on' : '') + '" aria-checked="' + (a === e.av) + '" data-av="' + k + '">' + a + '</button>';
+        });
+        h += '</div><div class="field-label pe-label" id="peDzLbl">주사위 디자인</div><div class="pe-dz" role="radiogroup" aria-labelledby="peDzLbl">';
+        DICE_DESIGNS.forEach(function (dz) {
+          h += '<button type="button" role="radio" class="pe-dz-btn' + (dz.id === e.dice ? ' is-on' : '') + '" aria-checked="' + (dz.id === e.dice) + '" data-dz="' + dz.id + '">' +
+            '<span class="pe-dz-img" data-thumb="' + dz.id + '">' + miniDie(dz.id) + '</span><span class="pe-dz-name">' + esc(dz.name) + '</span><span class="pe-dz-tag">' + esc(dz.tag) + '</span></button>';
+        });
+        h += '</div><div class="pe-foot"><button type="button" class="btn btn-ruby" data-act="save">저장</button>' +
+          (e.id && profStore.list.length > 1 ? '<button type="button" class="btn pe-del" data-act="del">삭제</button>' : '') + '</div>';
+        profBody.innerHTML = h;
+        const inp = $('peName');
+        inp.value = e.name;
+        inp.addEventListener('input', function () { e.name = inp.value; });
+        inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') saveEdit(); });
+        paintHero();
+        fillThumbs(profBody);
+        if (!e.id) setTimeout(function () { try { inp.focus(); } catch (er) {} }, 80);
+      }
+      function paintHero() {
+        const hero = profBody.querySelector('.pe-dice');
+        if (!hero || !profEditing) return;
+        const id = designOf(profEditing.dice).id;
+        let url = null;
+        if (window.Dice3D && window.Dice3D.portrait) {
+          try {
+            url = window.Dice3D.portrait({ zoom: 0.82, dice: [
+              { v: 6, x: -0.62, z: 0.12, ry: 0.5, tx: 0.42, tz: 0.18, design: id },
+              { v: 1, x: 0.68, z: -0.18, ry: -0.6, tx: 0.3, tz: -0.4, design: id }
+            ] }, 300);
+          } catch (e) { url = null; }
+        }
+        hero.innerHTML = url ? '<img alt="" src="' + url + '">' : miniDie(id, 6) + miniDie(id, 1);
+        const av = profBody.querySelector('.pe-av');
+        if (av) av.textContent = profEditing.av;
+      }
+      function markRadio(btn) {
+        Array.prototype.forEach.call(btn.parentNode.children, function (b) {
+          const on = b === btn;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+      }
+      function saveEdit() {
+        const e = profEditing;
+        if (!e) return;
+        const name = cleanName(e.name);
+        if (!name) { showToast('이름을 입력하세요'); const i = $('peName'); if (i) i.focus(); return; }
+        reloadProfiles();
+        let q = e.id ? profById(e.id) : null;
+        if (!q && profStore.list.length >= PROF_MAX) { showToast('프로필은 ' + PROF_MAX + '개까지 만들 수 있어요'); return; }
+        if (!q) { q = cleanProf({ name: name, av: e.av, dice: e.dice }); profStore.list.push(q); }
+        else { q.name = name; q.av = e.av; q.dice = e.dice; }
+        saveProfiles();
+        sfxPick();
+        const cb = profAfterSave;
+        profAfterSave = null;
+        profEditing = null;
+        onProfilesChanged();
+        if (cb) { closeOv(profileOv); cb(q.id); return; }
+        renderProfiles();
+        showToast('저장했어요');
+      }
+      function deleteProfile(id) {
+        reloadProfiles();
+        if (profStore.list.length <= 1) return;
+        profStore.list = profStore.list.filter(function (q) { return q.id !== id; });
+        if (!profById(profStore.active)) profStore.active = profStore.list[0].id;
+        // refill seat 1 only if it held the deleted profile, and never with someone already seated
+        const hadSeat0 = rowProf[0] === id;
+        rowProf = rowProf.map(function (r) { return r === id ? null : r; });
+        if (hadSeat0 && rowProf.indexOf(profStore.active) === -1) rowProf[0] = profStore.active;
+        saveProfiles();
+        profEditing = null;
+        sfxTick();
+        onProfilesChanged();
+        renderProfiles();
+      }
+      function onProfilesChanged() {
+        renderTitleProfile();
+        if (!modeOv.hidden) { renderNames(); renderOnlineProfile(); }
+        // a local match in progress picks up the new name / avatar / dice right away
+        if (gameActive && !isOnlineMatch) {
+          players.forEach(function (p) {
+            const q = p.profId ? profById(p.profId) : null;
+            if (q) { p.name = q.name; p.av = q.av; p.dice = q.dice; }
+          });
+          renderAll();
+        } else renderDice();
+      }
+      function recordProfileStats(ranked) {
+        if (statsMatch === matchId) return;
+        statsMatch = matchId;
+        const top = ranked.length ? ranked[0].total : 0;
+        const soleTop = ranked.filter(function (r) { return r.total === top; }).length === 1;
+        let touched = false;
+        reloadProfiles();
+        players.forEach(function (p) {
+          let q = null;
+          if (isOnlineMatch) { if (p.peerId && p.peerId === myPeerId) q = profById(onlineProfId); }
+          else if (!p.isAI && p.profId) q = profById(p.profId);
+          if (!q) return;
+          const total = getPlayerTotals(p).total;
+          const st = q.stats;
+          st.games += 1;
+          st.total += total;
+          if (total > st.best) st.best = total;
+          if (players.length > 1 && soleTop && total === top) st.wins += 1;
+          if ((p.scores.yacht || 0) >= 50) st.yachts += 1;
+          touched = true;
+        });
+        if (touched) { saveProfiles(); renderTitleProfile(); }
+      }
+      profBody.addEventListener('click', function (ev) {
+        const t = ev.target.closest('button');
+        if (!t) return;
+        if (t.dataset.av != null && profEditing) { profEditing.av = AVATARS[+t.dataset.av] || profEditing.av; markRadio(t); paintHero(); sfxTick(); return; }
+        if (t.dataset.dz && profEditing) { profEditing.dice = designOf(t.dataset.dz).id; markRadio(t); paintHero(); sfxHold(true); return; }
+        const act = t.dataset.act;
+        if (act === 'edit') { sfxTick(); startEdit(t.dataset.id); }
+        else if (act === 'use') { sfxTick(); if (profById(t.dataset.id)) setActiveProfile(t.dataset.id); renderProfiles(); }
+        else if (act === 'new') { if (profStore.list.length < PROF_MAX) { sfxTick(); startEdit(null); } }
+        else if (act === 'save') saveEdit();
+        else if (act === 'del' && profEditing) {
+          if (!profDelArm) { profDelArm = true; t.textContent = '한 번 더 누르면 삭제'; t.classList.add('is-armed'); sfxTick(); return; }
+          deleteProfile(profEditing.id);
+        }
+      });
+      $('profBack').addEventListener('click', function () {
+        sfxTick();
+        if (profAfterSave) { profAfterSave = null; profEditing = null; closeOv(profileOv); return; }
+        profEditing = null;
+        renderProfiles();
+      });
+      $('tProfile').addEventListener('click', function () { ensureAudio(); sfxTick(); openProfiles(); });
+      $('onlineAv').addEventListener('click', function (e) { e.stopPropagation(); openPick('online', $('onlineNameRow')); });
+      onlineNickname.addEventListener('change', syncOnlineName);
+      // #6: upgrade placeholders in place, so a focused seat input, typed text or an open picker survive 3D finishing late
+      window.addEventListener('dice3d-ready', function () {
+        fillThumbs($('tProfile'));
+        if (!modeOv.hidden) fillThumbs(namesEl);
+        if (!profileOv.hidden) { if (profEditing) paintHero(); fillThumbs(profBody); }
+      });
+      window.addEventListener('storage', function (e) {
+        if (e.key !== PROF_KEY || !reloadProfiles()) return;
+        rowProf = rowProf.map(function (r, k) { return r && profById(r) && rowProf.indexOf(r) === k ? r : null; });
+        if (profEditing && profEditing.id && !profById(profEditing.id)) profEditing = null;
+        if (!profileOv.hidden && !profEditing) renderProfiles();
+        renderTitleProfile();
+        if (!modeOv.hidden) {
+          const focused = document.activeElement;
+          if (!(focused && namesEl.contains(focused))) renderNames();
+          renderOnlineProfile();
+        }
+      });
+      renderTitleProfile();
       function paintModes() {
         document.querySelectorAll('.mode-card').forEach(function (c) { c.classList.toggle('is-on', c.dataset.mode === selectedMode); });
         $('localSetup').hidden = selectedMode === 'online';
@@ -5388,6 +6037,7 @@
         $('countRow').hidden = selectedMode !== 'local';
         $('netSeg').hidden = !FIREBASE_CONFIG;
         $('aiSeg').hidden = selectedMode !== 'ai';
+        renderOnlineProfile();
         document.querySelectorAll('#ruleSeg .seg-btn').forEach(function (b) { b.classList.toggle('is-on', b.dataset.rule === ruleMode); });
         document.querySelectorAll('#netSeg .seg-btn').forEach(function (b) { b.classList.toggle('is-on', b.dataset.net === netMode); });
         document.querySelectorAll('#aiSeg .seg-btn').forEach(function (b) { b.classList.toggle('is-on', b.dataset.lv === aiLevel); });
@@ -5516,7 +6166,9 @@
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (e.key === 'Escape') {
           if (!chatOv.hidden) { closeChat(); return; }
+          if (!profileOv.hidden) { profAfterSave = null; profEditing = null; closeOv(profileOv); return; }
           if (!rulesOv.hidden) { closeOv(rulesOv); return; }
+          if (pickEl) { closePick(); return; }
           [sheetOv, menuOv].forEach(closeOv);
           if (!modeOv.hidden) closeMode();
           return;
@@ -5718,6 +6370,203 @@
       }
       const faceTex = {};
       for (let v = 1; v <= 6; v++) faceTex[v] = faceTexture(v);
+
+      // ---------- dice designs (the looks players pick in their profile; specs live in window.DICE_DESIGNS) ----------
+      const DESIGNS = {};
+      (window.DICE_DESIGNS || []).forEach((dz) => { DESIGNS[dz.id] = dz; });
+      function hashStr(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+      function seeded(seed) {
+        let a = seed >>> 0;
+        return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+      }
+      function pipPath(g, shape, cx, cy, r) {
+        g.beginPath();
+        if (shape === 'square') { const q = r * 0.9; g.rect(cx - q, cy - q, q * 2, q * 2); }
+        else if (shape === 'star') {
+          for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.52 : r * 1.3; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+          g.closePath();
+        } else if (shape === 'heart') {
+          const q = r * 1.12;
+          g.moveTo(cx, cy + q * 0.95);
+          g.bezierCurveTo(cx - q * 1.55, cy + q * 0.02, cx - q * 0.95, cy - q * 1.2, cx, cy - q * 0.42);
+          g.bezierCurveTo(cx + q * 0.95, cy - q * 1.2, cx + q * 1.55, cy + q * 0.02, cx, cy + q * 0.95);
+          g.closePath();
+        } else g.arc(cx, cy, r, 0, Math.PI * 2);
+      }
+      function drawPattern(g, dz, S, rnd) {
+        const pt = dz.pattern;
+        if (!pt) return;
+        g.save();
+        if (pt === 'veins') {
+          for (let k = 0; k < 5; k++) {
+            const x = rnd() * S, y = rnd() * S, r = S * (0.25 + rnd() * 0.35);
+            const rg = g.createRadialGradient(x, y, 0, x, y, r);
+            rg.addColorStop(0, dz.cloud || 'rgba(255,255,255,0.2)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+            g.fillStyle = rg; g.fillRect(0, 0, S, S);
+          }
+          g.strokeStyle = dz.vein; g.lineCap = 'round';
+          for (let k = 0; k < 4; k++) {
+            let x = rnd() * S, y = -12;
+            g.lineWidth = 0.8 + rnd() * 2.6;
+            g.globalAlpha = 0.45 + rnd() * 0.55;
+            g.beginPath(); g.moveTo(x, y);
+            while (y < S + 12) { const nx = x + (rnd() - 0.5) * 70, ny = y + 18 + rnd() * 34; g.quadraticCurveTo(x + (rnd() - 0.5) * 50, (y + ny) / 2, nx, ny); x = nx; y = ny; }
+            g.stroke();
+          }
+        } else if (pt === 'wood') {
+          for (let k = 0; k < 28; k++) {
+            const y0 = (k / 28) * S + rnd() * 6, amp = 3 + rnd() * 7, ph = rnd() * 6;
+            g.strokeStyle = 'rgba(78,38,10,' + (0.1 + rnd() * 0.24).toFixed(2) + ')';
+            g.lineWidth = 0.8 + rnd() * 2.6;
+            g.beginPath();
+            for (let x = -8; x <= S + 8; x += 8) { const y = y0 + Math.sin(x * 0.017 + ph) * amp + Math.sin(x * 0.07 + ph * 2) * 1.2; if (x === -8) g.moveTo(x, y); else g.lineTo(x, y); }
+            g.stroke();
+          }
+          const kx = S * (0.2 + rnd() * 0.6), ky = S * (0.2 + rnd() * 0.6);
+          for (let r = 4; r < 26; r += 4) { g.strokeStyle = 'rgba(70,32,8,0.22)'; g.lineWidth = 1.4; g.beginPath(); g.ellipse(kx, ky, r * 1.8, r * 0.7, 0, 0, Math.PI * 2); g.stroke(); }
+        } else if (pt === 'grid') {
+          g.strokeStyle = dz.grid; g.lineWidth = 1.5;
+          for (let k = 1; k < 8; k++) { const q = (k / 8) * S; g.beginPath(); g.moveTo(q, 0); g.lineTo(q, S); g.moveTo(0, q); g.lineTo(S, q); g.stroke(); }
+          const vg = g.createRadialGradient(S / 2, S / 2, S * 0.2, S / 2, S / 2, S * 0.75);
+          vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+          g.fillStyle = vg; g.fillRect(0, 0, S, S);
+        } else if (pt === 'stars') {
+          [['rgba(255,80,200,0.32)', 0.3], ['rgba(80,200,255,0.26)', 0.7], ['rgba(170,120,255,0.3)', 0.5]].forEach((n) => {
+            const x = rnd() * S, y = rnd() * S, r = S * (0.3 + rnd() * 0.3);
+            const rg = g.createRadialGradient(x, y, 0, x, y, r);
+            rg.addColorStop(0, n[0]); rg.addColorStop(1, 'rgba(0,0,0,0)');
+            g.fillStyle = rg; g.fillRect(0, 0, S, S);
+          });
+          for (let k = 0; k < 90; k++) { g.fillStyle = 'rgba(255,255,255,' + (0.25 + rnd() * 0.7).toFixed(2) + ')'; g.beginPath(); g.arc(rnd() * S, rnd() * S, 0.5 + rnd() * 1.3, 0, Math.PI * 2); g.fill(); }
+        } else if (pt === 'petals') {
+          for (let k = 0; k < 7; k++) {
+            g.save(); g.translate(rnd() * S, rnd() * S); g.rotate(rnd() * Math.PI);
+            g.fillStyle = 'rgba(255,255,255,' + (0.3 + rnd() * 0.3).toFixed(2) + ')';
+            g.beginPath(); g.ellipse(0, 0, 13 + rnd() * 8, 6 + rnd() * 3, 0, 0, Math.PI * 2); g.fill();
+            g.restore();
+          }
+        } else if (pt === 'frost') {
+          g.strokeStyle = 'rgba(255,255,255,0.55)'; g.lineCap = 'round';
+          for (let k = 0; k < 6; k++) {
+            const x = rnd() * S, y = rnd() * S, len = 18 + rnd() * 26;
+            for (let a = 0; a < 6; a++) {
+              const ang = a * Math.PI / 3 + rnd() * 0.2, ex = x + Math.cos(ang) * len, ey = y + Math.sin(ang) * len;
+              g.lineWidth = 1.3; g.beginPath(); g.moveTo(x, y); g.lineTo(ex, ey); g.stroke();
+              const mx = x + Math.cos(ang) * len * 0.55, my = y + Math.sin(ang) * len * 0.55;
+              g.lineWidth = 0.9;
+              [-0.6, 0.6].forEach((o) => { g.beginPath(); g.moveTo(mx, my); g.lineTo(mx + Math.cos(ang + o) * len * 0.3, my + Math.sin(ang + o) * len * 0.3); g.stroke(); });
+            }
+          }
+        } else if (pt === 'brushed') {
+          for (let y = 0; y < S; y += 1) { g.fillStyle = (rnd() < 0.5 ? 'rgba(255,255,255,' : 'rgba(0,0,0,') + (0.02 + rnd() * 0.07).toFixed(3) + ')'; g.fillRect(0, y, S, 1); }
+          const lg = g.createLinearGradient(0, 0, S, S * 0.6);
+          lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.45, 'rgba(255,255,255,0.28)'); lg.addColorStop(0.6, 'rgba(255,255,255,0)');
+          g.fillStyle = lg; g.fillRect(0, 0, S, S);
+        } else if (pt === 'pixel') {
+          const B = 16;
+          g.fillStyle = 'rgba(150,110,30,0.35)';
+          g.fillRect(0, 0, S, B); g.fillRect(0, S - B, S, B); g.fillRect(0, 0, B, S); g.fillRect(S - B, 0, B, S);
+          g.fillStyle = 'rgba(255,255,255,0.45)';
+          g.fillRect(B, B, S - 2 * B, 6); g.fillRect(B, B, 6, S - 2 * B);
+          g.fillStyle = 'rgba(0,0,0,0.08)';
+          for (let y = B; y < S - B; y += B) for (let x = B; x < S - B; x += B) if (((x + y) / B) % 2) g.fillRect(x, y, B, B);
+        }
+        g.restore();
+      }
+      function drawPips(g, dz, v, S, glowPass) {
+        const pos = [0.26, 0.5, 0.74];
+        const shape = dz.shape || 'round';
+        const st = v === 1 ? (dz.one || dz.pip) : dz.pip;
+        PIPS[v].forEach((cell) => {
+          const cx = pos[cell % 3] * S, cy = pos[Math.floor(cell / 3)] * S;
+          const r = v === 1 ? 36 * (dz.oneScale || 1) : 22;
+          g.save();
+          if (glowPass) {
+            g.shadowColor = st[1]; g.shadowBlur = r * 0.9;
+            g.fillStyle = st[0]; pipPath(g, shape, cx, cy, r * 0.92); g.fill();
+            g.restore();
+            return;
+          }
+          if (dz.pipShadow) { g.shadowColor = 'rgba(0,0,0,0.3)'; g.shadowBlur = 6; g.shadowOffsetY = 3; }
+          if (dz.flat) g.fillStyle = st[1];
+          else {
+            const rg = g.createRadialGradient(cx - r * 0.25, cy - r * 0.3, r * 0.1, cx, cy, r * 1.2);
+            rg.addColorStop(0, st[0]); rg.addColorStop(0.6, st[1]); rg.addColorStop(1, st[2]);
+            g.fillStyle = rg;
+          }
+          pipPath(g, shape, cx, cy, r); g.fill();
+          g.restore();
+          if (dz.rim && shape === 'round') { g.strokeStyle = dz.rim; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, r + 1.5, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke(); }
+        });
+      }
+      function designCanvas(dz, v) {
+        const S = 256, c = makeCanvas(S, S), g = c.getContext('2d');
+        const rnd = seeded(hashStr(dz.id) + v * 7919);
+        const body = (dz.faces && dz.faces[v]) || dz.body;
+        const grd = g.createLinearGradient(0, 0, S, S);
+        grd.addColorStop(0, body[0]); grd.addColorStop(1, body[1]);
+        g.fillStyle = grd; g.fillRect(0, 0, S, S);
+        if (dz.core) {
+          const rg = g.createRadialGradient(S * 0.42, S * 0.38, 0, S / 2, S / 2, S * 0.72);
+          rg.addColorStop(0, dz.core); rg.addColorStop(1, 'rgba(0,0,0,0)');
+          g.fillStyle = rg; g.fillRect(0, 0, S, S);
+        }
+        drawPattern(g, dz, S, rnd);
+        drawPips(g, dz, v, S, false);
+        return c;
+      }
+      const dTex = {};
+      function designTex(id) {
+        if (dTex[id]) return dTex[id];
+        const dz = DESIGNS[id];
+        const t = { dz, map: {}, emi: dz.glow ? {} : null };
+        for (let v = 1; v <= 6; v++) {
+          t.map[v] = canvasTex(designCanvas(dz, v));
+          if (t.emi) {
+            const c = makeCanvas(256, 256), g = c.getContext('2d');
+            g.fillStyle = '#000'; g.fillRect(0, 0, 256, 256);
+            drawPips(g, dz, v, 256, true);
+            t.emi[v] = canvasTex(c);
+          }
+        }
+        dTex[id] = t;
+        return t;
+      }
+      // a small studio light box, pre-filtered once per renderer, so glossy / metal dice have something to reflect
+      const envCache = new Map();
+      function envFor(r) {
+        if (envCache.has(r)) return envCache.get(r);
+        let tex = null;
+        try {
+          const pm = new THREE.PMREMGenerator(r);
+          const es = new THREE.Scene();
+          es.add(new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), new THREE.MeshBasicMaterial({ color: 0x23272e, side: THREE.BackSide })));
+          const panel = (w, h, x, y, z, hex, k) => {
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), side: THREE.DoubleSide }));
+            m.position.set(x, y, z); m.lookAt(0, 0, 0); es.add(m);
+          };
+          panel(7, 3, 0, 5.8, 0.5, 0xfff3de, 4);
+          panel(3, 4, -5.8, 1.5, 1.5, 0xffc98a, 2);
+          panel(3, 4, 5.8, 1.2, -1.5, 0x9fe6ff, 1.6);
+          panel(10, 4, 0, -5.8, 0, 0x0e4f3d, 1);
+          tex = pm.fromScene(es, 0.035).texture;
+          pm.dispose();
+        } catch (e) { tex = null; }
+        envCache.set(r, tex);
+        return tex;
+      }
+      function designMaterial(id, v, r) {
+        const t = designTex(id), dz = t.dz, M = dz.mat || {};
+        const env = M.env ? envFor(r) : null;
+        const m = new THREE.MeshStandardMaterial({
+          map: t.map[v],
+          roughness: M.rough != null ? M.rough : 0.3,
+          metalness: env ? (M.metal || 0) : Math.min(M.metal || 0, 0.25) // bare metal looks black without reflections
+        });
+        if (env) { m.envMap = env; m.envMapIntensity = M.env; }
+        if (t.emi) { m.emissiveMap = t.emi[v]; m.userData.emiMap = t.emi[v]; m.emissive.setRGB(dz.glow, dz.glow, dz.glow); }
+        return m;
+      }
 
       // BoxGeometry material order: +x, -x, +y, -y, +z, -z (opposite faces sum to 7)
       const FACE_V = [3, 4, 1, 6, 2, 5];
@@ -6129,13 +6978,21 @@
           const SK = SKINS[d.skin];
           _col.copy(SK ? SK.color : WHITE).lerp(GOLD, d.heldVis * 0.7).multiplyScalar(1 - d.dimVis * 0.38);
           if (SK && SK.emi) { _emi.copy(SK.emi); if (d.skin === 'curse') _emi.multiplyScalar(0.55 + 0.45 * Math.sin(clock * 3.5)); }
-          else _emi.setRGB(0, 0, 0);
+          else { const gl = (d.glow || 0) * (1 - d.dimVis * 0.35); _emi.setRGB(gl, gl, gl); }
           _emi.lerp(GOLD, d.heldVis * 0.1);
           if (d.hlVis > 0.01) {
             const pulse = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis;
             _emi.r += d.hlColor.r * pulse; _emi.g += d.hlColor.g * pulse; _emi.b += d.hlColor.b * pulse;
           }
-          for (let m = 0; m < 6; m++) { d.mats[m].color.copy(_col); d.mats[m].emissive.copy(_emi); }
+          const am = d.active || d.mats;
+          // glow designs: their emissive map only lets the pips through, which would hide the highlight / aura tint
+          const unmask = d.glow > 0 && d.hlVis > 0.05;
+          if (unmask) { const pl = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis; _emi.copy(d.hlColor).multiplyScalar(pl).lerp(GOLD, d.heldVis * 0.1); }
+          for (let m = 0; m < 6; m++) {
+            const mt = am[m], em = mt.userData.emiMap;
+            if (em) { const want = unmask ? null : em; if (mt.emissiveMap !== want) { mt.emissiveMap = want; mt.needsUpdate = true; } }
+            mt.color.copy(_col); mt.emissive.copy(_emi);
+          }
           d.ring.position.set(d.group.position.x, 0.012, d.group.position.z);
           d.ring.material.color.copy(GOLD).lerp(d.hlColor, d.hlVis * (1 - d.heldVis * 0.5));
           d.ring.material.opacity = Math.max(d.heldVis * 0.75, d.hlVis * (0.5 + 0.2 * Math.sin(clock * 8)));
@@ -6257,7 +7114,47 @@
           d.skin = sk;
           const S = SKINS[sk];
           d.mats.forEach((m) => { m.metalness = S ? S.metal : 0.02; m.roughness = S ? S.rough : 0.28; });
+          applyMats(d);
         });
+      }
+
+      // the table dice wear the current player's design; augment-skinned dice keep the tinted ivory look
+      let curDesign = 'classic';
+      const designMats = {};
+      function matsFor(d) {
+        if (d.skin || curDesign === 'classic' || !DESIGNS[curDesign]) return d.mats;
+        if (!designMats[curDesign]) designMats[curDesign] = D.map(() => FACE_V.map((v) => designMaterial(curDesign, v, renderer)));
+        return designMats[curDesign][d.i];
+      }
+      function applyMats(d) {
+        const arr = matsFor(d);
+        if (d.mesh.material !== arr) d.mesh.material = arr;
+        d.active = arr;
+        const dz = arr === d.mats ? null : DESIGNS[curDesign];
+        d.glow = dz && dz.glow ? dz.glow : 0;
+      }
+      function refreshEnv(r, sets) {
+        const old = envCache.get(r);
+        envCache.delete(r);
+        if (old) { try { old.dispose(); } catch (e) {} }
+        const env = envFor(r);
+        sets.forEach((pair) => {
+          const M = (DESIGNS[pair[0]] && DESIGNS[pair[0]].mat) || {};
+          if (!M.env) return;
+          pair[1].forEach((m) => { m.envMap = env; if (!env) m.metalness = Math.min(m.metalness, 0.25); m.needsUpdate = true; });
+        });
+      }
+      canvas.addEventListener('webglcontextrestored', () => {
+        const sets = [];
+        Object.keys(designMats).forEach((id) => designMats[id].forEach((arr) => sets.push([id, arr])));
+        refreshEnv(renderer, sets);
+      });
+      function setDesign(id) {
+        if (!DESIGNS[id]) id = 'classic';
+        if (id === curDesign) return;
+        curDesign = id;
+        D.forEach(applyMats);
+        if (!anim && !gather) D.forEach((d, k) => { d.kickT0 = clock + k * 0.05; spawnRing(d.group.position.x, d.group.position.z, 9, 0xfff1c9); });
       }
 
       // augment card art: a small offscreen scene with the same dice, rendered once per spec
@@ -6297,12 +7194,17 @@
             const holder = new THREE.Group();
             sc.add(holder);
             pr = { r, cv, sc, holder, cam: new THREE.PerspectiveCamera(30, 1, 0.1, 60), mats: {} };
+            cv.addEventListener('webglcontextrestored', () => {
+              refreshEnv(r, Object.keys(pr.mats).filter((k) => k.indexOf('dz:') === 0).map((k) => [k.slice(3), pr.mats[k]]));
+            });
           }
           pr.r.setPixelRatio(1);
           pr.r.setSize(size, size, false);
           while (pr.holder.children.length) pr.holder.remove(pr.holder.children[0]);
           (spec.dice || []).forEach((dd) => {
-            const skin = dd.skin || 'none';
+            const dzKey = dd.design && dd.design !== 'classic' && DESIGNS[dd.design] ? 'dz:' + dd.design : null;
+            const skin = dzKey || dd.skin || 'none';
+            if (dzKey && !pr.mats[skin]) pr.mats[skin] = FACE_V.map((v) => designMaterial(dd.design, v, pr.r));
             if (!pr.mats[skin]) {
               const S = SKINS[dd.skin];
               pr.mats[skin] = FACE_V.map((v) => new THREE.MeshStandardMaterial({
@@ -6334,6 +7236,7 @@
       window.Dice3D = {
         ok: true,
         setSkins,
+        setDesign,
         portrait,
         knock,
         ring,
