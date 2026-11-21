@@ -276,6 +276,41 @@
   @keyframes holdPop { 0% { transform: translateX(-50%) scale(0.3); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 
+  /* power mode */
+  .powers { position: absolute; left: 50%; bottom: 12px; z-index: 5; transform: translateX(-50%); display: flex; gap: 8px; }
+  .pw-btn {
+    display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px 0 9px; border-radius: 999px; white-space: nowrap;
+    color: var(--brass-hi); background: rgba(6, 22, 17, 0.78);
+    box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35);
+    font: 400 14px var(--f-display); transition: transform 0.1s, background 0.15s, opacity 0.2s;
+  }
+  .pw-btn svg { width: 18px; height: 18px; flex: none; }
+  .pw-btn:active:not(:disabled) { transform: scale(0.94); }
+  .pw-btn:disabled { opacity: 0.32; }
+  .pw-n { display: flex; gap: 3px; }
+  .pw-n i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 0 18px rgba(255, 215, 122, 0.7); }
+  .slot-btn.target, .die2d.target { cursor: pointer; }
+  .slot-btn.target::after, .die2d.target::after {
+    content: ""; position: absolute; inset: 14% 6% 18%; border-radius: 16px; pointer-events: none;
+    box-shadow: 0 0 0 2px var(--brass-hi), 0 0 18px rgba(255, 215, 122, 0.55);
+    animation: pwPulse 0.9s ease-in-out infinite alternate;
+  }
+  .die2d.target { position: relative; }
+  .die2d.target::after { inset: -4px; }
+  @keyframes pwPulse { from { opacity: 0.45; } to { opacity: 1; } }
+  @media (orientation: landscape) and (max-height: 560px) { .powers { bottom: 8px; } .pw-btn { height: 32px; font-size: 12px; } }
+  .pw-row {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    min-height: 46px; padding: 0 14px; margin-bottom: 12px; border-radius: 14px;
+    background: #0d0e11; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+    font: 400 15px var(--f-display); color: var(--text);
+  }
+  .switch { position: relative; width: 46px; height: 26px; border-radius: 999px; background: #2b2e35; transition: background 0.2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #8f8a80; transition: transform 0.2s, background 0.2s; }
+  .pw-row[aria-checked="true"] .switch { background: var(--brass); }
+  .pw-row[aria-checked="true"] .switch::after { transform: translateX(20px); background: #fff7e0; }
+
   .combo-chip {
     position: absolute; top: 48px; left: 50%; z-index: 5; pointer-events: none;
     transform: translateX(-50%);
@@ -718,6 +753,20 @@
         <div id="turnCap" class="cap cap-l">나의 차례</div>
         <div id="roundCap" class="cap cap-r">ROUND 1/12</div>
         <div id="comboChip" class="combo-chip" hidden></div>
+        <div id="powers" class="powers" hidden>
+          <button type="button" class="pw-btn" data-pw="slam" aria-label="쾅: 고정 안 한 주사위를 공짜로 다시 굴림">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l2.2 5.6L20 5l-2.6 5.4L23 12l-5.6 1.6L20 19l-5.8-2.6L12 22l-2.2-5.6L4 19l2.6-5.4L1 12l5.6-1.6L4 5l5.8 2.6z"/></svg>
+            <span>쾅</span><span class="pw-n"></span>
+          </button>
+          <button type="button" class="pw-btn" data-pw="reroll" aria-label="다시: 주사위 하나를 골라 다시 굴림">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="12" rx="3"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><path d="M14 3.5a7 7 0 0 1 7 7"/><path d="M21 6v4.5h-4.5"/></svg>
+            <span>다시</span><span class="pw-n"></span>
+          </button>
+          <button type="button" class="pw-btn" data-pw="flip" aria-label="뒤집기: 주사위 하나를 반대 면으로 뒤집음">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 14-3l2 2"/><path d="M20 3v5h-5"/><path d="M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M4 21v-5h5"/></svg>
+            <span>뒤집기</span><span class="pw-n"></span>
+          </button>
+        </div>
         <div id="turnSweep" class="turn-sweep" hidden><span></span></div>
         <div id="loader" class="loader">
           <div class="loader-die"><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
@@ -792,6 +841,8 @@
         <button class="mode-card" type="button" data-mode="local"><span class="m-ico">2-4</span><span class="m-name">같이 하기</span><span class="m-desc">한 기기로 돌려가며</span></button>
         <button class="mode-card" type="button" data-mode="online"><span class="m-ico">P2P</span><span class="m-name">온라인</span><span class="m-desc">방 코드로 친구와</span></button>
       </div>
+
+      <button id="pwToggle" class="pw-row" type="button" role="switch" aria-checked="false"><span>초능력 모드</span><span class="switch"></span></button>
 
       <div id="localSetup">
         <div id="aiSeg" class="seg seg4">
@@ -1443,7 +1494,7 @@
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '');
+            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (canClick && armedPower ? ' target' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (held[i]) btn.innerHTML = '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
@@ -1461,7 +1512,7 @@
             const v = shown[i];
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'die2d' + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '');
+            btn.className = 'die2d' + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             let h = '';
@@ -1593,6 +1644,7 @@
         renderTiles();
         renderAction();
         renderCaps();
+        renderPowers();
         renderSheet();
         updateChatUi();
       }
@@ -1601,7 +1653,8 @@
       function broadcastState() {
         if (!isOnlineMatch || onlineRole !== 'host') return;
         const payload = JSON.parse(JSON.stringify({
-          players: players.map(function (p) { return { name: p.name, peerId: p.peerId, scores: p.scores }; }),
+          players: players.map(function (p) { return { name: p.name, peerId: p.peerId, scores: p.scores, pw: p.pw || null }; }),
+          powers: matchPowers,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: dice, held: held, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
@@ -1622,6 +1675,9 @@
 
       function applyFx(kind, extra) {
         if (kind === 'roll') {
+          playRoll(extra.values, extra.held, function () { renderDice(); postRollFx(extra.values); });
+        } else if (kind === 'power') {
+          powerFx(extra);
           playRoll(extra.values, extra.held, function () { renderDice(); postRollFx(extra.values); });
         } else if (kind === 'hold') {
           sfxHold(extra.held);
@@ -1655,6 +1711,13 @@
       function handleHoldInput(idx) {
         ensureAudio();
         if (!isMyTurn() || !hasRolledThisTurn || isRolling || isScoring) return;
+        if (armedPower) {
+          const k = armedPower;
+          armedPower = null;
+          if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: k, idx: idx }); renderDice(); renderPowers(); return; }
+          usePower(k, idx);
+          return;
+        }
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'hold', idx: idx }); return; }
         toggleHold(idx);
       }
@@ -1705,16 +1768,23 @@
         hasRolledThisTurn = true;
         rollsLeft -= 1;
         selectedTile = null;
-        if (hlIndices) setHighlight(null);
-        const myMatch = matchId;
         const heldSnap = held.slice();
         const roller = players[currentPlayerIdx];
         const luck = roller && roller.isAI && AI_LEVELS[roller.level] && AI_LEVELS[roller.level].luck;
         const next = luck
           ? YachtAI.luckyRoll(roller.scores, CAT_IDS, dice, heldSnap, rollsLeft, luck)
           : dice.map(function (v, i) { return heldSnap[i] ? v : 1 + Math.floor(Math.random() * 6); });
-
-        broadcastFx('roll', { values: next, held: heldSnap });
+        tossDice(next, heldSnap, null, onComplete);
+      }
+      // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
+      function tossDice(next, heldSnap, extra, onComplete) {
+        isRolling = true;
+        selectedTile = null;
+        armedPower = null;
+        if (hlIndices) setHighlight(null);
+        const myMatch = matchId;
+        if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra)); powerFx(extra); }
+        else broadcastFx('roll', { values: next, held: heldSnap });
         broadcastState();
         renderAll();
 
@@ -1744,6 +1814,97 @@
         if (calcCategoryScore('fourKind', values) && open('fourKind')) { showChip('4 OF A KIND', 'gold'); celebrate(contributingDice('fourKind', values)); sfxCombo(2); buzz(20); return; }
         if (calcCategoryScore('fullHouse', values) && open('fullHouse')) { showChip('FULL HOUSE'); celebrate(all); sfxCombo(1); return; }
         if (calcCategoryScore('smallStraight', values) && open('smallStraight')) { showChip('SMALL STRAIGHT'); celebrate(contributingDice('smallStraight', values)); sfxCombo(1); }
+      }
+
+      // ================= Power mode =================
+      // slam: re-roll every die that isn't held without spending a roll
+      // reroll: re-roll one chosen die · flip: turn one chosen die to its opposite face (7 - n)
+      const POWERS = {
+        slam: { label: '쾅!', charges: 1, target: false },
+        reroll: { label: 'REROLL', charges: 2, target: true },
+        flip: { label: 'FLIP', charges: 2, target: true }
+      };
+      const POWER_KEYS = ['slam', 'reroll', 'flip'];
+      let powerMode = false, matchPowers = false, armedPower = null;
+      try { powerMode = localStorage.getItem('yachtDeluxe.powers') === '1'; } catch (e) {}
+      function freshPowers() { const o = {}; POWER_KEYS.forEach(function (k) { o[k] = POWERS[k].charges; }); return o; }
+      function canUsePower(kind) {
+        const cur = players[currentPlayerIdx];
+        if (!matchPowers || !POWERS[kind] || !gameActive || !cur || !cur.pw || !(cur.pw[kind] > 0)) return false;
+        if (!hasRolledThisTurn || isRolling || isScoring) return false;
+        if (kind === 'slam' && held.every(Boolean)) return false;
+        return true;
+      }
+      // authoritative (local / host); returns false when the power can't be used
+      function usePower(kind, idx, onComplete) {
+        if (!canUsePower(kind)) return false;
+        if (POWERS[kind].target && !(idx >= 0 && idx < 5)) return false;
+        const cur = players[currentPlayerIdx];
+        cur.pw[kind] -= 1;
+        const free = [0, 1, 2, 3, 4].map(function (i) { return kind === 'slam' ? !held[i] : i === idx; });
+        const next = dice.map(function (v, i) {
+          if (!free[i]) return v;
+          return kind === 'flip' ? 7 - v : 1 + Math.floor(Math.random() * 6);
+        });
+        tossDice(next, free.map(function (f) { return !f; }), { power: kind, pIdx: currentPlayerIdx }, onComplete);
+        return true;
+      }
+      function sfxSlam() {
+        ensureAudio();
+        tone(90, 0.32, 'sine', 0.4, 38);
+        noise(260, 0.8, 0.22, 0.5, 'lowpass');
+        noise(1400, 1.2, 0.12, 0.18, 'bandpass', 0.02);
+      }
+      function powerFx(extra) {
+        const k = extra.power;
+        if (k === 'slam') { sfxSlam(); bigShake(); flashScreen(); buzz([40, 30, 50]); showChip('쾅!', 'gold'); }
+        else { tone(k === 'flip' ? 520 : 760, 0.18, 'triangle', 0.08, k === 'flip' ? 1040 : 380); showChip(POWERS[k] ? POWERS[k].label : 'POWER'); buzz(15); }
+      }
+      function renderPowers() {
+        const bar = $('powers');
+        const cur = players[currentPlayerIdx];
+        bar.hidden = !(matchPowers && gameActive && cur && cur.pw);
+        if (bar.hidden) return;
+        const mine = isMyTurn();
+        if (!mine || (armedPower && !canUsePower(armedPower))) armedPower = null;
+        bar.querySelectorAll('.pw-btn').forEach(function (b) {
+          const k = b.dataset.pw, n = cur.pw[k] || 0;
+          b.disabled = !(mine && canUsePower(k));
+          b.classList.toggle('is-arm', armedPower === k);
+          const dots = b.querySelector('.pw-n');
+          if (dots.childElementCount !== n) dots.innerHTML = new Array(n + 1).join('<i></i>');
+        });
+      }
+      function handlePowerInput(kind) {
+        ensureAudio();
+        if (!isMyTurn() || !canUsePower(kind)) return;
+        if (POWERS[kind].target) {
+          armedPower = armedPower === kind ? null : kind;
+          sfxTick();
+          renderDice(); renderPowers();
+          return;
+        }
+        armedPower = null;
+        if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: kind }); return; }
+        usePower(kind);
+      }
+      // AI: use a power when it beats carrying on by more than saving it is worth
+      // (simulated: hard bot ~191 -> ~226 with powers)
+      const PW_COST = { slam: 15, reroll: 8, flip: 6 };
+      function aiPowerPlan() {
+        const cur = players[currentPlayerIdx];
+        if (!matchPowers || !cur || !cur.pw) return null;
+        const o = YachtAI.powerOptions(cur.scores, CAT_IDS, dice, rollsLeft, held);
+        const scale = Math.max(0, 12 - round) / 11;
+        let best = null, gain = 0.3;
+        POWER_KEYS.forEach(function (k) {
+          if (!(cur.pw[k] > 0)) return;
+          if (k === 'slam' && o.slam.hold.every(Boolean)) return;
+          const g = o[k].value - o.none - PW_COST[k] * scale;
+          if (g > gain) { gain = g; best = k; }
+        });
+        if (!best) return null;
+        return best === 'slam' ? { kind: 'slam', hold: o.slam.hold } : { kind: best, idx: o[best].idx };
       }
 
       // ================= Scoring a category =================
@@ -1790,6 +1951,7 @@
         rollsLeft = 3;
         prevRollsLeft = 3;
         hasRolledThisTurn = false;
+        armedPower = null;
         broadcastState();
         renderAll();
         fx('turn', { idx: currentPlayerIdx, name: players[currentPlayerIdx].name });
@@ -1995,11 +2157,47 @@
           for (let j = SS[d]; j < SS[d + 1]; j++) { keeps.push(SKa[j]); vals.push(K[SKa[j]] + (SKa[j] === whole ? 1e-6 : 0)); }
           const bestK = keeps[pick(vals, temp)];
           if (bestK === whole) return { category: ids[pickCategory(st, d, temp)] };
-          // map the kept multiset onto dice, preferring dice already held
-          const need = KC[bestK].slice(), hold = [false, false, false, false, false];
+          return { hold: mapHold(bestK, dice, held) };
+        }
+        // map a kept multiset onto dice positions, preferring dice already held
+        function mapHold(k, dice, held) {
+          const need = KC[k].slice(), hold = [false, false, false, false, false];
           const order = [0, 1, 2, 3, 4].sort(function (a, b) { return (held && held[b] ? 1 : 0) - (held && held[a] ? 1 : 0); });
           order.forEach(function (i) { if (need[dice[i]] > 0) { need[dice[i]]--; hold[i] = true; } });
-          return { hold: hold };
+          return hold;
+        }
+
+        // power mode: expected value of each power right now (none = carry on without one)
+        const K3 = new Float64Array(KC.length);
+        function powerOptions(scores, ids, dice, rollsLeft, held) {
+          const st = stateOf(scores, ids), d = diceIdx(dice);
+          finalValues(st.mask, st.upper);
+          keepValues(E0, K1); diceValues(K1, E1);
+          keepValues(E1, K2); diceValues(K2, E2);
+          keepValues(E2, K3);
+          const r = Math.max(0, Math.min(2, rollsLeft));
+          const E = [E0, E1, E2][r], Kn = [K1, K2, K3][r];
+          // slam = re-roll the free dice without spending a roll
+          const whole = KEEP_OF_DICE[d];
+          let bk = -1, bv = -1e9;
+          for (let j = SS[d]; j < SS[d + 1]; j++) { const k = SKa[j]; if (k !== whole && Kn[k] > bv) { bv = Kn[k]; bk = k; } }
+          let ri = 0, rv = -1e9, fi = 0, fv = -1e9;
+          const c = dice.slice();
+          for (let i = 0; i < 5; i++) {
+            let sum = 0;
+            for (let v = 1; v <= 6; v++) { c[i] = v; sum += E[diceIdx(c)] / 6; }
+            if (sum > rv) { rv = sum; ri = i; }
+            c[i] = 7 - dice[i];
+            const f = E[diceIdx(c)];
+            if (f > fv) { fv = f; fi = i; }
+            c[i] = dice[i];
+          }
+          return {
+            none: E[d],
+            slam: { value: bv, hold: mapHold(bk, dice, held) },
+            reroll: { value: rv, idx: ri },
+            flip: { value: fv, idx: fi }
+          };
         }
 
         // loaded dice for the cheater bot: draw the free dice `tries` times (fractional = chance of
@@ -2034,7 +2232,7 @@
           return true;
         }
 
-        return { decide: decide, luckyRoll: luckyRoll, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
+        return { decide: decide, luckyRoll: luckyRoll, powerOptions: powerOptions, load: load, solve: solve, stateValue: stateValue, ready: function () { return !!V; } };
       })();
       /* AI-CORE:END */
       const CAT_IDS = CATEGORIES.map(function (c) { return c.id; });
@@ -2064,8 +2262,22 @@
         const scoreSoon = function (cat, ms) { aiTimer = setTimeout(function () { if (alive()) commitScore(cat || chooseAICategory()); }, ms); };
         const step = function () {
           if (!alive()) return;
-          rollDice(function () {
+          rollDice(afterRoll);
+        };
+        const afterRoll = function (skipPower) {
             if (!alive()) return;
+            const pw = skipPower === true ? null : aiPowerPlan();
+            if (pw) {
+              aiTimer = setTimeout(function () {
+                if (!alive()) return;
+                const fire = function () { if (alive() && !usePower(pw.kind, pw.idx, function () { aiTimer = setTimeout(afterRoll, 650); })) afterRoll(true); };
+                if (pw.hold && pw.hold.some(function (h, i) { return h !== held[i]; })) {
+                  held = pw.hold; sfxHold(true); renderDice();
+                  aiTimer = setTimeout(fire, 550);
+                } else fire();
+              }, 700);
+              return;
+            }
             if (rollsLeft > 0) {
               const plan = YachtAI.decide(players[currentPlayerIdx].scores, CAT_IDS, dice, rollsLeft, held, aiTemp());
               if (plan.category) { scoreSoon(plan.category, 850); return; }
@@ -2077,7 +2289,6 @@
             } else {
               scoreSoon(null, 800);
             }
-          });
         };
         aiTimer = setTimeout(step, 900);
       }
@@ -2287,8 +2498,11 @@
         const wasActive = gameActive && isOnlineMatch;
         isOnlineMatch = true;
         players = toArr(d.players).map(function (p) {
-          return { name: String(p.name || '플레이어'), isAI: false, peerId: p.peerId, scores: Object.assign(freshScores(), p.scores || {}) };
+          const pw = p.pw ? {} : null;
+          if (pw) POWER_KEYS.forEach(function (k) { pw[k] = Number(p.pw[k]) || 0; });
+          return { name: String(p.name || '플레이어'), isAI: false, peerId: p.peerId, scores: Object.assign(freshScores(), p.scores || {}), pw: pw };
         });
+        matchPowers = !!d.powers;
         currentPlayerIdx = d.currentPlayerIdx || 0;
         round = d.round || 1;
         const dv = toArr(d.dice);
@@ -2339,6 +2553,7 @@
         if (data.action === 'roll') rollDice();
         else if (data.action === 'hold' && data.idx >= 0 && data.idx < 5) toggleHold(data.idx);
         else if (data.action === 'score' && CATEGORIES.some(function (c) { return c.id === data.catId; })) commitScore(data.catId);
+        else if (data.action === 'power' && POWERS[data.kind]) usePower(data.kind, Number(data.idx));
       }
 
       function sendAction(msg) {
@@ -2718,7 +2933,7 @@
         held = [false, false, false, false, false];
         rollsLeft = 3; prevRollsLeft = 3;
         hasRolledThisTurn = false; isRolling = false; isScoring = false; gameActive = true;
-        lastScored = null; selectedTile = null;
+        lastScored = null; selectedTile = null; armedPower = null;
         matchId++;
         resetTotalAnims();
         if (use3D()) window.Dice3D.finishNow();
@@ -2730,6 +2945,7 @@
         isOnlineMatch = false;
         matchMode = mode || selectedMode;
         players = [];
+        matchPowers = powerMode;
         if (namesOverride) {
           namesOverride.forEach(function (n) { players.push({ name: n, isAI: false, scores: freshScores() }); });
         } else {
@@ -2738,6 +2954,7 @@
           });
         }
         if (matchMode === 'ai') players.push({ name: AI_LEVELS[aiLevel].name, isAI: true, level: aiLevel, scores: freshScores() });
+        players.forEach(function (p) { p.pw = matchPowers ? freshPowers() : null; });
         resetTurnState();
         OVERLAYS.forEach(closeOv);
         renderAll();
@@ -2748,7 +2965,8 @@
         clearTimeout(aiTimer);
         isOnlineMatch = true;
         matchMode = 'online';
-        players = lobbyMembers.map(function (m) { return { name: m.name, isAI: false, peerId: m.peerId, scores: freshScores() }; });
+        matchPowers = powerMode;
+        players = lobbyMembers.map(function (m) { return { name: m.name, isAI: false, peerId: m.peerId, scores: freshScores(), pw: matchPowers ? freshPowers() : null }; });
         resetTurnState();
         OVERLAYS.forEach(closeOv);
         broadcastState();
@@ -2758,7 +2976,7 @@
       function rematch() {
         if (isOnlineMatch) {
           if (onlineRole === 'host') {
-            players.forEach(function (p) { p.scores = freshScores(); });
+            players.forEach(function (p) { p.scores = freshScores(); p.pw = matchPowers ? freshPowers() : null; });
             resetTurnState();
             OVERLAYS.forEach(closeOv);
             broadcastState();
@@ -2800,6 +3018,7 @@
         $('countRow').hidden = selectedMode !== 'local';
         $('netSeg').hidden = !FIREBASE_CONFIG;
         $('aiSeg').hidden = selectedMode !== 'ai';
+        $('pwToggle').setAttribute('aria-checked', powerMode ? 'true' : 'false');
         document.querySelectorAll('#netSeg .seg-btn').forEach(function (b) { b.classList.toggle('is-on', b.dataset.net === netMode); });
         document.querySelectorAll('#aiSeg .seg-btn').forEach(function (b) { b.classList.toggle('is-on', b.dataset.lv === aiLevel); });
         renderNames();
@@ -2825,6 +3044,14 @@
       $('startMatchBtn').addEventListener('click', function () { ensureAudio(); startNewMatch(null, selectedMode); });
       document.querySelectorAll('#netSeg .seg-btn').forEach(function (b) {
         b.addEventListener('click', function () { netMode = b.dataset.net; sfxTick(); paintModes(); });
+      });
+      $('pwToggle').addEventListener('click', function () {
+        powerMode = !powerMode;
+        try { localStorage.setItem('yachtDeluxe.powers', powerMode ? '1' : '0'); } catch (e) {}
+        sfxTick(); paintModes();
+      });
+      document.querySelectorAll('#powers .pw-btn').forEach(function (b) {
+        b.addEventListener('click', function () { handlePowerInput(b.dataset.pw); });
       });
       document.querySelectorAll('#aiSeg .seg-btn').forEach(function (b) {
         b.addEventListener('click', function () {
