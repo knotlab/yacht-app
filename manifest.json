@@ -1,16 +1,31 @@
 {
+  "id": "./",
   "name": "Yacht Dice Deluxe",
   "short_name": "야추",
-  "description": "3D 물리 주사위 야추 — AI 대전, 한 기기 2~4인, 온라인 P2P",
-  "start_url": "./index.html",
+  "description": "3D 물리 주사위 야추 — AI 대전, 한 기기 2~4인, 온라인 대전, 증강 모드",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#07080a",
   "theme_color": "#07080a",
   "lang": "ko",
+  "dir": "ltr",
+  "categories": ["games", "entertainment"],
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "shot-phone.jpg", "sizes": "390x844", "type": "image/jpeg", "form_factor": "narrow", "label": "증강 모드 대전" },
+    { "src": "shot-wide.jpg", "sizes": "1600x900", "type": "image/jpeg", "form_factor": "wide", "label": "3D 주사위 테이블" }
+  ],
+  "shortcuts": [
+    { "name": "AI 대전", "short_name": "AI 대전", "url": "./index.html?play=ai", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "같이 하기", "short_name": "같이 하기", "url": "./index.html?play=local", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "온라인 대전", "short_name": "온라인", "url": "./index.html?play=online", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

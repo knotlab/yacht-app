@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <meta name="apple-mobile-web-app-title" content="야추" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='%23fbf8ef'/%3E%3Ccircle cx='20' cy='20' r='6' fill='%23141519'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23e0314b'/%3E%3Ccircle cx='44' cy='44' r='6' fill='%23141519'/%3E%3C/svg%3E" />
@@ -1082,12 +1083,25 @@
   .tile.is-twofer { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #ff9f5a, 0 0 14px rgba(255, 159, 90, 0.55); }
   .aug-badge { position: relative; }
   .aug-badge .mirror-mark { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, #4fd1ff); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6); }
+  .pwa-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .pwa-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+    font: 700 13px var(--f-ui); color: var(--brass-hi); background: rgba(224, 169, 59, 0.1);
+    box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.5); animation: rowIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) 0.36s both;
+  }
+  .pwa-btn svg { width: 16px; height: 16px; }
+  .pwa-btn:active { transform: translateY(1px); }
+  .pwa-btn.is-new { color: #06281c; background: var(--mint); box-shadow: 0 0 16px rgba(63, 224, 169, 0.45); }
   /* ================= Profiles & dice designs ================= */
   .seat-coin.has-av { background: radial-gradient(circle at 35% 28%, #3a3f49 0%, #15171c 100%); box-shadow: inset 0 0 0 2px var(--pc), 0 0 0 2px rgba(0, 0, 0, 0.5); }
   .seat-coin.has-av::after { display: none; }
-  .seat-coin.has-av .seat-ini { font-size: 22px; line-height: 1; font-family: system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif; }
+  .seat-coin.has-av .seat-ini { width: 100%; height: 100%; display: grid; place-items: center; }
+  .av-img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+  .seat-coin.has-av .av-img { width: 92%; height: 92%; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45)); }
+  .seat.is-turn .seat-coin.has-av .av-img { animation: avBob 1.6s ease-in-out infinite; }
+  @keyframes avBob { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
   @media (max-width: 560px) { .seats[data-count="3"] .seat-coin.has-av .seat-ini, .seats[data-count="4"] .seat-coin.has-av .seat-ini { font-size: 18px; } }
-  .podium-av, .lobby-av { margin-right: 6px; font-family: system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif; }
+  .podium-av, .lobby-av { display: inline-block; width: 1.5em; height: 1.5em; margin-right: 6px; vertical-align: -0.4em; }
 
   /* 2D dice in a player's design (no-WebGL fallback) + CSS mini dice used as placeholders */
   .die2d.dz, .die2d.dz.held { background: var(--dz-bg); }
@@ -1176,6 +1190,11 @@
   .pe-lore-txt::after { content: "”"; color: var(--brass); margin-left: 2px; }
   #peName { width: 100%; }
   .pe-avs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .pc-av .av-img, .pe-av .av-img, .pp-av .av-img { width: 90%; height: 90%; }
+  .pe-av.pop { animation: holdPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .pe-av-btn .av-img { width: 84%; height: 84%; transition: transform 0.15s; }
+  .pe-av-btn.is-on .av-img { transform: scale(1.08); }
+  .name-row.has-prof .name-chip .av-img, #onlineAv .av-img { width: 90%; height: 90%; }
   .pe-av-btn {
     aspect-ratio: 1; border-radius: 12px; display: grid; place-items: center;
     font: 23px/1 system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
@@ -1319,6 +1338,16 @@
           <button id="tRules" class="btn" type="button">족보 안내</button>
           <button id="tMute" class="btn" type="button">사운드 켜짐</button>
         </div>
+      </div>
+      <div class="pwa-row">
+        <button id="tInstall" class="pwa-btn" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+          <span>앱으로 설치</span>
+        </button>
+        <button id="tUpdate" class="pwa-btn is-new" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>
+          <span>새 버전 적용</span>
+        </button>
       </div>
       <p id="tBest" class="title-foot"></p>
     </div>
@@ -1555,16 +1584,30 @@
       ];
       const DESIGN_BY_ID = {};
       DICE_DESIGNS.forEach(function (dz) { DESIGN_BY_ID[dz.id] = dz; });
-      const AVATARS = ['🦊', '🐯', '🐼', '🐸', '🐙', '🦄', '🐲', '🐧', '🦉', '🐻', '🐰', '🐱', '🐶', '🦁', '🐵', '🦖', '🐳', '🦈', '👾', '🤖', '👻', '🎃', '🌵', '🍀', '🔥', '⚡', '🌙', '⭐', '🍒', '👑'];
+      // avatars: Kenney "Animal Pack Redux" round heads (CC0) in av/<id>.png - see CREDITS.md
+      const AVATARS = ['panda', 'chick', 'penguin', 'pig', 'rabbit', 'frog', 'dog', 'owl', 'monkey', 'bear', 'duck', 'parrot', 'chicken', 'cow', 'zebra',
+        'giraffe', 'elephant', 'hippo', 'rhino', 'gorilla', 'horse', 'goat', 'buffalo', 'moose', 'sloth', 'walrus', 'whale', 'narwhal', 'crocodile', 'snake'];
+      const AV_KO = { panda: '판다', chick: '병아리', penguin: '펭귄', pig: '돼지', rabbit: '토끼', frog: '개구리', dog: '강아지', owl: '부엉이', monkey: '원숭이', bear: '곰',
+        duck: '오리', parrot: '앵무새', chicken: '닭', cow: '소', zebra: '얼룩말', giraffe: '기린', elephant: '코끼리', hippo: '하마', rhino: '코뿔소', gorilla: '고릴라',
+        horse: '말', goat: '염소', buffalo: '물소', moose: '무스', sloth: '나무늘보', walrus: '바다코끼리', whale: '고래', narwhal: '일각고래', crocodile: '악어', snake: '뱀' };
+      // profiles saved before the switch used emoji: carry them over to the nearest animal
+      const LEGACY_AV = { '🦊': 'dog', '🐯': 'zebra', '🐼': 'panda', '🐸': 'frog', '🐙': 'narwhal', '🦄': 'horse', '🐲': 'crocodile', '🐧': 'penguin', '🦉': 'owl', '🐻': 'bear',
+        '🐰': 'rabbit', '🐱': 'monkey', '🐶': 'dog', '🦁': 'gorilla', '🐵': 'monkey', '🦖': 'crocodile', '🐳': 'whale', '🦈': 'whale', '👾': 'frog', '🤖': 'rhino', '👻': 'sloth',
+        '🎃': 'chick', '🌵': 'goat', '🍀': 'frog', '🔥': 'parrot', '⚡': 'chick', '🌙': 'owl', '⭐': 'chick', '🍒': 'pig', '👑': 'gorilla' };
+      function avImg(id) { return '<img class="av-img" src="av/' + id + '.png" alt="" draggable="false">'; }
       // every bot level has its own face and dice, so you can tell whose turn it is at a glance
-      const AI_LOOK = { easy: { av: '🐣', dice: 'candy' }, normal: { av: '🤖', dice: 'steel' }, hard: { av: '🦉', dice: 'onyx' }, cheat: { av: '😈', dice: 'neon' } };
+      const AI_LOOK = { easy: { av: 'chick', dice: 'candy' }, normal: { av: 'penguin', dice: 'steel' }, hard: { av: 'owl', dice: 'onyx' }, cheat: { av: 'snake', dice: 'neon' } };
 
       // ---------- profiles (this device only) ----------
       const PROF_KEY = 'yachtDeluxe.profiles';
       const PROF_MAX = 8;
       function newProfId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
       function cleanName(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, 12); }
-      function validAv(a) { return AVATARS.indexOf(a) !== -1 ? a : null; }
+      function validAv(a) {
+        if (typeof a !== 'string') return null;
+        if (AVATARS.indexOf(a) !== -1) return a;
+        return Object.prototype.hasOwnProperty.call(LEGACY_AV, a) ? LEGACY_AV[a] : null;
+      }
       function validDice(d) { return typeof d === 'string' && Object.prototype.hasOwnProperty.call(DESIGN_BY_ID, d) ? d : null; }
       function designOf(id) { return DESIGN_BY_ID[validDice(id) || 'classic']; }
       function cleanStats(st) {
@@ -2208,7 +2251,13 @@
           s.classList.toggle('is-turn', idx === currentPlayerIdx && gameActive);
           const clash = initials.filter(function (x) { return x === initials[idx]; }).length > 1;
           s.querySelector('.seat-coin').classList.toggle('has-av', !!p.av);
-          s.querySelector('.seat-ini').textContent = p.av ? p.av : (clash && !p.isAI ? (idx + 1) + 'P' : initials[idx]);
+          const ini = s.querySelector('.seat-ini');
+          const want = p.av ? 'av:' + p.av : 't:' + (clash && !p.isAI ? (idx + 1) + 'P' : initials[idx]);
+          if (ini.dataset.v !== want) {
+            ini.dataset.v = want;
+            if (p.av) ini.innerHTML = avImg(p.av);
+            else ini.textContent = want.slice(2);
+          }
           s.querySelector('.seat-name').textContent = p.name + (isOnlineMatch && p.peerId === myPeerId ? ' (나)' : '');
           s.querySelector('.seat-score').textContent = String(displayedTotal(idx, getPlayerTotals(p).total));
           const stEl = s.querySelector('.seat-st');
@@ -5993,7 +6042,7 @@
           row.className = 'podium-row' + (k === 0 ? ' first' : '');
           row.style.animationDelay = (0.15 + k * 0.12) + 's';
           row.innerHTML = '<span class="podium-rank">' + (k + 1) + '</span>' +
-            '<span class="podium-name" style="color:' + PLAYER_COLORS[r.idx % 4] + '">' + (players[r.idx].av ? '<span class="podium-av">' + esc(players[r.idx].av) + '</span>' : '') + esc(r.name) + '</span>' +
+            '<span class="podium-name" style="color:' + PLAYER_COLORS[r.idx % 4] + '">' + (players[r.idx].av ? '<span class="podium-av">' + avImg(players[r.idx].av) + '</span>' : '') + esc(r.name) + '</span>' +
             (matchAug ? '<span class="podium-augs">' + (players[r.idx].aug || []).map(function (id) { return badgeHtml(id, false, r.idx); }).join('') + '</span>' : '') +
             '<span class="podium-score" data-count="' + r.total + '">0</span>';
           podium.appendChild(row);
@@ -6167,7 +6216,7 @@
         lobbyMembers.forEach(function (m, idx) {
           const row = document.createElement('div');
           row.className = 'lobby-item';
-          row.innerHTML = '<span style="color:' + PLAYER_COLORS[idx % 4] + '">' + (validAv(m.av) ? '<span class="lobby-av">' + esc(m.av) + '</span>' : '') + esc(m.name) + (m.isHost ? ' · 방장' : '') + (m.peerId === myPeerId ? ' (나)' : '') + '</span><span class="lobby-ok">접속됨</span>';
+          row.innerHTML = '<span style="color:' + PLAYER_COLORS[idx % 4] + '">' + (validAv(m.av) ? '<span class="lobby-av">' + avImg(validAv(m.av)) + '</span>' : '') + esc(m.name) + (m.isHost ? ' · 방장' : '') + (m.peerId === myPeerId ? ' (나)' : '') + '</span><span class="lobby-ok">접속됨</span>';
           lobbyList.appendChild(row);
         });
         if (onlineRole === 'host') startOnlineBtn.disabled = lobbyMembers.length < 2;
@@ -6403,6 +6452,7 @@
 
       async function createOnlineRoom() {
         ensureAudio();
+        if (navigator.onLine === false) { showToast('오프라인이에요 · 온라인 대전은 인터넷이 필요해요'); return; }
         cleanupPeer(true);
         syncOnlineName();
         onlineProfId = activeProfile().id;
@@ -6446,6 +6496,7 @@
 
       async function joinOnlineRoom(codeOverride) {
         ensureAudio();
+        if (navigator.onLine === false) { showToast('오프라인이에요 · 온라인 대전은 인터넷이 필요해요'); return; }
         const code = normCode(codeOverride || joinRoomInput.value);
         if (!code) { showToast('방 코드를 입력하세요'); return; }
         cleanupPeer(true);
@@ -6768,7 +6819,7 @@
           chip.style.setProperty('--pc', PLAYER_COLORS[i]);
           chip.setAttribute('aria-label', (i + 1) + 'P 프로필 고르기');
           chip.setAttribute('aria-haspopup', 'true');
-          chip.textContent = prof ? prof.av : (i + 1) + 'P';
+          if (prof) chip.innerHTML = avImg(prof.av); else chip.textContent = (i + 1) + 'P';
           chip.addEventListener('click', function (e) { e.stopPropagation(); openPick(i, row); });
           const input = document.createElement('input');
           input.type = 'text';
@@ -6818,7 +6869,7 @@
       function lockOnlineId(on) { $('onlineAv').disabled = on; onlineNickname.disabled = on; }
       function renderOnlineProfile() {
         const q = activeProfile();
-        $('onlineAv').textContent = q.av;
+        $('onlineAv').innerHTML = avImg(q.av);
         if (document.activeElement !== onlineNickname) onlineNickname.value = q.name;
       }
 
@@ -6837,7 +6888,7 @@
         let h = '';
         profStore.list.forEach(function (q) {
           const at = online ? -1 : rowProf.indexOf(q.id);
-          h += '<button type="button" role="menuitem" data-pid="' + q.id + '"' + (q.id === cur ? ' class="is-on"' : '') + '><span class="pp-av">' + q.av + '</span><span class="pp-name">' + esc(q.name) + '</span>' +
+          h += '<button type="button" role="menuitem" data-pid="' + q.id + '"' + (q.id === cur ? ' class="is-on"' : '') + '><span class="pp-av">' + avImg(q.av) + '</span><span class="pp-name">' + esc(q.name) + '</span>' +
             (at !== -1 && at !== row ? '<span class="pp-at">' + (at + 1) + 'P</span>' : '') + '</button>';
         });
         if (!online) h += '<button type="button" role="menuitem" data-pid="-"' + (!cur ? ' class="is-on"' : '') + '><span class="pp-av pp-sym">?</span><span class="pp-name">게스트</span></button>';
@@ -6923,7 +6974,7 @@
         if (!el) return;
         const q = activeProfile();
         const dz = designOf(q.dice);
-        el.innerHTML = '<span class="pc-av">' + q.av + '</span><span class="pc-meta"><span class="pc-name"></span><span class="pc-sub">' +
+        el.innerHTML = '<span class="pc-av">' + avImg(q.av) + '</span><span class="pc-meta"><span class="pc-name"></span><span class="pc-sub">' +
           esc(dz.name) + ' 주사위 · ' + statLine(q.stats) + '</span></span><span class="pc-thumb" data-thumb="' + dz.id + '">' + miniDie(dz.id) + '</span>' + CHEVRON;
         el.querySelector('.pc-name').textContent = q.name;
         el.setAttribute('aria-label', '프로필: ' + q.name);
@@ -6945,7 +6996,7 @@
           const on = q.id === profStore.active;
           h += '<div class="prof-item' + (on ? ' is-on' : '') + '">' +
             '<button type="button" class="prof-main" data-act="edit" data-id="' + q.id + '">' +
-              '<span class="pc-av">' + q.av + '</span>' +
+              '<span class="pc-av">' + avImg(q.av) + '</span>' +
               '<span class="pc-meta"><span class="pc-name">' + esc(q.name) + '</span><span class="pc-sub">' + esc(designOf(q.dice).name) + ' · ' + statLine(q.stats) + '</span></span>' +
               '<span class="pc-thumb" data-thumb="' + q.dice + '">' + miniDie(q.dice) + '</span>' +
             '</button>' +
@@ -6975,7 +7026,7 @@
         h += '<label class="field-label" for="peName">이름</label><input id="peName" class="text-in" type="text" maxlength="12" placeholder="이름 (최대 12자)" autocomplete="off">';
         h += '<div class="field-label pe-label" id="peAvLbl">아바타</div><div class="pe-avs" role="radiogroup" aria-labelledby="peAvLbl">';
         AVATARS.forEach(function (a, k) {
-          h += '<button type="button" role="radio" class="pe-av-btn' + (a === e.av ? ' is-on' : '') + '" aria-checked="' + (a === e.av) + '" data-av="' + k + '">' + a + '</button>';
+          h += '<button type="button" role="radio" class="pe-av-btn' + (a === e.av ? ' is-on' : '') + '" aria-checked="' + (a === e.av) + '" aria-label="' + AV_KO[a] + '" title="' + AV_KO[a] + '" data-av="' + k + '">' + avImg(a) + '</button>';
         });
         h += '</div><div class="field-label pe-label" id="peDzLbl">주사위 디자인</div><div class="pe-dz" role="radiogroup" aria-labelledby="peDzLbl">';
         DICE_DESIGNS.forEach(function (dz) {
@@ -7015,7 +7066,7 @@
           restartAnim(lore, 'pop');
         }
         const av = profBody.querySelector('.pe-av');
-        if (av) av.textContent = profEditing.av;
+        if (av && av.dataset.v !== profEditing.av) { av.dataset.v = profEditing.av; av.innerHTML = avImg(profEditing.av); restartAnim(av, 'pop'); }
       }
       function markRadio(btn) {
         Array.prototype.forEach.call(btn.parentNode.children, function (b) {
@@ -7318,6 +7369,55 @@
         try { history.replaceState(null, '', location.pathname); } catch (e) {}
       }
       handleInvite();
+      // home-screen shortcuts open a mode directly (…/index.html?play=ai|local|online)
+      (function () {
+        let q = null;
+        try { q = new URLSearchParams(location.search).get('play'); } catch (e) {}
+        if (q !== 'ai' && q !== 'local' && q !== 'online') return;
+        selectedMode = q;
+        openMode();
+        try { history.replaceState(null, '', location.pathname); } catch (e) {}
+      })();
+
+      // ---------- PWA: offline cache, install button, update notice ----------
+      // only the deployed build links a manifest; the raw source file (file:// or a dev server) stays SW-free
+      let installEvt = null, swUpdated = false;
+      const PWA_BUILD = !!document.querySelector('link[rel="manifest"]');
+      const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      function isStandalone() { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+      function paintPwa() {
+        $('tInstall').hidden = !PWA_BUILD || isStandalone() || !(installEvt || IS_IOS);
+        $('tUpdate').hidden = !swUpdated;
+      }
+      if (PWA_BUILD && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+        const hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (!hadController) return; // first install: the page is already current
+          swUpdated = true;
+          paintPwa();
+          if (!gameActive) showToast('새 버전이 준비됐어요');
+        });
+      }
+      window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; paintPwa(); });
+      window.addEventListener('appinstalled', function () { installEvt = null; paintPwa(); showToast('홈 화면에 설치됐어요'); sfxCombo(2); });
+      $('tInstall').addEventListener('click', function () {
+        sfxTick();
+        if (installEvt) {
+          const ev = installEvt;
+          installEvt = null;
+          ev.prompt();
+          Promise.resolve(ev.userChoice).catch(function () {}).then(paintPwa);
+          return;
+        }
+        if (IS_IOS) showToast('Safari 아래쪽 공유 버튼 → "홈 화면에 추가"');
+      });
+      $('tUpdate').addEventListener('click', function () {
+        if (gameActive && !confirmReload) { confirmReload = true; showToast('진행 중인 게임이 끝나요 · 한 번 더 누르면 적용'); setTimeout(function () { confirmReload = false; }, 2500); return; }
+        location.reload();
+      });
+      let confirmReload = false;
+      paintPwa();
       window.addEventListener('hashchange', handleInvite);
 
       // behind the title, the dice keep tumbling into new faces

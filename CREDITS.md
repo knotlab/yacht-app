@@ -214,3 +214,9 @@ Every one of these packs is released under CC0 1.0 (public domain dedication), s
 - License: CC0 1.0
 - Source: https://opengameart.org/content/item-popup-starburst
 - Files: `fx/burst.png` (burst0030.png)
+
+## Avatars
+
+| File | Source | Author | License |
+|---|---|---|---|
+| `av/*.png` (30 animal heads) | [Animal Pack Redux](https://opengameart.org/content/animal-pack-redux) — "Round (outline)" set, padded to 160×160 and palette-optimized | Kenney (kenney.nl) | CC0 1.0 |
