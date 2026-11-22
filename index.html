@@ -21,7 +21,8 @@
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js",
+    "wawa-vfx-vanilla": "https://cdn.jsdelivr.net/npm/wawa-vfx-vanilla@1.2.10/dist/index.es.js"
   }
 }
 </script>
@@ -7122,10 +7123,14 @@
         shakeApp(use3D() ? 7 : 10); buzz([40, 30, 90]);
         stageVignette(0.85, 'bad', 60);
         fuseLater(function () { stageVignette(0, 'bad', 900); }, 500);
-        kaboomFx(c);
+        // the 3D table draws the burst itself with particles (Dice3D.boomFx); the DOM picture is the fallback
+        const own = use3D() && !!window.Dice3D.blast && !!window.Dice3D.boomFx;
+        if (!own) kaboomFx(c);
         sootSeat(p);
-        burst(c, { shape: 'ember', count: 10, dist: 90, gravity: 60, color: ['#ffd25a', '#ff7a2a'], dur: 900 });
-        burst(c, { shape: 'smoke', count: 6, dist: 70, color: 'rgba(40,34,30,0.75)', dur: 1500, spin: 90 });
+        if (!own) {
+          burst(c, { shape: 'ember', count: 10, dist: 90, gravity: 60, color: ['#ffd25a', '#ff7a2a'], dur: 900 });
+          burst(c, { shape: 'smoke', count: 6, dist: 70, color: 'rgba(40,34,30,0.75)', dur: 1500, spin: 90 });
+        }
         if (!use3D()) decalFx(c, 'impact', 'rgba(25,18,12,0.75)', 170, 2600);
         ensureAudio();
         if (!sample('boom')) { if (!sample('slam')) tone(70, 0.4, 'sine', 0.35, 35); noise(300, 0.8, 0.35, 0.4, 'lowpass'); }
@@ -10837,6 +10842,7 @@
       const slots = [0, 1, 2, 3, 4].map(() => new THREE.Vector3());
       let spacing = 1.75;
       let rects = [];
+      let blastFit = 1; // 도화선 burst scale for this table shape (layout)
       const rc = new THREE.Raycaster();
       const v2 = new THREE.Vector2();
       function groundAt(nx, ny, h) {
@@ -10885,6 +10891,8 @@
           const cx = ((c.x + 1) / 2) * w, cy = ((1 - c.y) / 2) * h;
           return { cx, cy, hw: Math.abs(((e.x + 1) / 2) * w - cx), dx: cx - ((k.x + 1) / 2) * w, dy: cy - ((1 - k.y) / 2) * h };
         });
+        // 도화선 burst: about two thirds of the stage's short side at its widest (a die is 2 * hw / spacing px wide here)
+        blastFit = rects[2] && rects[2].hw > 1 ? Math.max(0.55, Math.min(1, (0.17 * Math.min(w, h) * spacing) / (2 * rects[2].hw))) : 1;
         window.dispatchEvent(new CustomEvent('dice3d-layout'));
       }
 
@@ -11084,7 +11092,7 @@
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
       }
       // a new throw: a blast that hasn't gone off yet is dropped, and the charred felt fades
-      function cancelBlast() { boomAt = null; focusUntil = -9; clearScorch(0.4); }
+      function cancelBlast() { boomAt = null; focusUntil = -9; clearScorch(0.4); if (vfxUntil && clock > vfxUntil - 0.9) vfxOff(); } // a new throw: no smoke lingering over it
 
       function roll(values, heldArr, opts) {
         opts = opts || {};
@@ -11112,6 +11120,7 @@
           if (anim || gather) finishNow();
           if (apexAt) fireApex(); // no frames are coming: pay off now instead of over a later turn
           if (boomAt) fireBoom(); // same for a blast that was about to go off
+          vfxOff(); // hidden: drop the particles instead of resuming them on return
           D.forEach((d) => { if (d.flight) { const cb = d.flight.onDone; d.flight = null; d.group.visible = true; if (cb) setTimeout(cb, 0); } });
           return;
         }
@@ -11283,6 +11292,7 @@
         boomAt = null;
         if (!b) return;
         focusUntil = -9; fastRelUntil = clock + 0.5;
+        vfxDrawn = !REDUCED && !document.hidden && vfxBlast(b.hot); // before onBoom: the main script reads boomFx there
         try { if (b.o.onBoom) b.o.onBoom(); } catch (e) {}
         spawnRing(b.cx, b.cz, 14, 0xffb04d, BOOM_RING1);
         spawnRing(b.cx, b.cz, 14, 0xffffff, BOOM_RING2);
@@ -11346,10 +11356,143 @@
         if (f.onDone) setTimeout(f.onDone, 0);
       }
       function scorchAt(i) { const S = scorch[i]; if (!S) return; S.t0 = clock; S.fade = -9; S.m.visible = S.g.visible = true; }
+
+      // ---------- 도화선 burst: wawa-vfx-vanilla (MIT), GPU-instanced particle pools drawn inside the scene ----------
+      // Loaded on the side once the table is up. If the library or a texture is missing (offline first visit, a local file)
+      // vfx stays null and the main script keeps drawing its DOM burst. The pools run on the sim `clock`, so hitstop holds them.
+      let vfx = null, vfxDrawn = false, vfxUntil = 0, vfxHide = 0;
+      const vfxQueue = [];
+      function loadVfx() {
+        if (location.protocol === 'file:') return; // image textures taint WebGL on a local file: keep the old picture
+        (async function () {
+          try {
+            const lib = await import('wawa-vfx-vanilla');
+            const tl = new THREE.TextureLoader();
+            const tex = await Promise.all(['smoke', 'glow', 'impact', 'ring'].map((n) => new Promise((ok, no) => {
+              tl.load('fx/' + n + '.png', (t) => { t.colorSpace = THREE.SRGBColorSpace; ok(t); }, undefined, () => no(new Error(n)));
+            })));
+            const built = buildVfx(lib, tex);
+            // warm-up off-screen (layer 31: the main camera skips it), compiled in parallel where the GPU allows
+            built.list.forEach((p) => { const m = p.getMesh(); m.layers.set(31); m.visible = true; });
+            try { await renderer.compileAsync(scene, camera); } catch (e) {}
+            built.list.forEach((p) => { const m = p.getMesh(); m.visible = false; m.layers.set(0); });
+            vfx = built;
+          } catch (e) { vfx = null; }
+        })();
+      }
+      function buildVfx(lib, tex) {
+        // the library writes linear colour straight to the canvas (no colour-space step): encode it so '#ffb01f' reads as '#ffb01f'
+        const SRGB = 'finalColor = pow(max(finalColor, vec3(0.0)), vec3(0.4545));';
+        // cartoon puffs out of the soft smoke sprite: a hard silhouette eaten away over the particle's life (alpha erosion),
+        // a brighter inner band and a dark ink edge. tex / alpha / vProgress / finalColor are the library's own names.
+        const TOON = (edge, hot, ink) => `
+          float th = mix(0.10, 0.92, smoothstep(0.72, 1.0, vProgress));
+          alpha = smoothstep(th, th + ${edge}, tex.a) * smoothstep(0.0, 0.04, vProgress);
+          finalColor = mix(finalColor, finalColor * 1.25 + vec3(${hot}), smoothstep(th + 0.30, th + 0.36, tex.a));
+          finalColor = mix(vec3(${ink}), finalColor, smoothstep(th + 0.07, th + 0.10, tex.a));
+        ` + SRGB;
+        const mk = (name, st, hook, map, geo) => new lib.VFXParticles(name, Object.assign({ shadingHooks: { fragmentBeforeOutput: hook }, frustumCulled: false }, st), undefined, map, geo);
+        const N = THREE.NormalBlending;
+        const flat = new THREE.PlaneGeometry(0.5, 0.5).rotateX(-Math.PI / 2); // lies on the felt
+        const chip = new THREE.BoxGeometry(0.5, 0.35, 0.42);
+        const pools = {
+          ring: mk('ring', { nbParticles: 4, renderMode: 'mesh', blendingMode: N, fadeSize: [1.0, 1.0], fadeAlpha: [0.001, 0.2], easeFunction: 'easeOutCubic', side: THREE.DoubleSide }, SRGB, tex[3], flat),
+          smoke: mk('smoke', { nbParticles: 48, renderMode: 'billboard', blendingMode: N, fadeSize: [0.5, 1.0], fadeAlpha: [0.001, 1.0], gravity: [0, 1.2, 0], easeFunction: 'easeOutCubic' }, TOON('0.20', '0.05, 0.04, 0.03', '0.02, 0.015, 0.012'), tex[0]),
+          fire: mk('fire', { nbParticles: 72, renderMode: 'billboard', blendingMode: N, fadeSize: [0.22, 1.0], fadeAlpha: [0.001, 1.0], gravity: [0, 1.5, 0], easeFunction: 'easeOutCubic' }, TOON('0.05', '0.30, 0.22, 0.02', '0.05, 0.012, 0.0'), tex[0]),
+          debris: mk('debris', { nbParticles: 40, renderMode: 'mesh', blendingMode: N, fadeSize: [0.001, 0.85], fadeAlpha: [0.001, 0.9], gravity: [0, -26, 0], easeFunction: 'easeLinear' }, SRGB, undefined, chip),
+          sparks: mk('sparks', { nbParticles: 96, renderMode: 'stretchBillboard', stretchScale: 0.2, blendingMode: N, fadeSize: [0.001, 0.5], fadeAlpha: [0.001, 0.6], gravity: [0, -14, 0], easeFunction: 'easeLinear' }, SRGB, tex[1]),
+          flash: mk('flash', { nbParticles: 4, renderMode: 'billboard', blendingMode: N, fadeSize: [0.3, 1.0], fadeAlpha: [0.001, 0.2], easeFunction: 'easeOutCubic', depthTest: false }, SRGB, tex[1]),
+          star: mk('star', { nbParticles: 4, renderMode: 'billboard', blendingMode: THREE.AdditiveBlending, intensity: 1.6, fadeSize: [0.5, 1.0], fadeAlpha: [0.001, 0.3], easeFunction: 'easeOutCubic', depthTest: false }, SRGB, tex[2])
+        };
+        const list = Object.keys(pools).map((k) => pools[k]);
+        // after every opaque / felt-level transparent thing (rings, scorch: order 0); flash and rays last, on top of the dice
+        // order: ring, smoke, debris (inside the fireball), fire, sparks, flash, star
+        const ORD = { ring: 0, smoke: 1, debris: 2, fire: 3, sparks: 4, flash: 5, star: 6 };
+        Object.keys(pools).forEach((k) => { const m = pools[k].getMesh(); m.renderOrder = 20 + ORD[k]; m.visible = false; scene.add(m); });
+        // texture upload now (the shader compile is done by loadVfx), or the first blast hitches
+        tex.forEach((t) => renderer.initTexture(t));
+        return { store: lib.vfxStore.getState(), pools, list };
+      }
+      const vfxRnd = (a, b) => a + Math.random() * (b - a);
+      const vfxPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      function vfxDome(up) { // a direction on the upper hemisphere, biased by `up`
+        const a = vfxRnd(0, Math.PI * 2), y = vfxRnd(up, 1), r = Math.sqrt(Math.max(0, 1 - y * y));
+        return [Math.cos(a) * r, y, Math.sin(a) * r];
+      }
+      function vfxEmit(name, n, o, make) {
+        vfx.store.emit(name, n, () => {
+          const m = make();
+          return {
+            position: [o.x + (m.off ? m.off[0] : 0), o.y + (m.off ? m.off[1] : 0), o.z + (m.off ? m.off[2] : 0)],
+            direction: m.dir || [0, 0, 0], scale: m.scale, rotation: m.rot || [0, 0, vfxRnd(0, 6.28)], rotationSpeed: m.spin || [0, 0, 0],
+            lifetime: [clock - 0.06, m.life], colorStart: m.c0, colorEnd: m.c1 || m.c0, speed: [m.speed || 0]
+          };
+        });
+      }
+      // one cartoon explosion at o; k scales its size, counts and reach (two small blasts for two far-apart dice)
+      function vfxOne(o, k) {
+        const cube = (a, b) => { const s = vfxRnd(a, b) * k; return [s, s, s]; };
+        const n = (c) => Math.max(1, Math.round(c * k));
+        // t = 0: white-hot flash + a spiky star, a ring racing over the felt
+        vfxEmit('flash', 1, o, () => ({ scale: [12 * k, 12 * k, 12 * k], life: 0.24, c0: '#fff6d8', c1: '#ffb347' }));
+        vfxEmit('star', 1, o, () => ({ scale: [10 * k, 10 * k, 10 * k], life: 0.18, c0: '#ffffff', c1: '#ffd27a', rot: [0, 0, 0.4] }));
+        vfxEmit('ring', 1, { x: o.x, y: 0.04, z: o.z }, () => ({ scale: [17 * k, 1, 17 * k], life: 0.45, c0: '#fff6dc', c1: '#ffd9a0', rot: [0, 0, 0] }));
+        // the fireball: solid puffs, yellow to orange to a burnt red
+        vfxEmit('fire', n(22), o, () => ({ dir: vfxDome(-0.15), speed: vfxRnd(1.4, 4.2) * k, scale: cube(4.0, 6.6), life: vfxRnd(0.55, 0.9), c0: vfxPick(['#ffd23a', '#ffb01f', '#ff8a12']), c1: vfxPick(['#c2330c', '#8a1c08']), spin: [0, 0, vfxRnd(-1.2, 1.2)], off: [vfxRnd(-0.25, 0.25), vfxRnd(0, 0.3), vfxRnd(-0.25, 0.25)] }));
+        vfxEmit('fire', n(8), o, () => ({ dir: vfxDome(0.3), speed: vfxRnd(0.3, 1.2) * k, scale: cube(3.2, 4.6), life: vfxRnd(0.4, 0.55), c0: '#fff3b0', c1: '#ff9a1f', spin: [0, 0, vfxRnd(-2, 2)] }));
+        // sparks stretched along their flight, falling; charred chips thrown out, tumbling
+        vfxEmit('sparks', n(44), o, () => ({ dir: vfxDome(-0.05), speed: vfxRnd(5, 13) * k, scale: [0.2, 0.55, 0.2], life: vfxRnd(0.35, 0.75), c0: vfxPick(['#fffbe6', '#fff0a8']), c1: '#ffb13a' }));
+        vfxEmit('debris', n(14), o, () => ({ dir: vfxDome(0.25), speed: vfxRnd(4, 8.5) * k, scale: cube(0.22, 0.5), life: vfxRnd(0.6, 0.95), c0: vfxPick(['#2a1c14', '#3a2416', '#ff7a1a']), c1: '#17110d', rot: [vfxRnd(0, 6), vfxRnd(0, 6), vfxRnd(0, 6)], spin: [vfxRnd(-12, 12), vfxRnd(-12, 12), vfxRnd(-12, 12)] }));
+        // the smoke that is left: rises, darkens, is eaten away
+        vfxQueue.push({ at: clock + 0.15, run: () => vfx && vfxEmit('smoke', n(14), o, () => ({ dir: vfxDome(0.1), speed: vfxRnd(0.8, 2.6) * k, scale: cube(4.0, 6.4), life: vfxRnd(0.65, 1.05), c0: vfxPick(['#6a584c', '#544840']), c1: '#231d19', spin: [0, 0, vfxRnd(-0.7, 0.7)], off: [vfxRnd(-0.5, 0.5), vfxRnd(0.2, 0.8), vfxRnd(-0.5, 0.5)] })) });
+      }
+      // the blast at the guilty dice: one at their centre, or two smaller ones when two dice sit far apart. false = not drawn here.
+      function vfxBlast(hot) {
+        if (!vfx || !hot.length || renderer.getContext().isContextLost()) return false;
+        try {
+          vfxQueue.length = 0;
+          for (let i = 0; i < vfx.list.length; i++) vfx.list[i].getMesh().visible = true;
+          const ps = hot.map((i) => D[i].group.position);
+          const x0 = Math.min.apply(null, ps.map((p) => p.x)), x1 = Math.max.apply(null, ps.map((p) => p.x));
+          const lim = Math.max(0.5, bounds.halfX - 1.8), cx = (x0 + x1) / 2, cz = ps.reduce((s, p) => s + p.z, 0) / ps.length;
+          // blastFit (layout): the puffs are billboards, so on a shallow table (desktop, landscape) the same world size would swallow the felt
+          if (ps.length === 2 && x1 - x0 > 1.7) ps.forEach((p) => vfxOne({ x: Math.max(-lim, Math.min(lim, p.x)), y: 0.65, z: p.z }, 0.62 * blastFit));
+          else vfxOne({ x: Math.max(-lim, Math.min(lim, cx)), y: 0.65, z: cz }, (ps.length > 2 ? 0.9 : 0.82) * blastFit);
+          vfxHide = 0; vfxUntil = clock + 1.4;
+          return true;
+        } catch (e) { vfxOff(); vfx = null; return false; }
+      }
+      function vfxOff() { vfxQueue.length = 0; vfxUntil = 0; vfxHide = 0; if (vfx) for (let i = 0; i < vfx.list.length; i++) vfx.list[i].getMesh().visible = false; }
+      // a new match: every particle is dead at once (the buffers are rewritten, then hidden after one upload)
+      function vfxKill() {
+        vfxQueue.length = 0; vfxUntil = 0; vfxDrawn = false;
+        boomAt = null; // a blast still swelling when the match restarts must not go off on the fresh table
+        if (!vfx) return;
+        try { // uses 1.2.10 internals: keep wawa-vfx-vanilla pinned (import map + app/sw.js)
+          for (let i = 0; i < vfx.list.length; i++) {
+            const p = vfx.list[i], m = p.getMesh(), a = m.geometry.getAttribute('instanceLifetime');
+            for (let j = 0; j < a.count; j++) a.setXY(j, -1e4, 1);
+            a.clearUpdateRanges(); a.needsUpdate = true; p.needsUpdate = false;
+            m.visible = true;
+          }
+          vfxHide = 2; // two frames visible: the first render uploads the dead buffers
+        } catch (e) { vfxOff(); }
+      }
+      function vfxFrame() {
+        if (!vfx) return;
+        if (vfxHide > 0) { if (--vfxHide === 0) vfxOff(); return; }
+        if (!vfxUntil) return;
+        try {
+          for (let i = vfxQueue.length - 1; i >= 0; i--) if (clock >= vfxQueue[i].at) { const q = vfxQueue[i]; vfxQueue.splice(i, 1); q.run(); }
+          for (let i = 0; i < vfx.list.length; i++) vfx.list[i].update(clock);
+          if (clock >= vfxUntil) vfxOff();
+        } catch (e) { vfxOff(); vfx = null; vfxDrawn = false; } // the table must keep drawing: drop the particles, the old picture takes over
+      }
       // the charred felt fades (a new throw, or the turn is over); dice that kept their soot lose it too
       function clearScorch(sec) {
         scorch.forEach((S) => { if (S.m.visible && S.fade < 0) { S.fade = clock; S.fd = sec || 0.4; } });
         D.forEach((d) => { d.sootKeep = false; if (sec < 0.05) d.soot = 0; }); // (a new match: clean dice at once)
+        if (sec < 0.05) vfxKill();
       }
       function updateScorch() {
         for (let i = 0; i < 5; i++) {
@@ -11694,6 +11837,7 @@
         updateDice(sdt);
         updateFx();
         updateScorch();
+        vfxFrame();
         updateCamera(dt);
         renderer.render(scene, camera);
       }
@@ -12003,6 +12147,8 @@
         finishNow,
         // 도화선: blast({ hot, pre, onBoom, onLand, onDone }) and the charred felt it leaves behind
         blast,
+        // true when the last blast was drawn here as particles (the main script then skips its DOM burst)
+        get boomFx() { return vfxDrawn; },
         clearScorch,
         isAnimating: () => !!(anim || gather || boomAt || D.some((d) => d.flight)),
         slotRects: () => rects,
@@ -12029,6 +12175,7 @@
       else window.addEventListener('resize', layout);
       requestAnimationFrame(frame);
       window.dispatchEvent(new CustomEvent('dice3d-ready'));
+      loadVfx(); // last, on the side: the table never waits for it
     })();
   </script>
 </body>

@@ -234,3 +234,20 @@ Every one of these packs is released under CC0 1.0 (public domain dedication), s
 | File | Source | Author | License |
 |---|---|---|---|
 | `av/*.png` (30 animal heads) | [Animal Pack Redux](https://opengameart.org/content/animal-pack-redux) — "Round (outline)" set, padded to 160×160 and palette-optimized | Kenney (kenney.nl) | CC0 1.0 |
+
+## wawa-vfx-vanilla (code library)
+
+- Author: Wassim SAMAD (wawa sensei)
+- License: MIT (a code licence, unlike the CC0 art above)
+- Source: https://github.com/wass08/wawa-vfx (LICENSE: https://github.com/wass08/wawa-vfx/blob/main/LICENSE)
+- Use: GPU-instanced particle pools for three.js that draw the 도화선 explosion inside the 3D table. The file (`wawa-vfx-vanilla@1.2.10`) is loaded from the jsDelivr CDN at run time and is not copied into this repository; the explosion sprites are the game's own `fx/smoke.png`, `fx/glow.png`, `fx/impact.png` and `fx/ring.png` (Kenney Particle Pack, CC0, listed above).
+
+MIT License
+
+Copyright (c) 2025 Wassim SAMAD
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
