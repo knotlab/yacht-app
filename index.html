@@ -1565,10 +1565,10 @@
         <h2 class="panel-title">족보 안내</h2>
         <button class="x-btn" type="button" data-close="rulesOv" aria-label="닫기">✕</button>
       </div>
-      <p class="rules-intro">한 턴에 주사위 5개를 최대 3번 굴립니다. 남길 주사위는 탭해서 고정하세요. 12라운드 동안 족보 칸을 하나씩 채우고, 총점이 가장 높은 사람이 이깁니다. 위 6칸 합이 63점 이상이면 보너스 35점.</p>
+      <p class="rules-intro">주사위 5개를 한 턴에 3번까지 굴립니다. 남길 주사위는 탭해서 고정합니다. 매 턴 칸 하나를 채웁니다. 12라운드 뒤 총점 1등이 승리합니다. 상단 6칸 합이 63점 이상이면 보너스 35점입니다.</p>
       <div id="rulesList" class="rules-list"></div>
       <h3 class="dex-title">증강 도감</h3>
-      <p class="dex-intro">증강 모드에서는 1·5·9라운드가 시작될 때 같은 등급 증강 3장 중 1장을 고릅니다.</p>
+      <p class="dex-intro">증강 모드에선 1·5·9라운드 시작에 같은 등급 증강 3장 중 1장을 고릅니다.</p>
       <div id="augDex" class="aug-dex"></div>
     </div>
   </div>
@@ -3144,51 +3144,51 @@
       // art: a 3D dice portrait rendered by Dice3D (glyph: also pin the icon on it); otherwise the icon is the art
       const PROPHECY_PTS = 8; // 예언 bonus; a scratched (0) box gets nothing
       const AUG_LIST = [
-        { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
-        { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 주사위를 4번 굴릴 수 있습니다', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
-        { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈이 점수 합산에서 2배로 계산됩니다', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
-        { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 앞 절반엔 1~3만, 뒤 절반엔 4~6만 나옵니다', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
-        { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1이 3개 이상인 채로 기록하면 깨어나, 그 뒤로 1은 족보에서 아무 눈이나 됩니다', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
-        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1번·2번 주사위가 항상 같은 눈으로 나옵니다', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
-        { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상을 쾅! 2회 · 누가 굴렸든, 주사위가 구르기 시작해서 다시 굴리거나 기록하기 전까지 언제든 흔듭니다', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
-        { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집기 2회', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
-        { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 다시 굴리기 3회', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
-        { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴린 결과를 취소하고 굴림 횟수를 돌려받기 2회', ch: { rewind: 2 }, ev: 12 },
-        { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꾸기 2회', ch: { psychic: 2 }, ev: 24, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
-        { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '2회, 바로 앞 사람이 기록한 주사위 그대로 내 턴을 시작합니다', ch: { ride: 2 }, ev: 22 },
-        { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1이 하나당 6점', ev: 10 },
-        { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '1회, 이미 기록한 칸을 더 높은 점수로 다시 기록 · 대신 마지막에 빈칸 하나가 남습니다', ch: { overwrite: 1 }, ev: 10 },
-        { id: 'yachtClub', tier: 2, cat: 'score', name: '요트 클럽', desc: '야트 100점', ev: 18, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
-        { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '기록할 때 주사위 합이 정확히 21이면 +21점', ev: 13 },
-        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나가 예언됩니다 · 그 칸을 0점이 아닌 점수로 채우면 +' + PROPHECY_PTS + '점', ev: 12 },
-        { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '1회, 족보 조건을 무시하고 원하는 칸에 기록', ch: { joker: 1 }, ev: 30 },
-        { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스 35점 → 70점', ev: 24 },
-        { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '상단 보너스가 없어지는 대신, 같은 눈 4개 이상으로 채운 상단 칸마다 +10', ev: 7 },
-        { id: 'grandSlam', tier: 2, cat: 'score', name: '그랜드슬램', desc: '포카인드·풀하우스·두 스트레이트·야트를 0점 없이 다 채우면 게임 끝에 +40', ev: 14 },
-        { id: 'shaky', tier: 1, cat: 'hex', name: '손 떨림', desc: '상대들의 다음 2턴 굴림이 1번씩 줄어듭니다', ev: 9 },
-        { id: 'seal', tier: 1, cat: 'hex', name: '봉인', desc: '2회, 다음 상대의 그 턴 가장 점수가 높은 칸을 잠급니다', ch: { seal: 2 }, ev: 9 },
-        { id: 'pressure', tier: 1, cat: 'hex', name: '압박', desc: '상대가 한 턴에 굴림을 끝까지 다 쓸 때마다 상대 -3점', ev: 8 },
-        { id: 'curse', tier: 2, cat: 'hex', name: '저주 주사위', desc: '상대 5번 주사위의 6 면이 1로 바뀝니다', ev: 10, art: { zoom: 0.78, glyph: 1, dice: [{ v: 1, skin: 'curse', ry: 0.9 }] } },
-        { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '1회, 내 칸 하나와 상대의 같은 칸 점수를 맞바꿉니다', ch: { swap: 1 }, ev: 16 },
-        { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임이 끝날 때 상대 1등의 최고 점수 칸 절반을 훔칩니다', ev: 24 },
-        { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '2회, 숫자 하나를 찍으면 다음 상대 첫 굴림에서 그 눈 주사위가 그 턴 내내 붙어요', ch: { glue: 2 }, ev: 8 },
-        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1회, 1등 상대에게 폭탄 · 받은 사람은 20점 이상 기록해야 돌려보내고, 못 하면 -20', ch: { bomb: 1 }, ev: 12 },
-        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '1회, 켜고 기록하면 점수 2배 · 0점이면 -20점', ch: { allin: 1 }, ev: 16 },
-        { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에서 바로 기록하면 +6점', ev: 6 },
-        { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 +30점 · 게임이 끝날 때 상단 보너스가 없으면 -50점', ev: 8 },
-        { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임이 끝날 때 1등과 30점 이상 뒤져 있으면 +40점', ev: 10 },
-        { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 내 턴에 2번 더 굴립니다', ev: 8 },
-        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '굴림을 다 쓴 뒤 3번 더 굴릴 수 있지만, 다시 굴린 주사위에 1이 나오면 펑! 0점', ch: { fuse: 3 }, ev: 13 },
-        { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '1회, 상대가 채운 칸에 도전 · 같거나 높게 쓰면 상대 칸 0점, 지면 내 점수 절반', ch: { gauntlet: 1 }, ev: 22 },
-        { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 모든 기록 +8점', ev: 20, fixed: true },
-        { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다 · 못 채운 칸은 0점', ev: 8 },
-        { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드가 시작될 때마다 총점의 5%를 이자로 받습니다', ev: 32 },
-        { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임이 끝나기 전에 나만 한 턴 더 · 기록한 칸 하나를 더 높은 점수로 덮어씁니다', ev: 18 },
-        { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다 · 그 턴은 가장 낮은 빈칸에 0점', ev: 18 },
-        { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '2회, 같은 주사위로 빈칸 두 개를 한 번에 기록 · 칸이 일찍 차면 남은 턴은 쉽니다', ch: { twofer: 2 }, ev: 20 },
-        { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '이번 선택이 끝나면, 상대들이 방금 고른 증강 중 하나를 똑같이 얻습니다', ev: 12 },
-        { id: 'rerollMaster', tier: 1, cat: 'meta', name: '리롤 장인', desc: '앞으로 증강을 고를 때 다시 뽑기 +2회', ev: 4 },
-        { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 올라갑니다', ev: 9 }
+        { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다.', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
+        { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 4번까지 굴립니다.', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
+        { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈을 2배로 더합니다.', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
+        { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
+        { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
+        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 항상 같은 눈으로 나옵니다.', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
+        { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
+        { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
+        { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
+        { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다. 연속으로는 못 씁니다.', ch: { rewind: 2 }, ev: 12 },
+        { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꿉니다.', ch: { psychic: 2 }, ev: 24, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
+        { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람이 기록한 주사위를 첫 굴림으로 씁니다.', ch: { ride: 2 }, ev: 22 },
+        { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1을 6점으로 셉니다.', ev: 10 },
+        { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '채운 칸을 더 높게 덮어씁니다. 빈칸 하나가 0점으로 남습니다.', ch: { overwrite: 1 }, ev: 10 },
+        { id: 'yachtClub', tier: 2, cat: 'score', name: '요트 클럽', desc: '야트가 100점입니다.', ev: 18, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
+        { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '주사위 합이 21이면 어느 칸에 기록해도 +21점입니다.', ev: 13 },
+        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나를 예언합니다. 그 칸에 점수를 내면 +' + PROPHECY_PTS + '점입니다.', ev: 12 },
+        { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '켠 채 기록하면 족보 조건을 무시합니다.', ch: { joker: 1 }, ev: 30 },
+        { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스가 35점에서 70점으로 오릅니다.', ev: 24 },
+        { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '4개 이상 모은 상단 칸은 +10점입니다. 상단 보너스는 없습니다.', ev: 7 },
+        { id: 'grandSlam', tier: 2, cat: 'score', name: '그랜드슬램', desc: '포카인드부터 야트까지 0점 없이 채우면 +40점입니다.', ev: 14 },
+        { id: 'shaky', tier: 1, cat: 'hex', name: '손 떨림', desc: '상대 전원의 다음 2턴 굴림을 1번씩 줄입니다.', ev: 9 },
+        { id: 'seal', tier: 1, cat: 'hex', name: '봉인', desc: '다음 상대 턴에 가장 높게 나오는 빈칸을 잠급니다.', ch: { seal: 2 }, ev: 9 },
+        { id: 'pressure', tier: 1, cat: 'hex', name: '압박', desc: '상대가 굴림을 다 쓰면 3점을 잃습니다.', ev: 8 },
+        { id: 'curse', tier: 2, cat: 'hex', name: '저주 주사위', desc: '상대 5번 주사위의 6 면이 1로 바뀝니다.', ev: 10, art: { zoom: 0.78, glyph: 1, dice: [{ v: 1, skin: 'curse', ry: 0.9 }] } },
+        { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '같은 칸끼리 상대의 더 높은 점수와 맞바꿉니다.', ch: { swap: 1 }, ev: 16 },
+        { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임 끝에 1등 상대의 최고 점수 칸 절반을 훔칩니다.', ev: 24 },
+        { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '눈 하나를 찍습니다. 다음 상대 첫 굴림에 그 눈이 붙습니다.', ch: { glue: 2 }, ev: 8 },
+        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등 상대와 폭탄을 주고받습니다. 20점 못 쓰면 -20점입니다.', ch: { bomb: 1 }, ev: 12 },
+        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '켠 채 기록하면 점수가 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 16 },
+        { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에 바로 기록하면 +6점입니다.', ev: 6 },
+        { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 30점을 빌립니다. 상단 보너스를 놓치면 -50점입니다.', ev: 8 },
+        { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임 끝에 1등 상대보다 30점 이상 뒤지면 +40점입니다.', ev: 10 },
+        { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 턴에 2번 더 굴립니다.', ev: 8 },
+        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '매 턴 다 굴린 뒤 3번 더 굴립니다. 1이 뜨면 터져서 0점입니다.', ch: { fuse: 3 }, ev: 13 },
+        { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '도전한 칸을 따라잡으면 상대 칸 0점, 지면 내 칸 절반입니다.', ch: { gauntlet: 1 }, ev: 22 },
+        { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 기록마다 +8점입니다.', ev: 20, fixed: true },
+        { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다. 못 채운 칸은 0점입니다.', ev: 8 },
+        { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드마다 총점의 5%를 이자로 받습니다.', ev: 32 },
+        { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
+        { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
+        { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
+        { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
+        { id: 'rerollMaster', tier: 1, cat: 'meta', name: '리롤 장인', desc: '증강 선택마다 다시 뽑기가 2번 늘어납니다.', ev: 4 },
+        { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
       ];
       const AUG = {};
       AUG_LIST.forEach(function (a) { AUG[a.id] = a; });
@@ -3770,6 +3770,12 @@
         }
         return '<span class="aug-glyph">' + glyphSvg(a.id) + '</span>';
       }
+      // use count for the card tag ("2회"); 도화선 refills every turn, so its text carries the number instead
+      function usesTxt(a) {
+        if (!a || !a.ch || a.id === 'fuse') return '';
+        return a.ch[Object.keys(a.ch)[0]] + '회';
+      }
+      function tagTxt(a) { const u = usesTxt(a); return TIER_NAME[a.tier] + ' · ' + AUG_CATS[a.cat].ko + (u ? ' · ' + u : ''); }
       function cardEl(id, k) {
         const a = AUG[id], c = AUG_CATS[a.cat];
         const el = document.createElement('button');
@@ -3777,7 +3783,7 @@
         el.className = 'aug-card t' + a.tier;
         el.style.setProperty('--cat', c.color);
         el.style.setProperty('--d', (k * 0.12) + 's');
-        el.setAttribute('aria-label', a.name + ': ' + a.desc);
+        el.setAttribute('aria-label', a.name + (usesTxt(a) ? ' (' + usesTxt(a) + ')' : '') + ': ' + a.desc);
         let sparks = '';
         if (a.tier === 3) {
           for (let n = 0; n < 7; n++) {
@@ -3786,7 +3792,7 @@
         }
         el.innerHTML = '<span class="aug-inner"><span class="aug-face aug-back"></span><span class="aug-face aug-front"><span class="aug-body">' +
           '<span class="aug-art">' + augArt(a) + '</span>' +
-          '<span class="aug-meta"><span class="aug-tag">' + TIER_NAME[a.tier] + ' · ' + c.ko + '</span><span class="aug-name">' + esc(a.name) + '</span><span class="aug-desc">' + esc(a.desc) + '</span></span>' +
+          '<span class="aug-meta"><span class="aug-tag">' + tagTxt(a) + '</span><span class="aug-name">' + esc(a.name) + '</span><span class="aug-desc">' + esc(a.desc) + '</span></span>' +
           sparks + '<span class="aug-shine"></span></span></span></span>';
         return el;
       }
@@ -3961,7 +3967,7 @@
         [3, 2, 1].forEach(function (t) {
           html += '<div class="dex-tier t' + t + '">' + TIER_NAME[t] + '</div>';
           AUG_LIST.filter(function (a) { return a.tier === t; }).forEach(function (a) {
-            html += '<div class="ai-row">' + badgeHtml(a.id) + '<div class="ai-txt"><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></div><span class="ai-n">' + AUG_CATS[a.cat].ko + '</span></div>';
+            html += '<div class="ai-row">' + badgeHtml(a.id) + '<div class="ai-txt"><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></div><span class="ai-n">' + AUG_CATS[a.cat].ko + (usesTxt(a) ? ' · ' + usesTxt(a) : '') + '</span></div>';
           });
         });
         box.innerHTML = html;
@@ -3980,7 +3986,7 @@
         clearTimeout(tipTimer);
         augTip.className = 'aug-tip t' + a.tier;
         augTip.innerHTML = '<span class="at-arrow"></span>' +
-          '<div class="at-head">' + badgeHtml(id) + '<div><div class="at-tag">' + TIER_NAME[a.tier] + ' · ' + c.ko + '</div><div class="at-name">' + esc(a.name) + '</div></div></div>' +
+          '<div class="at-head">' + badgeHtml(id) + '<div><div class="at-tag">' + tagTxt(a) + '</div><div class="at-name">' + esc(a.name) + '</div></div></div>' +
           '<div class="at-desc">' + esc(a.desc) + '</div>' +
           (p ? '<div class="at-foot"><span style="color:' + PLAYER_COLORS[pIdx % 4] + '">' + esc(p.name) + '</span>' + (k ? '<span>남은 횟수 <b>' + charges(p, k) + '</b></span>' : '') + '</div>' : '');
         augTip.hidden = false;
@@ -4702,7 +4708,7 @@
               setTimeout(function () { burst(seatPt(e.q), { shape: 'glow', count: 4, dist: 18, color: '#8cff9f', dur: 700 }); }, 800);
               break;
             }
-            if (e.phase === 'warn') { augPop('glue', seatPt(e.q), e.face + '이 붙어요'); break; }
+            if (e.phase === 'warn') { augPop('glue', seatPt(e.q), e.face + ' 나오면 고정'); break; }
             if (e.phase === 'stick') {
               const idx = toArr(e.idx).map(Number);
               idx.forEach(function (i, k) {
@@ -4749,7 +4755,7 @@
               const sp = seatPt(e.q);
               ringFx(sp, '#ff7a5a', 1.6);
               if (!sample('clock')) tone(1200, 0.04, 'square', 0.03);
-              if (e.q === powerOwnerIdx() || (qp && !qp.isAI && !isOnlineMatch)) showChip('폭탄! 20점 이상 기록하면 돌려보내요', 'gold');
+              if (e.q === powerOwnerIdx() || (qp && !qp.isAI && !isOnlineMatch)) showChip('폭탄! 20점 이상 기록하면 반사', 'gold');
               break;
             }
             if (e.phase === 'boom') {
@@ -4852,7 +4858,7 @@
             const sp = seatPt(e.p);
             burst(sp, { shape: 'smoke', count: 4, angle: -Math.PI / 2, spread: 0.5, dist: 40, size: 0.6, color: 'rgba(220,220,240,0.6)', dur: 1200 });
             augPop('twofer', sp, '휴식');
-            showChip((who ? who.name + ' · ' : '') + '칸을 다 채워서 쉬어요', 'cool');
+            showChip((who ? who.name + ' · ' : '') + '칸을 다 채워 휴식', 'cool');
             if (!sample('chime', { vol: 0.4 })) tone(523, 0.25, 'sine', 0.04);
             break;
           }
@@ -7110,7 +7116,7 @@
 
       async function createOnlineRoom() {
         ensureAudio();
-        if (navigator.onLine === false) { showToast('오프라인이에요 · 온라인 대전은 인터넷이 필요해요'); return; }
+        if (navigator.onLine === false) { showToast('인터넷 연결이 필요해요'); return; }
         cleanupPeer(true);
         syncOnlineName();
         onlineProfId = activeProfile().id;
@@ -7154,7 +7160,7 @@
 
       async function joinOnlineRoom(codeOverride) {
         ensureAudio();
-        if (navigator.onLine === false) { showToast('오프라인이에요 · 온라인 대전은 인터넷이 필요해요'); return; }
+        if (navigator.onLine === false) { showToast('인터넷 연결이 필요해요'); return; }
         const code = normCode(codeOverride || joinRoomInput.value);
         if (!code) { showToast('방 코드를 입력하세요'); return; }
         cleanupPeer(true);
@@ -7452,7 +7458,7 @@
             resetTurnState();
             OVERLAYS.forEach(closeOv);
             beginMatch();
-          } else showToast('방장만 새 게임을 시작할 수 있어요');
+          } else showToast('새 게임은 방장만 시작해요');
           return;
         }
         startNewMatch(players.filter(function (p) { return !p.isAI; }).map(function (p) { return { name: p.name, profId: p.profId || null }; }), matchMode);
@@ -7663,7 +7669,7 @@
         });
         h += '</div>';
         h += '<button type="button" class="btn btn-brass prof-new" data-act="new"' + (profStore.list.length >= PROF_MAX ? ' disabled' : '') + '>새 프로필 만들기</button>';
-        h += '<p class="prof-hint">기본 프로필로 AI 대전과 온라인을 합니다. 같이 하기에서는 자리마다 프로필을 고를 수 있고, 내 차례에는 내 주사위로 굴립니다.</p>';
+        h += '<p class="prof-hint">AI 대전·온라인은 기본 프로필로 합니다. 같이 하기는 자리마다 고른 프로필로 굴립니다.</p>';
         profBody.innerHTML = h;
         fillThumbs(profBody);
       }
@@ -7740,7 +7746,7 @@
         if (!name) { showToast('이름을 입력하세요'); const i = $('peName'); if (i) i.focus(); return; }
         reloadProfiles();
         let q = e.id ? profById(e.id) : null;
-        if (!q && profStore.list.length >= PROF_MAX) { showToast('프로필은 ' + PROF_MAX + '개까지 만들 수 있어요'); return; }
+        if (!q && profStore.list.length >= PROF_MAX) { showToast('프로필은 ' + PROF_MAX + '개까지예요'); return; }
         if (!q) { q = cleanProf({ name: name, av: e.av, dice: e.dice }); profStore.list.push(q); }
         else { q.name = name; q.av = e.av; q.dice = e.dice; }
         saveProfiles();
