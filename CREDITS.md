@@ -31,7 +31,7 @@ Every one of these packs is released under CC0 1.0 (public domain dedication), s
 - Author: Kenney (www.kenney.nl)
 - License: CC0 1.0
 - Source: https://opengameart.org/content/sci-fi-sounds
-- Files: `sfx/thud-2.mp3` (impactMetal_001.ogg); `sfx/zap-1.mp3` (laserLarge_000.ogg)
+- Files: `sfx/thud-2.mp3` (impactMetal_001.ogg); `sfx/zap-1.mp3` (laserLarge_000.ogg); `sfx/boom-1.mp3` (explosionCrunch_000.ogg mixed with lowFrequency_explosion_001.ogg); `sfx/boom-2.mp3` (lowFrequency_explosion_001.ogg, under the bang listed below)
 
 ## Digital Audio (63 Digital sound effects)
 
@@ -60,6 +60,13 @@ Every one of these packs is released under CC0 1.0 (public domain dedication), s
 - License: CC0 1.0
 - Source: https://opengameart.org/content/100-cc0-sfx
 - Files: `sfx/slam-1.mp3` (slam_03.ogg); `sfx/slam-2.mp3` (slam_02.ogg)
+
+## 25 CC0 bang / firework SFX
+
+- Author: rubberduck
+- License: CC0 1.0
+- Source: https://opengameart.org/content/25-cc0-bang-firework-sfx
+- Files: `sfx/boom-2.mp3` (bang_09.ogg mixed with Kenney's lowFrequency_explosion_001.ogg)
 
 ## 100 CC0 SFX #2
 
@@ -207,6 +214,13 @@ Every one of these packs is released under CC0 1.0 (public domain dedication), s
 - License: CC0 1.0
 - Source: https://opengameart.org/content/particle-pack-80-sprites
 - Files: `fx/smoke.png` (smoke_07.png); `fx/dust.png` (dirt_02.png); `fx/spark.png` (trace_01.png); `fx/lightning.png` (spark_07.png); `fx/star.png` (star_06.png); `fx/magic.png` (magic_01.png); `fx/ember.png` (flame_05.png); `fx/glow.png` (circle_05.png); `fx/ring.png` (circle_02.png); `fx/ring_soft.png` (circle_01.png); `fx/impact.png` (scorch_01.png); `fx/twirl.png` (twirl_01.png); `fx/slash.png` (slash_04.png); `fx/flare.png` (flare_01.png)
+
+## Explosion Pack
+
+- Author: Kenney (www.kenney.nl)
+- License: CC0 1.0
+- Source: https://kenney.nl/assets/explosion-pack
+- Files: `fx/kaboom.png` (regularExplosion00.png to regularExplosion08.png joined into one strip, colours unchanged)
 
 ## Item Popup Starburst
 
