@@ -283,25 +283,50 @@
     box-shadow: 0 0 14px rgba(255, 215, 122, 0.8), 0 2px 0 #8a5a12;
   }
   .slot-hold.pop { animation: holdPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  /* a die changed by an augment: the augment's badge pinned to its shoulder (plus an edge glow in 3D / outline in 2D).
+     Dice designs never have either, so "augment die" and "my dice color" can't be mixed up. */
+  .slot-marks { position: absolute; left: 1px; top: 5%; z-index: 2; display: flex; gap: 3px; pointer-events: none; }
+  .slot-marks .aug-badge { width: 21px; height: 21px; border-radius: 7px; pointer-events: auto; cursor: help; box-shadow: 0 0 0 1.5px var(--tc), 0 0 0 3.5px rgba(0, 0, 0, 0.5), 0 3px 7px rgba(0, 0, 0, 0.6); }
+  .slot-marks .aug-badge svg { width: 15px; height: 15px; }
+  .die2d .slot-marks { left: -7px; top: -9px; }
+  .die2d.aug { box-shadow: 0 0 0 3px var(--mk, #fff), 0 0 16px var(--mk, #fff), 0 9px 16px rgba(0, 0, 0, 0.45); }
   @keyframes holdPop { 0% { transform: translateX(-50%) scale(0.3); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 
   /* power mode */
   .powers { position: absolute; left: 50%; bottom: 12px; z-index: 5; transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: max-content; max-width: calc(100% - 20px); }
+  /* usable now = a bright ivory key (same language as the score tiles) with the augment's color block;
+     not usable right now = a dark plate that still reads; armed = gold; live slam = ruby */
   .pw-btn {
-    display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px 0 9px; border-radius: 999px; white-space: nowrap;
-    color: var(--brass-hi); background: rgba(6, 22, 17, 0.78);
-    box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35);
-    font: 400 14px var(--f-display); transition: transform 0.1s, background 0.15s, opacity 0.2s;
+    --cat: var(--brass-hi); --fg: #2a1a04;
+    position: relative; display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 9px 0 5px; border-radius: 14px; white-space: nowrap;
+    color: var(--ink); background: linear-gradient(180deg, var(--ivory), var(--ivory-lo));
+    box-shadow: 0 3px 0 var(--ivory-edge), 0 0 0 2px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.45), 0 0 18px color-mix(in srgb, var(--cat) 60%, transparent);
+    font: 400 15px var(--f-display); transition: transform 0.1s, filter 0.2s;
   }
-  .pw-btn svg { width: 18px; height: 18px; flex: none; }
-  .pw-btn:active:not(:disabled) { transform: scale(0.94); }
-  .pw-btn:disabled { opacity: 0.32; }
-  .pw-n { display: flex; gap: 3px; }
-  .pw-n i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .pw-btn.is-live { color: #fff; background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 0 22px rgba(224, 49, 75, 0.75); animation: pwLive 0.45s ease-in-out infinite alternate; }
+  .pw-ico {
+    flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--fg);
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cat) 78%, white), color-mix(in srgb, var(--cat) 72%, #0c0d10));
+    box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.22);
+  }
+  .pw-btn svg { width: 22px; height: 22px; flex: none; }
+  .pw-n { min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; display: grid; place-items: center; background: var(--ink); color: var(--ivory); font: 700 12px/1 var(--f-ui); }
+  .pw-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ivory-edge), 0 0 0 2px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.45); }
+  .pw-btn:disabled { color: #b9b2a2; background: rgba(8, 12, 11, 0.86); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.16), 0 4px 10px rgba(0, 0, 0, 0.4); }
+  .pw-btn:disabled .pw-ico { filter: saturate(0.5) brightness(0.72); }
+  .pw-btn:disabled .pw-n { background: rgba(255, 255, 255, 0.14); color: #d8d2c4; }
+  .pw-btn.pw-wake { animation: pwWake 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes pwWake { 0% { transform: scale(0.9); filter: brightness(1.7); } 55% { transform: scale(1.1); } 100% { transform: none; filter: none; } }
+  .pw-btn.is-live { color: #fff; background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 3px 0 #7d0f24, 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 24px rgba(224, 49, 75, 0.85); animation: pwLive 0.45s ease-in-out infinite alternate; }
+  .pw-btn.is-live .pw-ico { background: #fff; color: var(--ruby); }
+  .pw-btn.is-live .pw-n { background: #fff; color: var(--ruby-lo); }
   @keyframes pwLive { from { transform: scale(1); } to { transform: scale(1.08); } }
-  .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 0 18px rgba(255, 215, 122, 0.7); }
+  .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 3px 0 #8a5a12, 0 0 0 2px #fff, 0 0 22px rgba(255, 215, 122, 0.9); animation: pwArm 0.7s ease-in-out infinite alternate; }
+  @keyframes pwArm { from { filter: brightness(1); } to { filter: brightness(1.14); } }
+  /* five or more: icon + count only, so the bar stays within two rows on a phone */
+  .powers.many .pw-lb { display: none; }
+  .powers.many .pw-btn { padding: 0 6px 0 5px; gap: 5px; }
+  @media (max-width: 480px) { .pw-btn { height: 40px; font-size: 14px; gap: 6px; } .pw-ico { width: 30px; height: 30px; border-radius: 9px; } .pw-btn svg { width: 20px; height: 20px; } }
   .slot-btn.target, .die2d.target { cursor: pointer; }
   .slot-btn.target::after, .die2d.target::after {
     content: ""; position: absolute; inset: 14% 6% 18%; border-radius: 16px; pointer-events: none;
@@ -311,11 +336,11 @@
   .die2d.target { position: relative; }
   .die2d.target::after { inset: -4px; }
   @keyframes pwPulse { from { opacity: 0.45; } to { opacity: 1; } }
-  @media (orientation: landscape) and (max-height: 560px) { .powers { bottom: 8px; } .pw-btn { height: 32px; font-size: 12px; } }
+  @media (orientation: landscape) and (max-height: 560px) { .powers { bottom: 8px; } .pw-btn { height: 34px; font-size: 13px; } .pw-ico { width: 26px; height: 26px; border-radius: 8px; } .pw-btn svg { width: 18px; height: 18px; } }
   .slot-btn.target-sel::after { box-shadow: 0 0 0 3px #fff, 0 0 24px rgba(255, 255, 255, 0.75); animation: none; opacity: 1; }
   .pw-btn .a, .aug-glyph .a, .aug-glyph-mini .a, .aug-badge .a { fill: var(--acc, #e0314b); stroke: none; }
   .face-pick {
-    position: absolute; left: 50%; bottom: 60px; z-index: 6; transform: translateX(-50%);
+    position: absolute; left: 50%; bottom: 66px; z-index: 6; transform: translateX(-50%);
     display: flex; gap: 6px; padding: 8px; border-radius: 16px;
     background: rgba(6, 22, 17, 0.9); box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.55), 0 10px 24px rgba(0, 0, 0, 0.5);
     animation: chipIn2 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1596,6 +1621,9 @@
         { id: 'yacht', name: 'YACHT', ko: '야트', desc: '5개 모두 같은 눈이면 50점', section: 'lower', glyph: '5×' }
       ];
       const UPPER_FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+      // signature color of each augment skin: the die's edge glow in 3D, its outline in 2D
+      const SKIN_EDGE = { gold: '#ffc233', lead: '#dfe6f5', curse: '#ff3b57', twin: '#5fd4ff', cocoon: '#e9d9a6', wing: '#7fe9ff', wild: '#b98cff', glue: '#6dff8a' };
+      window.SKIN_EDGE = SKIN_EDGE;
       const PLAYER_COLORS = ['#4fd1ff', '#ff6b8b', '#ffc94d', '#7cf29c'];
 
       // ---------- dice designs (shared with the 3D module, which builds the face textures from these) ----------
@@ -1949,6 +1977,7 @@
       let selectedTile = null;
       let lastPointer = '';
       let prevHeld = [false, false, false, false, false];
+      let prevMarks = ['', '', '', '', ''];
       let prevRollsLeft = 3;
       let totalDelayUntil = 0;
       const totalAnims = {};
@@ -2498,6 +2527,7 @@
 
       function renderDice() {
         const canClick = hasRolledThisTurn && !isRolling && !isScoring && isMyTurn();
+        const marks = diceMarks();
 
         if (use3D()) {
           const D3 = window.Dice3D;
@@ -2514,8 +2544,8 @@
             btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
-            if (held[i]) btn.innerHTML = '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
-            btn.addEventListener('click', function () { handleHoldInput(i); });
+            btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
+            btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             btn.addEventListener('pointerenter', function (e) { if (canClick && e.pointerType === 'mouse') D3.setHover(i); });
             btn.addEventListener('pointerleave', function () { D3.setHover(-1); });
             diceGrid.appendChild(btn);
@@ -2532,19 +2562,21 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             const dzOn = dz2d && !skins2d[i];
-            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '');
+            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : ''));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (dzOn) btn.style.cssText = '--dz-bg:' + dz2d.css[0] + ';--dz-pip:' + dz2d.css[1] + ';--dz-one:' + dz2d.css[2];
+            if (skins2d[i] && SKIN_EDGE[skins2d[i]]) btn.style.setProperty('--mk', SKIN_EDGE[skins2d[i]]);
             let h = '';
             for (let c = 0; c < 9; c++) h += '<i class="' + (PIP_MAP[v].indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
             if (held[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
-            btn.innerHTML = h;
-            btn.addEventListener('click', function () { handleHoldInput(i); });
+            btn.innerHTML = h + marksHtml(marks[i], i);
+            btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             diceGrid.appendChild(btn);
           }
         }
         prevHeld = held.slice();
+        prevMarks = marks.map(function (ids) { return ids.join(','); });
       }
 
       function renderTiles() {
@@ -3378,6 +3410,31 @@
         lastRollNotes = rollNotes;
         rollNotes = null;
         return next;
+      }
+      // the augments acting on each die right now, as badge ids (the table dice are the current player's)
+      function diceMarks() {
+        const m = [[], [], [], [], []];
+        const p = players[currentPlayerIdx];
+        if (!matchAug || !p || !gameActive) return m;
+        if (augHas(p, 'twins')) { m[0].push('twins'); m[1].push('twins'); }
+        if (augHas(p, 'loaded')) m[0].push('loaded');
+        if (augHas(p, 'golden')) m[2].push('golden');
+        if (augHas(p, 'pupa')) m[4].push('pupa');
+        if (cursedBy(p)) m[4].push('curse');
+        stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
+        if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
+        return m;
+      }
+      // whose augment a die mark is (for its tooltip): the roller's own, or the opponent's who put it there
+      function markOwner(id) {
+        if (id !== 'curse' && id !== 'glue') return currentPlayerIdx;
+        for (let j = 0; j < players.length; j++) if (j !== currentPlayerIdx && augHas(players[j], id)) return j;
+        return -1;
+      }
+      function marksHtml(ids, i) {
+        if (!ids.length) return '';
+        const fresh = prevMarks[i] !== ids.join(',');
+        return '<span class="slot-marks">' + ids.map(function (id) { return badgeHtml(id, fresh, markOwner(id)); }).join('') + '</span>';
       }
       function diceSkins() {
         const s = [null, null, null, null, null];
@@ -5310,6 +5367,7 @@
         if (armed.allin && charges(owner, 'allin') <= 0) armed.allin = false;
         if (armed.overwrite && charges(owner, 'overwrite') <= 0) armed.overwrite = false;
         bar.hidden = !keys.length;
+        bar.classList.toggle('many', keys.length >= 5);
         const augFor = function (k) { return augIdForPower(owner, k); };
         const sig = me + '|' + keys.map(function (k) { return k + ':' + augFor(k); }).join(',');
         if (bar.dataset.sig !== sig) {
@@ -5322,7 +5380,9 @@
             b.dataset.pw = k;
             if (augFor(k)) { b.dataset.aug = augFor(k); b.dataset.p = String(me); }
             b.setAttribute('aria-label', POWER_DEFS[k].label);
-            b.innerHTML = glyphSvg(k) + '<span>' + POWER_DEFS[k].label + '</span><span class="pw-n"></span>';
+            const cat = AUG[augFor(k)] ? AUG_CATS[AUG[augFor(k)].cat] : null;
+            if (cat) { b.style.setProperty('--cat', cat.color); b.style.setProperty('--fg', cat.fg); }
+            b.innerHTML = '<span class="pw-ico">' + glyphSvg(k) + '</span><span class="pw-lb">' + POWER_DEFS[k].label + '</span><b class="pw-n"></b>';
             b.addEventListener('click', function () { handlePowerInput(k); });
             bar.appendChild(b);
           });
@@ -5330,11 +5390,14 @@
         bar.querySelectorAll('.pw-btn').forEach(function (b) {
           const k = b.dataset.pw, n = charges(owner, k);
           const ok = k === 'slam' ? canSlam(me) : (mine && canUsePower(k));
+          if (b.disabled && ok && b.dataset.seen) restartAnim(b, 'pw-wake'); // it just became usable: one pop
+          b.dataset.seen = '1';
           b.disabled = !ok;
           b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || !!armed[k]);
-          const dots = b.querySelector('.pw-n');
-          if (dots.childElementCount !== n) dots.innerHTML = new Array(n + 1).join('<i></i>');
+          b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회');
+          const cnt = b.querySelector('.pw-n');
+          if (cnt.textContent !== String(n)) cnt.textContent = String(n);
         });
         renderFacePick();
       }
@@ -8413,6 +8476,8 @@
         wild: { color: new THREE.Color('#e6d2ff'), metal: 0.2, rough: 0.22, emi: new THREE.Color('#2a0c4a') },
         glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') }
       };
+      // every augment skin also has a signature edge color (shared with the 2D fallback through window.SKIN_EDGE)
+      Object.keys(SKINS).forEach((k) => { SKINS[k].edge = new THREE.Color((window.SKIN_EDGE || {})[k] || '#ffffff'); });
 
       const D = [];
       for (let i = 0; i < 5; i++) {
@@ -8427,8 +8492,18 @@
         ring.rotation.x = -Math.PI / 2;
         ring.position.y = 0.01;
         scene.add(ring);
+        // augment dice: a colored edge around the die and a pool of the same color on the felt (no dice design has these)
+        const hull = new THREE.Mesh(dieGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.BackSide, toneMapped: false }));
+        hull.visible = false;
+        mesh.add(hull);
+        const mark = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+        mark.rotation.x = -Math.PI / 2;
+        mark.position.y = 0.011;
+        mark.scale.setScalar(1.15);
+        mark.visible = false;
+        scene.add(mark);
         const d = {
-          i, group, mesh, mats, ring,
+          i, group, mesh, mats, ring, hull, mark, markVis: 0, markCol: new THREE.Color(1, 1, 1),
           value: i + 1, baseQuat: canonQuat(i + 1, jitter()),
           held: false, heldVis: 0, hover: false, hoverVis: 0, dim: false, dimVis: 0,
           hl: false, hlVis: 0, hlColor: new THREE.Color('#3fe0a9'),
@@ -9163,6 +9238,19 @@
           d.ring.material.color.copy(GOLD).lerp(d.hlColor, d.hlVis * (1 - hv * 0.5));
           d.ring.material.opacity = Math.min(1.2, Math.max(hv * 0.75, d.hlVis * (0.5 + 0.2 * Math.sin(clock * 8))) + d.ringSpike);
           d.ringSpike = d.ringSpike > 0.002 ? d.ringSpike * Math.exp(-dt * 8) : 0;
+          // augment mark: edge + felt glow in the skin's signature color, breathing slowly
+          const edge = d.skin && SKINS[d.skin] ? SKINS[d.skin].edge : null;
+          d.markVis += ((edge ? 1 : 0) - d.markVis) * k;
+          if (d.markVis > 0.02) {
+            if (edge) d.markCol.copy(edge);
+            const pulse = REDUCED ? 1 : 0.86 + 0.14 * Math.sin(clock * 3 + d.i * 1.3);
+            d.hull.visible = true; d.mark.visible = true;
+            d.hull.scale.setScalar(1 + 0.12 * d.markVis);
+            d.hull.material.color.copy(d.markCol).multiplyScalar(pulse * (1 - d.dimVis * 0.35));
+            d.mark.position.set(d.group.position.x, 0.011, d.group.position.z);
+            d.mark.material.color.copy(d.markCol);
+            d.mark.material.opacity = d.markVis * 0.62 * pulse * (d.rolling ? 0.45 : 1);
+          } else if (d.hull.visible) { d.hull.visible = false; d.mark.visible = false; }
         }
         if (gather && clock >= gather.at) { const g = gather; gather = null; if (g.cb) g.cb(g.values); }
       }
@@ -9500,6 +9588,11 @@
               }));
             }
             const m = new THREE.Mesh(dieGeo, pr.mats[skin]);
+            if (!dzKey && SKINS[dd.skin]) { // same edge as on the table
+              const h = new THREE.Mesh(dieGeo, new THREE.MeshBasicMaterial({ color: SKINS[dd.skin].edge, side: THREE.BackSide, toneMapped: false }));
+              h.scale.setScalar(1.1);
+              m.add(h);
+            }
             m.castShadow = true;
             m.quaternion.copy(canonQuat(dd.v || 1, dd.ry || 0));
             if (dd.tx || dd.tz) m.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(dd.tx || 0, 0, dd.tz || 0)));
