@@ -1052,7 +1052,7 @@
   body.fx-tex .fx-ring { border: 0; box-shadow: none; background: var(--c, #fff); width: 60px; height: 60px; margin: -30px 0 0 -30px; -webkit-mask: url(fx/ring.png) center / contain no-repeat; mask: url(fx/ring.png) center / contain no-repeat; }
   /* tiles under augments */
   .tile.is-prophecy { animation: prophecyGlow 1.6s ease-in-out infinite; }
-  .tile.is-prophecy::after { content: "+10"; position: absolute; top: -9px; left: -6px; padding: 2px 6px; border-radius: 999px; background: #8f5cff; color: #fff; font: 400 9px var(--f-game); box-shadow: 0 0 10px rgba(185, 140, 255, 0.9); }
+  .tile.is-prophecy::after { content: "+8"; position: absolute; top: -9px; left: -6px; padding: 2px 6px; border-radius: 999px; background: #8f5cff; color: #fff; font: 400 9px var(--f-game); box-shadow: 0 0 10px rgba(185, 140, 255, 0.9); }
   @keyframes prophecyGlow { 0%, 100% { box-shadow: 0 4px 0 var(--ivory-edge), 0 0 0 2px #b98cff, 0 0 10px rgba(185, 140, 255, 0.5); } 50% { box-shadow: 0 4px 0 var(--ivory-edge), 0 0 0 3px #d6bcff, 0 0 24px rgba(185, 140, 255, 0.9); } }
   .tile.is-sealed { filter: grayscale(0.6) brightness(0.7); }
   .tile.is-sealed::after {
@@ -3099,6 +3099,7 @@
       };
       const TIER_NAME = { 1: 'SILVER', 2: 'GOLD', 3: 'PRISM' };
       // art: a 3D dice portrait rendered by Dice3D (glyph: also pin the icon on it); otherwise the icon is the art
+      const PROPHECY_PTS = 8; // 예언 bonus; a scratched (0) box gets nothing
       const AUG_LIST = [
         { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
         { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 주사위를 4번 굴릴 수 있습니다', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
@@ -3116,7 +3117,7 @@
         { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '1회, 이미 기록한 칸을 더 높은 점수로 다시 기록 · 대신 마지막에 빈칸 하나가 남습니다', ch: { overwrite: 1 }, ev: 10 },
         { id: 'yachtClub', tier: 2, cat: 'score', name: '요트 클럽', desc: '야트 100점', ev: 18, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
         { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '기록할 때 주사위 합이 정확히 21이면 +21점', ev: 13 },
-        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나가 예언됩니다 · 그 칸에 기록하면 +10점', ev: 14 },
+        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나가 예언됩니다 · 그 칸을 0점이 아닌 점수로 채우면 +' + PROPHECY_PTS + '점', ev: 12 },
         { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '1회, 족보 조건을 무시하고 원하는 칸에 기록', ch: { joker: 1 }, ev: 30 },
         { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스 35점 → 70점', ev: 24 },
         { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '상단 보너스가 없어지는 대신, 같은 눈 4개 이상으로 채운 상단 칸마다 +10', ev: 7 },
@@ -3288,7 +3289,7 @@
       }
 
       // what a record is worth for player p, augments included
-      // opts: { roundNo, firstRoll, joker, allin, noGolden, noProphecy, trace: [] (receives the augments that applied) }
+      // opts: { roundNo, firstRoll, joker, allin, noGolden, noProphecy, own (just the box's own score), trace: [] (receives the augments that applied) }
       function scoreFor(p, catId, d, opts) {
         opts = opts || {};
         const base = calcCategoryScore(catId, d);
@@ -3321,10 +3322,12 @@
           else if (catId === 'largeStraight') v = met ? 30 : 0;
           else { v = met ? 50 : 0; if (met && has('yachtClub')) { v = 100; note('yachtClub'); } }
         }
+        const own = v; // the box's own score, before flat extras
+        if (opts.own) return own;
         if (has('blackjack') && sum === 21 && !opts.second) { v += 21; note('blackjack'); }
         if (has('lateBloom') && (opts.roundNo || round) >= 10) { v += 8; note('lateBloom'); }
         if (has('speedrun') && opts.firstRoll && !opts.second) { v += 6; note('speedrun'); }
-        if (has('prophecy') && !opts.noProphecy && p.prophecy === catId) { v += 10; note('prophecy'); }
+        if (has('prophecy') && !opts.noProphecy && p.prophecy === catId && own > 0) { v += PROPHECY_PTS; note('prophecy'); }
         if (opts.allin && !opts.second) { v = v > 0 ? v * 2 : -20; note('allin'); }
         return v;
       }
@@ -4418,7 +4421,7 @@
             burst(t, { shape: 'magic', count: 4, dist: 50, color: '#d6bcff', dur: 1000, spin: 360 });
             sample('prophecy');
             sfxMagic();
-            augPop('prophecy', t, '+10', { label: '예언 적중' });
+            augPop('prophecy', t, '+' + PROPHECY_PTS, { label: '예언 적중' });
             break;
           }
           case 'shaky': {
@@ -5446,9 +5449,10 @@
         let scx = null;
         const scw = function () { if (!scx) { scx = Float64Array.from(m.sc || YachtAI.baseSC()); m.sc = scx; } return scx; };
         if (p.prophecy && p === players[currentPlayerIdx]) {
-          const ci = CAT_IDS.indexOf(p.prophecy);
+          const ci = CAT_IDS.indexOf(p.prophecy), pc = p.prophecy;
           const sc = scw();
-          for (let d = 0; d < 252; d++) sc[ci * 252 + d] += 10;
+          const own = YachtAI.buildSC(function (cj, d) { return cj === ci ? scoreFor(p, pc, d, { noGolden: true, own: true, roundNo: round }) : 0; });
+          for (let d = 0; d < 252; d++) if (own[ci * 252 + d] > 0) sc[ci * 252 + d] += PROPHECY_PTS;
         }
         const after = Math.max(0, lastRound - round); // my turns after this one
         // 그랜드슬램: don't scratch a quest box, chase the last ones
