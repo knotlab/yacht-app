@@ -2790,7 +2790,7 @@
           renderDice();
           renderPowers();
           postRollFx(finalV && finalV.length === 5 ? finalV : vals);
-        }, { knock: !!extra.knock, sound: extra.power === 'reroll' ? 'reroll' : null });
+        }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : null });
         renderPowers();
       }
       function applyFx(kind, extra) {
@@ -2887,6 +2887,14 @@
       let fbRoll = null;   // 2D fallback roll in progress
       let liveRoll = null; // the roll on the table right now: { roller, held, values, rollsAfter, slammed }
       let rollSeq = 0;     // bumps whenever the dice change, so late remote actions can be recognised
+      // 다시 굴려 throws exactly one die: its index, or -1 (anything else pops like a knock)
+      function rerollIdx(extra, heldSnap) {
+        if (!extra || extra.power !== 'reroll') return -1;
+        const i = Math.floor(Number(extra.idx));
+        if (!(i >= 0 && i < 5) || heldSnap[i]) return -1;
+        for (let k = 0; k < 5; k++) if (k !== i && !heldSnap[k]) return -1;
+        return i;
+      }
       function playRoll(values, heldSnap, done, mode) {
         if (!(mode && mode.sound && sample(mode.sound))) sfxRattle();
         // drama = suspense, not a spoiler: the slow-mo also runs for near misses (four of a kind going for an open
@@ -2904,8 +2912,9 @@
         const done2 = function (v) { lastDrama = tag; done(v); };
         if (use3D()) {
           const opts = { drama: willYacht || near, onDrama: dramaFx, onImpact: diceImpact, onLand: sfxLand, onDone: done2 };
-          // knock: the dice pop up from where they rest instead of being thrown in
-          if (mode && mode.knock && window.Dice3D.knock) window.Dice3D.knock(values, heldSnap.map(function (h) { return !h; }), opts);
+          // one: a single die is picked up and thrown again · knock: the dice pop up from where they rest
+          if (mode && mode.one >= 0 && window.Dice3D.reroll) window.Dice3D.reroll(values, mode.one, opts);
+          else if (mode && mode.knock && window.Dice3D.knock) window.Dice3D.knock(values, heldSnap.map(function (h) { return !h; }), opts);
           else window.Dice3D.roll(values, heldSnap, opts);
           return;
         }
@@ -2984,7 +2993,7 @@
           postRollFx(v);
           augRollFx(roll.notes);
           if (typeof onComplete === 'function') onComplete();
-        }, { knock: !!(extra && extra.knock), sound: extra && extra.sound ? extra.sound : null });
+        }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null });
         renderPowers(); // the slam window opens once the dice are actually moving
       }
 
@@ -8628,6 +8637,7 @@
 
       // ---------- physics ----------
       // init (slam): start each rolling die from its current pose and kick it off the table
+      // (an entry with w = angular velocity is launched exactly as given; init may be a function = a new launch per attempt)
       function runSim(heldArr, rollingIdx, init) {
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -50, 0) });
         world.allowSleep = false;
@@ -8680,8 +8690,13 @@
               Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, st.p.z))
             );
             b.quaternion.set(st.q.x, st.q.y, st.q.z, st.q.w);
-            b.velocity.set(st.v.x * 0.5 + (Math.random() - 0.5) * 7, 10 + Math.random() * 6, st.v.z * 0.5 + (Math.random() - 0.5) * 5);
-            b.angularVelocity.set((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34);
+            if (st.w) { // a throw with its own launch (re-roll): take it as given
+              b.velocity.set(st.v.x, st.v.y, st.v.z);
+              b.angularVelocity.set(st.w.x, st.w.y, st.w.z);
+            } else {
+              b.velocity.set(st.v.x * 0.5 + (Math.random() - 0.5) * 7, 10 + Math.random() * 6, st.v.z * 0.5 + (Math.random() - 0.5) * 5);
+              b.angularVelocity.set((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34);
+            }
           } else {
             b.position.set(
               dir * (bounds.halfX - 0.75) + (Math.random() - 0.5) * 0.3,
@@ -8739,7 +8754,7 @@
       }
       function simulate(heldArr, rollingIdx, init) {
         let res = null;
-        for (let attempt = 0; attempt < 6; attempt++) { res = runSim(heldArr, rollingIdx, init); if (res.ok) break; }
+        for (let attempt = 0; attempt < 6; attempt++) { res = runSim(heldArr, rollingIdx, typeof init === 'function' ? init() : init); if (res.ok) break; }
         return res;
       }
 
@@ -8836,7 +8851,7 @@
       function slam(forced) {
         const a = anim;
         if (!a || a.playhead >= a.steps - 3) return null;
-        const ph = Math.min(a.playhead, a.steps - 1);
+        const ph = Math.max(0, Math.min(a.playhead, a.steps - 1));
         const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, a.steps - 1);
         const init = a.rolling.map((i, k) => {
           const F = a.frames[k], o0 = f0 * 7, o1 = f1 * 7, d = D[i];
@@ -8890,7 +8905,8 @@
       function applyFrame(a, ph) {
         const last = a.steps - 1;
         const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, last), t = ph - f0;
-        const blend = Math.min(1, a.playhead / 7);
+        // lead: the die is lifted to the launch point first (the playhead counts up from -lead)
+        const blend = a.lead ? Math.min(1, (a.playhead + a.lead) / (a.lead + 6)) : Math.min(1, a.playhead / 7);
         a.centroid.set(0, 0, 0);
         a.rolling.forEach((i, k) => {
           const d = D[i], F = a.frames[k];
@@ -8924,7 +8940,7 @@
         a.timeScale += (want - a.timeScale) * (1 - Math.exp(-dt * 6));
         a.playhead += dt * 60 * SPEED * a.timeScale;
         const last = a.steps - 1;
-        const ph = Math.min(a.playhead, last);
+        const ph = Math.max(0, Math.min(a.playhead, last));
         applyFrame(a, ph);
         while (a.ii < a.impacts.length && a.impacts[a.ii].step <= ph) {
           const k = a.ii++, im = a.impacts[k];
@@ -8991,13 +9007,14 @@
           d.rolling = false;
           d.value = a.values[i];
           d.baseQuat = canonQuat(d.value, jitter());
-          const delay = k * 0.05, dur = 0.4;
+          const delay = k * 0.05, dur = a.homeDur || 0.4;
           d.tween = {
-            fromP: d.group.position.clone(), fromQ: worldQ, toQ: d.baseQuat.clone(), t0: clock + delay, dur, hop: 0.6, sq: -3.2,
+            fromP: d.group.position.clone(), fromQ: worldQ, toQ: d.baseQuat.clone(), t0: clock + delay, dur, hop: a.homeHop || 0.6, sq: -3.2,
             onEnd: () => {
               // landing flash: "this is your result"
               flashDie(d, 0.3);
-              spawnRing(d.group.position.x, d.group.position.z, 5, null, STEEP);
+              if (a.homeRing != null) spawnRing(d.group.position.x, d.group.position.z, 9, a.homeRing);
+              else spawnRing(d.group.position.x, d.group.position.z, 5, null, STEEP);
               if (a.opts.onLand) a.opts.onLand(k);
             }
           };
@@ -9285,6 +9302,48 @@
         }
         if (document.hidden) finishNow();
       }
+      // 다시 굴려: one die is picked out of the row, tossed onto the open felt and hops back home.
+      // Nothing else on the table moves (a knock jolts the whole row like a slam would).
+      const PLUCK = 11; // lead-in steps: the lift before the throw
+      const PLUCK_PUFF = { a: 0.2, s0: 0.22, s1: 0.7, vy: 0.25 };
+      const HOME_RING = { size: 1.25, life: 1.0, alpha: 0.4 };
+      const AXIS_X = new THREE.Vector3(1, 0, 0);
+      function reroll(values, i, opts) {
+        opts = opts || {};
+        const d = D[i];
+        if (!d) { setTimeout(() => opts.onDone && opts.onDone(values.slice()), 0); return; }
+        if (anim || gather) finishNow();
+        apexAt = null; // the dice that earned a pending payoff are changing
+        const home = slots[i];
+        const front = bounds.zNear - home.z, back = home.z - bounds.zFar;
+        // toward the player when the near felt has room for it (tall tables), else onto the far felt
+        const side = front >= 2.6 && (back < 2.6 || Math.random() < 0.65) ? 1 : -1;
+        const reach = Math.max(1, Math.min(2.2, (side > 0 ? front : back) - 1.1)); // the first bounce lands clear of the row
+        const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
+        const cocked = new THREE.Quaternion().setFromAxisAngle(AXIS_X, -side * 0.5).multiply(worldQ); // leans back before the flick
+        const launch = () => [{
+          p: new THREE.Vector3(home.x, 2, home.z + side * 0.35),
+          q: cocked,
+          v: new THREE.Vector3((Math.random() - 0.5) * 1.6 - home.x * 0.2, 5 + Math.random() * 2, side * (reach / 0.4) * (0.9 + Math.random() * 0.2)),
+          w: new THREE.Vector3(side * (14 + Math.random() * 10), (Math.random() - 0.5) * 16, (Math.random() - 0.5) * 26)
+        }];
+        const sim = simulate(D.map((x, k) => k !== i), [i], launch);
+        d.startP.copy(d.group.position);
+        d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(values[i])], sim.tops[0]);
+        d.startQ.copy(worldQ).multiply(d.mesh.quaternion.clone().invert());
+        startRolling(d);
+        const a = anim = makeAnim(sim, [i], values, opts, opts.drama);
+        a.homeHop = 1.1; a.homeDur = 0.5; a.homeRing = 0xff8fa0;
+        if (!REDUCED) { a.lead = PLUCK; a.playhead = -PLUCK; }
+        // the die leaves the felt; a soft ring keeps its seat until it comes home
+        spawnRing(home.x, home.z, 10, 0xff8fa0);
+        spawnRing(home.x, home.z, 6, 0xff8fa0, HOME_RING);
+        if (!REDUCED) {
+          spawnPuff(home.x - 0.36, home.z + 0.1, -0.5, 0.1, PLUCK_PUFF);
+          spawnPuff(home.x + 0.36, home.z + 0.1, 0.5, 0.1, PLUCK_PUFF);
+        }
+        if (document.hidden) finishNow();
+      }
       function ring(i, color, power) { const d = D[i]; if (d) spawnRing(d.group.position.x, d.group.position.z, power || 14, color); }
       // dice hop in their slots. o: { stagger (0.07 s), delay (s), amp (1.15), spin (true), land (squash impulse, -4.5),
       // ring (landing ring color | null), apex: { stop (hitstop s at the top of the hop), cb } }
@@ -9466,6 +9525,7 @@
         setDesign,
         portrait,
         knock,
+        reroll,
         ring,
         aura,
         flipTo,
