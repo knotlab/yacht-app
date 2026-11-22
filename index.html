@@ -285,10 +285,10 @@
   .slot-hold.pop { animation: holdPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
   /* a die changed by an augment: the augment's badge pinned to its shoulder (plus an edge glow in 3D / outline in 2D).
      Dice designs never have either, so "augment die" and "my dice color" can't be mixed up. */
-  .slot-marks { position: absolute; left: 1px; top: 5%; z-index: 2; display: flex; gap: 3px; pointer-events: none; }
-  .slot-marks .aug-badge { width: 21px; height: 21px; border-radius: 7px; pointer-events: auto; cursor: help; box-shadow: 0 0 0 1.5px var(--tc), 0 0 0 3.5px rgba(0, 0, 0, 0.5), 0 3px 7px rgba(0, 0, 0, 0.6); }
-  .slot-marks .aug-badge svg { width: 15px; height: 15px; }
-  .die2d .slot-marks { left: -7px; top: -9px; }
+  .slot-marks { --sz: var(--mks, 21px); position: absolute; left: calc(var(--mkx, 4px) - var(--sz) * 0.55); top: calc(var(--mky, 12px) - var(--sz) * 0.6); z-index: 2; display: flex; gap: 3px; pointer-events: none; }
+  .slot-marks .aug-badge { width: var(--sz); height: var(--sz); border-radius: 30%; pointer-events: auto; cursor: help; box-shadow: 0 0 0 1.5px var(--tc), 0 0 0 3.5px rgba(0, 0, 0, 0.5), 0 3px 7px rgba(0, 0, 0, 0.6); }
+  .slot-marks .aug-badge svg { width: 70%; height: 70%; }
+  .die2d .slot-marks { --sz: 21px; left: -7px; top: -9px; }
   .die2d.aug { box-shadow: 0 0 0 3px var(--mk, #fff), 0 0 16px var(--mk, #fff), 0 9px 16px rgba(0, 0, 0, 0.45); }
   @keyframes holdPop { 0% { transform: translateX(-50%) scale(0.3); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
 
@@ -2522,6 +2522,8 @@
           b.style.top = (r.cy - s * 1.25) + 'px';
           b.style.width = (2 * s) + 'px';
           b.style.height = (2 * s * 1.35) + 'px';
+          // where the die's top-left shoulder is inside this slot: the augment badge is pinned there
+          if (r.dx) { b.style.setProperty('--mkx', (s - r.dx).toFixed(1) + 'px'); b.style.setProperty('--mky', (s * 1.25 - r.dy).toFixed(1) + 'px'); b.style.setProperty('--mks', Math.max(20, Math.min(30, r.dx * 0.5)).toFixed(1) + 'px'); }
         });
       }
 
@@ -8704,8 +8706,9 @@
         rects = slots.map((s) => {
           const c = s.clone().project(camera);
           const e = s.clone().add(new THREE.Vector3(spacing / 2, 0, 0)).project(camera);
+          const k = s.clone().add(new THREE.Vector3(-0.5, 0.5, -0.5)).project(camera); // the die's top far-left corner
           const cx = ((c.x + 1) / 2) * w, cy = ((1 - c.y) / 2) * h;
-          return { cx, cy, hw: Math.abs(((e.x + 1) / 2) * w - cx) };
+          return { cx, cy, hw: Math.abs(((e.x + 1) / 2) * w - cx), dx: cx - ((k.x + 1) / 2) * w, dy: cy - ((1 - k.y) / 2) * h };
         });
         window.dispatchEvent(new CustomEvent('dice3d-layout'));
       }
@@ -9403,19 +9406,33 @@
         if (anim || gather) finishNow();
         apexAt = null; // the dice that earned a pending payoff are changing
         const home = slots[i];
-        const front = bounds.zNear - home.z, back = home.z - bounds.zFar;
-        // toward the player when the near felt has room for it (tall tables), else onto the far felt
-        const side = front >= 2.6 && (back < 2.6 || Math.random() < 0.65) ? 1 : -1;
-        const reach = Math.max(1, Math.min(2.2, (side > 0 ? front : back) - 1.1)); // the first bounce lands clear of the row
+        // always onto the far felt: it has the most room on every table shape, and the near felt sits under the augment buttons
+        const side = -1, back = home.z - bounds.zFar;
+        const low = back < 4.2; // short tables: the far edge is the top of the view, so keep the toss low and short to stay in frame
+        const reach = Math.max(1, Math.min(1.8, back - 1.65)); // the first bounce lands clear of the row
         const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
         const cocked = new THREE.Quaternion().setFromAxisAngle(AXIS_X, -side * 0.5).multiply(worldQ); // leans back before the flick
         const launch = () => [{
-          p: new THREE.Vector3(home.x, 2, home.z + side * 0.35),
+          p: new THREE.Vector3(home.x, low ? 1.7 : 2, home.z + side * 0.5),
           q: cocked,
-          v: new THREE.Vector3((Math.random() - 0.5) * 1.6 - home.x * 0.2, 5 + Math.random() * 2, side * (reach / 0.4) * (0.9 + Math.random() * 0.2)),
-          w: new THREE.Vector3(side * (14 + Math.random() * 10), (Math.random() - 0.5) * 16, (Math.random() - 0.5) * 26)
+          v: new THREE.Vector3((Math.random() - 0.5) * 1.6 - home.x * 0.2, (low ? 4.2 : 5) + Math.random() * (low ? 1.4 : 2), side * (reach / (low ? 0.35 : 0.4)) * (0.9 + Math.random() * 0.2)),
+          // backspin: it tumbles in the air but checks up where it lands instead of running to the far rail
+          w: new THREE.Vector3(-side * (8 + Math.random() * 6.5), (Math.random() - 0.5) * 16, (Math.random() - 0.5) * 26)
         }];
         const sim = simulate(D.map((x, k) => k !== i), [i], launch);
+        // cut the settled tail: a die that has clearly stopped but waits before hopping home reads as lag
+        {
+          const F = sim.frames[0], lo = (sim.steps - 1) * 7;
+          let cut = sim.steps - 1;
+          while (cut > 12) {
+            const o = (cut - 1) * 7;
+            const dp = Math.abs(F[o] - F[lo]) + Math.abs(F[o + 1] - F[lo + 1]) + Math.abs(F[o + 2] - F[lo + 2]);
+            const dq = 1 - Math.abs(F[o + 3] * F[lo + 3] + F[o + 4] * F[lo + 4] + F[o + 5] * F[lo + 5] + F[o + 6] * F[lo + 6]);
+            if (dp > 0.012 || dq > 0.00015) break;
+            cut--;
+          }
+          sim.steps = Math.min(sim.steps, cut + 4);
+        }
         d.startP.copy(d.group.position);
         d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(values[i])], sim.tops[0]);
         d.startQ.copy(worldQ).multiply(d.mesh.quaternion.clone().invert());
