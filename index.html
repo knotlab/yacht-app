@@ -759,9 +759,7 @@
   .cock-pick.tight button, .cock-pick.tight .cp-chip { width: 42px; height: 42px; }
   .cock-pick.tight button svg, .cock-pick.tight .cp-chip svg { width: 28px; height: 28px; }
   .tile.is-cockpv .t-val { opacity: 0.72; }
-  .die2d.cocked { transform: rotate(-9deg) translateY(-5px); animation: cockRock 1.1s ease-in-out infinite alternate; }
-  @keyframes cockRock { from { transform: rotate(-9deg) translateY(-5px); } to { transform: rotate(7deg) translateY(-3px); } }
-  @media (prefers-reduced-motion: reduce) { .die2d.cocked { animation: none; } }
+  .die2d.cocked { transform: rotate(-9deg) translateY(-5px); }
   /* 뻥카: the cups lie in one persistent layer over the free dice (never rebuilt by a render); the bar sits above the keys, the bubble under the round caps */
   #cupLayer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
   .cup { position: absolute; transform-origin: 50% 100%; filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.55)); transition: transform 0.16s ease-in, opacity 0.16s ease-in; }
@@ -3163,7 +3161,7 @@
       // 모서리 착지: on a roll of its holder one free die may stand on an edge (two faces) or a corner (three); the holder picks the face that counts
       const COCK_P = 0.15, COCK_CORNER = 0.2, COCK_LIVE = true; // chance per roll (once a turn at most), share of corners among the cocks
       const COCK_MS = REDUCED ? 140 : 440;                      // the die tips onto the picked face
-      let cockSpent = false, cockSpentBefore = false, cockTickT = 0, cockSoundT0 = 0, cockSentSeq = -1, cockHl = false, lastKeyAt = 0;
+      let cockSpent = false, cockSpentBefore = false, cockTickT = 0, cockSentSeq = -1, cockHl = false, lastKeyAt = 0;
       // the faces the die may show: its rolled value first, then a neighbour (never the opposite face), and with COCK_CORNER a third that touches both
       function cockFaces(faces, v, r, cornerP) {
         const pool = faces.filter(function (f) { return f !== v && f !== 7 - v; }); // a face on the die twice keeps its double odds
@@ -3217,19 +3215,9 @@
         cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, scoreFor(cur, id, d, o)); });
         return best;
       }
-      // a slow tick-tock while the die rocks. Guests start it a moment before the pending state reaches them, so it waits that long for `cock`
+      // the leaning die no longer rocks, so there is no loop to play: the clacks come from the dice themselves (kept so the stop calls stay valid)
       function cockSound(on) {
         clearInterval(cockTickT); cockTickT = 0;
-        if (!on) return;
-        cockSoundT0 = performance.now();
-        const mid = matchId;
-        let k = 0;
-        sample('wobble', { vol: 0.4 });
-        cockTickT = setInterval(function () {
-          if (matchId !== mid || k >= 90 || (!cock && performance.now() - cockSoundT0 > 1600)) { clearInterval(cockTickT); cockTickT = 0; return; }
-          if (!document.hidden) sample('tick', { rate: k % 2 ? 0.8 : 0.64, vol: 0.4, vary: 0 });
-          k++;
-        }, 435);
       }
 
       // DOM
@@ -8342,7 +8330,6 @@
               if (use3D() && window.Dice3D.kick) window.Dice3D.kick({ fov: -1.2 });
               ringFx(pt, '#ffd77a', 2.2);
               showChip(e.p === powerOwnerIdx() ? '주사위 ' + (ci + 1) + '번이 모서리에 섰습니다.' : (who ? who.name : '') + ' 님의 주사위가 모서리에 섰습니다.', 'gold');
-              cockSound(true);
             } else if (e.phase === 'pick' && cf !== null) {
               cockSound(false);
               // not while this screen's own roll is still landing (the state then repairs the pose)
@@ -14272,27 +14259,107 @@
       // 모서리 착지: a die propped on an edge (two candidate faces look up from it) or on a corner (three)
       let cockWant = null; // the lean the table should show (set by setCock); a lean that had to wait for a tween is applied when it ends
       const wnormal = (q, v) => FACE_N[faceIdx(v)].clone().applyQuaternion(q);
-      function leanQuat(base, faces) {
-        const avg = new THREE.Vector3();
-        faces.forEach((v) => avg.add(wnormal(base, v)));
-        return new THREE.Quaternion().setFromUnitVectors(avg.normalize(), UP).multiply(base);
-      }
       function tipQuat(cur, v) { return new THREE.Quaternion().setFromUnitVectors(wnormal(cur, v), UP).multiply(cur); } // the shortest turn from the lean onto face v
+      // the die a leaning die props on: the inner one (die 2 by its faces), or the other side when the inner one is held and the other is not.
+      // Every client reads the same i, faces and held[], so every client picks the same side.
+      function cockSide(i, faces) {
+        let dir = i < 2 ? 1 : i > 2 ? -1 : ((faces[0] + faces[1]) % 2 ? 1 : -1);
+        const near = D[i + dir], far = D[i - dir];
+        if (near && near.held && far && !far.held) dir = -dir;
+        return dir;
+      }
+      const CK_LEAN = 51 * Math.PI / 180, CK_TIP = 24 * Math.PI / 180;
+      const CK_Z = new THREE.Vector3(0, 0, 1), CK_X = new THREE.Vector3(1, 0, 0), _cm1 = new THREE.Matrix4(), _cm2 = new THREE.Matrix4();
+      // the rest pose of a leaning die, worked out from its eight inner vertices (inner half-size 0.35, rounded by 0.15):
+      // faces[1] looks up and toward the neighbour, faces[0] up and away, the ridge runs along z. A corner is also tipped about x
+      // so one end of the ridge lifts and the third face looks up too. Stores on d: cockQ (turn), cockDir/cockNb (the support),
+      // cockY (height of the centre with the lowest point on the felt), cockSep (distance of the centre from the support's centre
+      // with the nearest point on its face), cockPv (lowest point from the centre: the pivot of the settle), cockCY (height of the contact).
+      function cockGeom(d, faces) {
+        const dir = cockSide(d.i, faces), j = d.i + dir, nb = D[j];
+        const b0 = FACE_N[faceIdx(faces[0])], b1 = FACE_N[faceIdx(faces[1])];
+        const W = new THREE.Vector3(-dir, 0, 0), U = new THREE.Vector3(0, 1, 0);
+        _cm1.makeBasis(b0, b1, new THREE.Vector3().crossVectors(b0, b1)).transpose();
+        _cm2.makeBasis(W, U, new THREE.Vector3().crossVectors(W, U)).multiply(_cm1);
+        const q = new THREE.Quaternion().setFromRotationMatrix(_cm2);
+        q.premultiply(new THREE.Quaternion().setFromAxisAngle(CK_Z, -dir * CK_LEAN));
+        if (faces.length === 3) {
+          const sg = Math.sign(FACE_N[faceIdx(faces[2])].clone().applyQuaternion(q).z) || 1;
+          q.premultiply(new THREE.Quaternion().setFromAxisAngle(CK_X, -sg * CK_TIP));
+        }
+        const vs = [];
+        let minY = 1e9;
+        for (let sx = -1; sx <= 1; sx += 2) for (let sy = -1; sy <= 1; sy += 2) for (let sz = -1; sz <= 1; sz += 2) {
+          const v = new THREE.Vector3(sx * CK_IN, sy * CK_IN, sz * CK_IN).applyQuaternion(q);
+          vs.push(v);
+          if (v.y < minY) minY = v.y;
+        }
+        const y = CK_R - minY, piv = new THREE.Vector3();
+        let np = 0;
+        vs.forEach((v) => { if (v.y < minY + 1e-3) { piv.add(v); np++; } });
+        piv.multiplyScalar(1 / np);
+        // the support's face is flat up to its inner top: a vertex above that hangs over its rounded rim and does not count
+        const flatTop = 0.5 + (nb && nb.held ? 0.36 : 0) + CK_IN + 0.08;
+        let reach = -9, cy = y;
+        vs.forEach((v) => { const r = dir * v.x + CK_R; if (y + v.y <= flatTop && r > reach) { reach = r; cy = y + v.y; } });
+        d.cockQ.copy(q); d.cockDir = dir; d.cockNb = j; d.cockY = y; d.cockSep = 0.5 + reach; d.cockPv.copy(piv); d.cockCY = cy;
+      }
       function applyLean(d, faces) {
         if (!faces || faces[0] !== d.value) return;
-        const three = faces.length === 3;
-        d.cockFaces = faces.slice(); d.cockKey = faces.join(','); d.cockT0 = clock;
-        d.cockLift = three ? 0.256 : 0.145; d.cockDz = three ? 0.5 : 0; d.cockDx = d.i % 4 === 0 ? (three ? 0.4 : 0.2) : 0; // a corner stands half a die toward the camera, clear of its neighbours (an end die also steps in, off the edge of the felt)
-        d.baseQuat = leanQuat(d.baseQuat, faces);
-        if (!three) d.cockAxis.copy(wnormal(d.baseQuat, faces[1]).cross(wnormal(d.baseQuat, faces[0])).normalize()); // horizontal: along the edge it stands on
+        if (d.cockFaces) dropCock(d);
+        cockGeom(d, faces);
+        d.cockFaces = faces.slice(); d.cockKey = faces.join(','); d.cockOn = false; d.cockT0 = -9;
+        d.baseQuat = d.cockQ.clone();
       }
-      // lean die d into cockWant if it is at rest and not already there
+      // the lean ends (a throw, a state, the pick): the settle ends and the neighbour's offset eases back on its own
+      function dropCock(d) {
+        if (d.cockNb >= 0 && D[d.cockNb]) D[d.cockNb].nbGoal = 0;
+        d.cockFaces = null; d.cockKey = ''; d.cockOn = false; d.cockT0 = -9; d.cockNb = -1;
+      }
+      // the leaning die is in its rest pose: from now on it is placed flush against its neighbour every frame.
+      // fx = it just landed there: the clack (through the throw's impact callback), glint, a nudge and squash of the neighbour, the settle.
+      function cockDock(d, opts, fx) {
+        const j = d.cockNb, nb = D[j], dir = d.cockDir;
+        d.cockOn = true;
+        // the die steps up to 0.36 toward the neighbour, the neighbour (unless held) gives the rest of the room
+        const room = Math.abs(slots[j].x - slots[d.i].x) - d.cockSep;
+        nb.nbGoal = nb.held ? 0 : -dir * Math.max(0, room - 0.36);
+        if (!fx) { nb.nbX = nb.nbGoal; d.cockT0 = -9; return; }
+        d.cockT0 = clock;
+        const mx = slots[j].x + nb.nbX - dir * 0.5, my = d.cockCY, mz = slots[d.i].z;
+        if (opts && opts.onImpact) { try { opts.onImpact(4.5, 'die', { step: 0, v: 4.5, kind: 'die', x: d.group.position.x, y: my, z: mz, i: d.i, j, mx, my, mz, side: '' }); } catch (e) {} }
+        if (REDUCED) return;
+        flashDie(d, 0.5); flashDie(nb, 0.5);
+        spawnGlint(mx, my, mz, 4.5);
+        squash(nb, -2.5);
+        nb.nudgeT0 = clock; nb.nudgeDir = dir; nb.nudgeAmp = 0.035;
+        hitstop(0.03);
+      }
+      // the settle: two small bounces away from the neighbour about the felt contact, then dead still
+      function cockRockAngle(t) {
+        if (t < 0 || t >= 0.22) return 0;
+        return t < 0.12 ? 0.07 * Math.sin(Math.PI * t / 0.12) : 0.026 * Math.sin(Math.PI * (t - 0.12) / 0.1);
+      }
+      // the docked pose of a leaning die (its position is already set): the rest turn, plus the settle turned about the lowest point
+      function cockPoseNow(d) {
+        const a = REDUCED ? 0 : cockRockAngle(clock - d.cockT0);
+        if (a === 0) { d.group.quaternion.copy(d.cockQ); return; }
+        const q = new THREE.Quaternion().setFromAxisAngle(CK_Z, d.cockDir * a);
+        const sh = d.cockPv.clone().sub(d.cockPv.clone().applyQuaternion(q));
+        d.group.quaternion.copy(q).multiply(d.cockQ);
+        d.group.position.add(sh);
+      }
+      // lean die d into cockWant if it is at rest and not already there: at once, with the neighbour at its offset and nothing animated
       function applyWanted(d) {
         if (!cockWant || cockWant.i !== d.i || d.rolling || d.tween || d.flight || d.cockKey === cockWant.faces.join(',')) return;
         d.value = cockWant.faces[0];
-        d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
+        d.mesh.quaternion.identity();
         applyLean(d, cockWant.faces);
-        d.group.quaternion.copy(d.baseQuat);
+        if (!d.cockFaces) return;
+        cockDock(d, null, false);
+        targetPos(d, _p);
+        d.group.position.copy(_p);
+        d.group.quaternion.copy(d.cockQ);
       }
 
       const dieGeo = new RoundedBoxGeometry(1, 1, 1, 5, 0.15);
@@ -14349,7 +14416,7 @@
           _ph: false, hvv: 0, ringSpike: 0, wobT0: -9, wobAxis: new THREE.Vector3(1, 0, 0),
           joltT0: -9, joltAmp: 0.22, yGlow: 0, yGoal: 0,
           // 모서리 착지: the faces the die stands between (null = flat), its lift and step toward the camera, and the edge it rocks about
-          cockFaces: null, cockKey: '', cockVis: 0, cockLift: 0, cockDz: 0, cockDx: 0, cockT0: -9, cockAxis: new THREE.Vector3(1, 0, 0),
+          cockFaces: null, cockKey: '', cockOn: false, cockT0: -9, cockQ: new THREE.Quaternion(), cockDir: 1, cockNb: -1, cockSep: 1.14, cockY: 0.64, cockCY: 0.7, cockPv: new THREE.Vector3(), nbX: 0, nbGoal: 0, nudgeT0: -9, nudgeDir: 1, nudgeAmp: 0,
           // 도화선: lit (swelling, blinking) since litT0, blown off the table (flight), sooty afterwards
           flight: null, litT0: 0, swell: 0, blinkPh: 0, soot: 0, sootKeep: false
         };
@@ -14578,9 +14645,8 @@
       }
 
       // ---------- physics ----------
-      // init (slam): start each rolling die from its current pose and kick it off the table
-      // (an entry with w = angular velocity is launched exactly as given; init may be a function = a new launch per attempt)
-      function runSim(heldArr, rollingIdx, init) {
+      // the physics world of a throw: floor, four walls and a lid, and the held dice as static boxes
+      function makeWorld(heldArr) {
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -50, 0) });
         world.allowSleep = false;
         world.solver.iterations = 12;
@@ -14617,38 +14683,50 @@
           world.addBody(b);
         }
 
+        return { world, floorM, wallM, dieM, box };
+      }
+      // start pose and velocity of rolling die number k of n (init = its pose in a slam / knock; dir = the side the throw comes from)
+      function launchDie(b, k, n, init, dir, zSpan) {
+        if (init) {
+          const st = init[k];
+          b.position.set(
+            Math.max(-bounds.halfX + 0.6, Math.min(bounds.halfX - 0.6, st.p.x)),
+            Math.max(0.55, st.p.y),
+            Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, st.p.z))
+          );
+          b.quaternion.set(st.q.x, st.q.y, st.q.z, st.q.w);
+          if (st.w) { // a throw with its own launch (re-roll): take it as given
+            b.velocity.set(st.v.x, st.v.y, st.v.z);
+            b.angularVelocity.set(st.w.x, st.w.y, st.w.z);
+          } else {
+            b.velocity.set(st.v.x * 0.5 + (Math.random() - 0.5) * 7, 10 + Math.random() * 6, st.v.z * 0.5 + (Math.random() - 0.5) * 5);
+            b.angularVelocity.set((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34);
+          }
+        } else {
+          b.position.set(
+            dir * (bounds.halfX - 0.75) + (Math.random() - 0.5) * 0.3,
+            k % 2 ? 3.7 : 1.9,
+            bounds.zFar + 0.7 + (n > 1 ? (k * zSpan) / (n - 1) : zSpan / 2)
+          );
+          b.quaternion.setFromEuler(Math.random() * 6.283, Math.random() * 6.283, Math.random() * 6.283);
+          b.velocity.set(-dir * (7 + Math.random() * 6), -1 + Math.random() * 3, (Math.random() - 0.5) * 6);
+          b.angularVelocity.set((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32);
+        }
+      }
+
+      // init (slam): start each rolling die from its current pose and kick it off the table
+      // (an entry with w = angular velocity is launched exactly as given; init may be a function = a new launch per attempt)
+      function runSim(heldArr, rollingIdx, init, skipK) {
+        const { world, dieM, box } = makeWorld(heldArr);
         const impacts = [];
         let curStep = 0;
         const dir = Math.random() < 0.5 ? 1 : -1;
         const n = rollingIdx.length;
         const zSpan = Math.max(1, bounds.zNear - bounds.zFar - 1.4);
         const bodies = rollingIdx.map((dieI, k) => {
+          if (k === skipK) return null; // 모서리 착지, pass 1: the cock die is thrown later, in pass 2
           const b = new CANNON.Body({ mass: 1, material: dieM, shape: box, linearDamping: 0.1, angularDamping: 0.14 });
-          if (init) {
-            const st = init[k];
-            b.position.set(
-              Math.max(-bounds.halfX + 0.6, Math.min(bounds.halfX - 0.6, st.p.x)),
-              Math.max(0.55, st.p.y),
-              Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, st.p.z))
-            );
-            b.quaternion.set(st.q.x, st.q.y, st.q.z, st.q.w);
-            if (st.w) { // a throw with its own launch (re-roll): take it as given
-              b.velocity.set(st.v.x, st.v.y, st.v.z);
-              b.angularVelocity.set(st.w.x, st.w.y, st.w.z);
-            } else {
-              b.velocity.set(st.v.x * 0.5 + (Math.random() - 0.5) * 7, 10 + Math.random() * 6, st.v.z * 0.5 + (Math.random() - 0.5) * 5);
-              b.angularVelocity.set((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34, (Math.random() - 0.5) * 34);
-            }
-          } else {
-            b.position.set(
-              dir * (bounds.halfX - 0.75) + (Math.random() - 0.5) * 0.3,
-              k % 2 ? 3.7 : 1.9,
-              bounds.zFar + 0.7 + (n > 1 ? (k * zSpan) / (n - 1) : zSpan / 2)
-            );
-            b.quaternion.setFromEuler(Math.random() * 6.283, Math.random() * 6.283, Math.random() * 6.283);
-            b.velocity.set(-dir * (7 + Math.random() * 6), -1 + Math.random() * 3, (Math.random() - 0.5) * 6);
-            b.angularVelocity.set((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32, (Math.random() - 0.5) * 32);
-          }
+          launchDie(b, k, n, init, dir, zSpan);
           b.tag = 'die';
           b.dieIndex = dieI;
           b.addEventListener('collide', (e) => {
@@ -14664,7 +14742,7 @@
           });
           world.addBody(b);
           return b;
-        });
+        }).filter(Boolean);
 
         const frames = bodies.map(() => new Float32Array(MAX_STEPS * 7));
         let still = 0, s = 0, settled = false;
@@ -14692,12 +14770,888 @@
           if (m === ay) return new THREE.Vector3(0, Math.sign(lu.y), 0);
           return new THREE.Vector3(0, 0, Math.sign(lu.z));
         });
-        return { frames, steps, impacts, tops, ok };
+        return { frames, steps, impacts, tops, ok, dir };
       }
-      function simulate(heldArr, rollingIdx, init) {
+      // cock = { i, faces }: a cock die among the rolling dice is thrown by the two-pass search (it ends leaning on another die)
+      function simulate(heldArr, rollingIdx, init, cock) {
+        if (cock && cock.faces && rollingIdx.indexOf(cock.i) >= 0) { const cs = simulateCock(heldArr, rollingIdx, init, cock, false); if (cs && cs.frames) return cs; }
         let res = null;
         for (let attempt = 0; attempt < 6; attempt++) { res = runSim(heldArr, rollingIdx, typeof init === 'function' ? init() : init); if (res.ok) break; }
         return res;
+      }
+
+
+      // ---------- 모서리 착지: the catch inside the physics roll ----------
+      // A cock die c has to END its throw leaning on another die. Pass 1 throws the other rolling dice exactly as always.
+      // Pass 2 replays them as moving obstacles (kinematic bodies that follow their pass-1 frames) and throws c alone, attempt
+      // after attempt, until its last tumble stops on an edge against a resting die (a held one, or one that has stopped for good).
+      // The moment a catch is found, the rest of c's motion is computed: a pendulum about the edge that clacks against the support
+      // and settles, plus the sideways tip onto a corner for a three-face cock. c's frames end in that pose.
+      const CK_E = 0.3;                           // rebound of the leaning die off its support
+      const CK_W2 = (3 * 50) / (2 * Math.SQRT2);  // theta'' = CK_W2 * sin(theta): a unit cube falling about an edge (gravity 50)
+      const CK_IN = 0.35, CK_R = 0.15;            // the rendered die = a box of half-size 0.35 swept by a ball of radius 0.15
+      const CK_SGN = [[-1, -1, -1], [1, -1, -1], [-1, 1, -1], [1, 1, -1], [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1]];
+      // sample points on the rendered die's inner box: its 8 vertices first, then 7 along each of the 12 edges
+      const CK_PTS = (() => {
+        const P = CK_SGN.map((s) => [s[0] * CK_IN, s[1] * CK_IN, s[2] * CK_IN]);
+        for (let i = 0; i < 8; i++) {
+          for (let j = i + 1; j < 8; j++) {
+            const df = (CK_SGN[i][0] !== CK_SGN[j][0] ? 1 : 0) + (CK_SGN[i][1] !== CK_SGN[j][1] ? 1 : 0) + (CK_SGN[i][2] !== CK_SGN[j][2] ? 1 : 0);
+            if (df !== 1) continue;
+            for (let m = 1; m < 8; m++) {
+              const f = m / 8;
+              P.push([P[i][0] + (P[j][0] - P[i][0]) * f, P[i][1] + (P[j][1] - P[i][1]) * f, P[i][2] + (P[j][2] - P[i][2]) * f]);
+            }
+          }
+        }
+        return P;
+      })();
+      let cockStat = null; // the last cock search: { caught, tries, ms, support, ... } (read-only through Dice3D.cockStat)
+
+      // small quaternion helpers on plain arrays [x, y, z, w]
+      function ckRot(q, x, y, z) {
+        const qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+        const tx = 2 * (qy * z - qz * y), ty = 2 * (qz * x - qx * z), tz = 2 * (qx * y - qy * x);
+        return [x + qw * tx + (qy * tz - qz * ty), y + qw * ty + (qz * tx - qx * tz), z + qw * tz + (qx * ty - qy * tx)];
+      }
+      function ckMul(a, b) {
+        return [
+          a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+          a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+          a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+          a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]
+        ];
+      }
+      const ckInv = (q) => [-q[0], -q[1], -q[2], q[3]];
+      function ckAx(x, y, z, ang) { const s = Math.sin(ang / 2); return [x * s, y * s, z * s, Math.cos(ang / 2)]; }
+      // world positions of the rendered die's sample points
+      function ckPts(p, q) {
+        return CK_PTS.map((v) => { const r = ckRot(q, v[0], v[1], v[2]); return [p[0] + r[0], p[1] + r[1], p[2] + r[2]]; });
+      }
+      // distance from a point to the inner box of a die at (sp, sq inverse); negative = inside
+      function ckDist(pt, sp, sqi) {
+        const l = ckRot(sqi, pt[0] - sp[0], pt[1] - sp[1], pt[2] - sp[2]);
+        const dx = Math.abs(l[0]) - CK_IN, dy = Math.abs(l[1]) - CK_IN, dz = Math.abs(l[2]) - CK_IN;
+        const m = Math.max(dx, dy, dz);
+        if (m <= 0) return m;
+        return Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0));
+      }
+      // gap between the rendered die with sample points pts and the rendered die s (0 = touching, negative = overlapping)
+      function ckGap(pts, s, dx, dz) {
+        const sqi = ckInv(s.q);
+        const sp = [s.vp[0] - (dx || 0), s.vp[1], s.vp[2] - (dz || 0)]; // moving c by (dx, dz) = moving s the other way
+        let m = 9;
+        for (let i = 0; i < pts.length; i++) { const d = ckDist(pts[i], sp, sqi); if (d < m) m = d; }
+        return m - 2 * CK_R;
+      }
+      // lowest point of the rendered die (the 8 inner vertices, minus the ball radius)
+      function ckLow(pts) { let m = 9; for (let i = 0; i < 8; i++) if (pts[i][1] < m) m = pts[i][1]; return m - CK_R; }
+      // does the rendered die at (p, q) stay clear of every other die (except the support) and inside the walls?
+      function ckClear(p, q, cx, skipId) {
+        const pts = ckPts(p, q);
+        for (let i = 0; i < pts.length; i += 3) {
+          const x = pts[i][0], z = pts[i][2];
+          if (x - CK_R < -bounds.halfX - 0.05 || x + CK_R > bounds.halfX + 0.05 || z - CK_R < bounds.zFar - 0.05 || z + CK_R > bounds.zNear + 0.05) return false;
+        }
+        for (let k = 0; k < cx.allSups.length; k++) {
+          const s = cx.allSups[k];
+          if (s.id === skipId) continue;
+          if (ckGap(pts, s) < -0.05) return false;
+        }
+        return true;
+      }
+      // the two lowest corners of the SHARP box (the physics shape) at a pose
+      function ckSharpLow(pose) {
+        const vs = CK_SGN.map((sg) => { const r = ckRot(pose.q, sg[0] * 0.5, sg[1] * 0.5, sg[2] * 0.5); return [pose.p[0] + r[0], pose.p[1] + r[1], pose.p[2] + r[2]]; });
+        vs.sort((a, b) => a[1] - b[1]);
+        return [vs[0], vs[1]];
+      }
+      function ckSmooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+      // pose of c turned about the horizontal axis (ax, ay, az) through point pv by ang
+      function ckTurn(I, pv, axis, ang) {
+        const qr = ckAx(axis[0], axis[1], axis[2], ang);
+        const d = ckRot(qr, I.p[0] - pv[0], I.p[1] - pv[1], I.p[2] - pv[2]);
+        return { p: [pv[0] + d[0], pv[1] + d[1], pv[2] + d[2]], q: ckMul(qr, I.q) };
+      }
+      // slide along nh until the rendered die touches the rendered support (bisection on the signed gap); also returns the gap before
+      function ckSlide(pose, nh, sup) {
+        const pts = ckPts(pose.p, pose.q);
+        const low = ckLow(pts);
+        for (let i = 0; i < pts.length; i++) pts[i][1] -= low;
+        const g = (d) => ckGap(pts, sup, d * nh[0], d * nh[2]);
+        let lo = -0.3, hi = 0.45;
+        if (g(lo) < 0) return lo;
+        if (g(hi) > 0) return hi;
+        for (let it = 0; it < 10; it++) { const mid = (lo + hi) / 2; if (g(mid) > 0) lo = mid; else hi = mid; }
+        return (lo + hi) / 2;
+      }
+      // body axes of the die at quaternion q ordered by how much they point up: the signed local axes a1, a2, a3 and their up components
+      function ckAxes(q) {
+        const up = ckRot(ckInv(q), 0, 1, 0);
+        const ord = [0, 1, 2].sort((i, j) => Math.abs(up[j]) - Math.abs(up[i]));
+        return ord.map((i) => { const v = [0, 0, 0]; v[i] = up[i] >= 0 ? 1 : -1; return { v, u: Math.abs(up[i]) }; });
+      }
+      // the mesh offset that puts faces[0] on a1, faces[1] on a2 (a corner: faces[2] on a3, swapping 1 and 2 when the handedness needs it)
+      function ckMesh(q, faces) {
+        const A = ckAxes(q).map((o) => new THREE.Vector3(o.v[0], o.v[1], o.v[2]));
+        const N = faces.map((f) => FACE_N[faceIdx(f)]);
+        let n1 = N[0], n2 = N[1], n3, a3;
+        if (faces.length === 3) {
+          a3 = A[2];
+          n3 = N[2];
+          if (N[0].clone().cross(N[1]).dot(N[2]) * A[0].clone().cross(A[1]).dot(A[2]) < 0) { n2 = N[2]; n3 = N[1]; }
+        } else {
+          n3 = N[0].clone().cross(N[1]);
+          a3 = A[0].clone().cross(A[1]);
+        }
+        const mb = new THREE.Matrix4().makeBasis(A[0], A[1], a3);
+        const mn = new THREE.Matrix4().makeBasis(n1, n2, n3).transpose();
+        const mq = new THREE.Quaternion().setFromRotationMatrix(mb.multiply(mn));
+        return { mesh: mq, top: A[0] };
+      }
+
+      // The tail of a catch. I = { p, q (c's pose at the catch step), Pm (middle of the edge on the felt), t (edge direction), nh (horizontal,
+      // across the edge toward the support), a (turn axis, positive = further into the support), th (lean angle at the catch), w (spin about the
+      // edge, positive = into the support), rc (lever of the contact), sup }. Returns the frames after the catch step, the hits, the end pose.
+      function ckTail(cx, I, corner) {
+        const hits = [];
+        let th = I.th, om = I.w > 0 ? -CK_E * I.w : I.w;
+        if (I.w > 0) hits.push({ n: 0, v: I.w * I.rc });
+        const ths = [];
+        let still = false;
+        for (let n = 1; n <= 80 && !still; n++) {
+          for (let k = 0; k < 8 && !still; k++) {
+            om += (CK_W2 * Math.sin(th) - 0.8 * om) / 480;
+            th += om / 480;
+            if (th >= I.th) {
+              const hv = om;
+              th = I.th;
+              if (hv > 0) {
+                hits.push({ n, v: hv * I.rc });
+                if (hv < 0.6) { still = true; om = 0; } else om = -CK_E * hv;
+              }
+            }
+            if (th < 0.01) return null; // it would roll back over the balance point
+          }
+          ths.push(th);
+        }
+        if (!still) ths[ths.length - 1] = I.th;
+        const poses = ths.map((t) => ckTurn(I, I.Pm, I.a, t - I.th));
+        // is the swing clear of everything else?
+        if (!ckClear(I.p, I.q, cx, I.sup.id)) return null;
+        const mid = ckTurn(I, I.Pm, I.a, -0.5 * I.th), bal = ckTurn(I, I.Pm, I.a, -I.th);
+        if (!ckClear(mid.p, mid.q, cx, I.sup.id) || !ckClear(bal.p, bal.q, cx, I.sup.id)) return null;
+        const rest = poses.length ? poses[poses.length - 1] : { p: I.p, q: I.q };
+        const tau = poses.map(() => 0);
+        let tipB = 0;
+        let endPose = rest;
+        if (corner) {
+          // tip sideways about nh through one end of the edge until three faces look up (each with an up-component of 0.4 or more)
+          const low2 = ckSharpLow(rest);
+          const base = { p: rest.p, q: rest.q };
+          let best = null;
+          for (let e = 0; e < 2; e++) {
+            const V = low2[e], W = low2[1 - e];
+            // the other end of the edge has to rise: sign of ((nh x (W - V)) . up)
+            const sg = (I.nh[2] * (W[0] - V[0]) - I.nh[0] * (W[2] - V[2])) >= 0 ? 1 : -1;
+            for (let bd = 20; bd <= 40; bd++) {
+              const bt = (bd * Math.PI) / 180;
+              const pose = ckTurn(base, V, I.nh, sg * bt);
+              const ax = ckAxes(pose.q);
+              const mn = Math.min(ax[0].u, ax[1].u, ax[2].u);
+              if (mn < 0.4) continue;
+              const score = Math.abs(bd - 24) - mn;
+              if (best && best.score <= score) continue;
+              if (!ckClear(pose.p, pose.q, cx, I.sup.id)) continue;
+              best = { score, V, sg, bt, pose };
+            }
+          }
+          if (!best) return null;
+          tipB = best.bt;
+          const M = 16;
+          for (let m = 1; m <= M; m++) {
+            const pose = ckTurn(base, best.V, I.nh, best.sg * best.bt * ckSmooth(m / M));
+            poses.push(pose);
+            tau.push(m / M);
+          }
+          endPose = poses[poses.length - 1];
+        }
+        // the rendered die is rounded: ease it down onto the felt and over to the support during the first frames
+        const dE = ckSlide(rest, I.nh, I.sup);
+        const dF = corner ? ckSlide(endPose, I.nh, I.sup) : dE;
+        if (Math.abs(dE) > 0.28 || Math.abs(dF) > 0.28) return null;
+        const fr = poses.map((ps, n) => {
+          const g = ckSmooth((n + 1) / 6);
+          const pts = ckPts(ps.p, ps.q);
+          const dy = -ckLow(pts) * g;
+          const dd = (dE + (dF - dE) * tau[n]) * g;
+          return [ps.p[0] + I.nh[0] * dd, ps.p[1] + dy, ps.p[2] + I.nh[2] * dd, ps.q[0], ps.q[1], ps.q[2], ps.q[3]];
+        });
+        // slid onto the rounded support and tipped onto its corner, it must still be clear of every other die
+        for (let n = fr.length - 1; n >= 0; n -= 4) { const f = fr[n]; if (!ckClear([f[0], f[1], f[2]], [f[3], f[4], f[5], f[6]], cx, I.sup.id)) return null; }
+        return { fr, hits, end: endPose, tip: tipB };
+      }
+
+      // everything one attempt needs: the world with the held dice, the replayed dice and c as the only dynamic body
+      function ckSetup(cx, shape) {
+        const W = makeWorld(cx.heldArr);
+        const world = W.world;
+        const cM = new CANNON.Material('cockdie');
+        world.addContactMaterial(new CANNON.ContactMaterial(W.floorM, cM, { friction: shape.floorF, restitution: shape.floorR }));
+        world.addContactMaterial(new CANNON.ContactMaterial(W.wallM, cM, { friction: 0.02, restitution: 0.6 }));
+        world.addContactMaterial(new CANNON.ContactMaterial(W.dieM, cM, { friction: shape.dieF, restitution: shape.dieR }));
+        const S = { world, impacts: [], step: 0, floorHits: 0, c: null, kin: [] };
+        cx.kin.forEach((o) => {
+          const b = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: W.dieM, shape: W.box, collisionFilterGroup: 2, collisionFilterMask: 4 }); // meets c only
+          b.tag = 'die';
+          b.dieIndex = o.die;
+          world.addBody(b);
+          S.kin.push(b);
+        });
+        const c = new CANNON.Body({ mass: 1, material: cM, shape: W.box, linearDamping: 0.1, angularDamping: 0.14, collisionFilterGroup: 4 });
+        launchDie(c, cx.kc, cx.n, cx.initArr, cx.dir, cx.zSpan);
+        c.tag = 'die';
+        c.dieIndex = cx.cock.i;
+        c.addEventListener('collide', (e) => {
+          const other = e.body;
+          const v = Math.abs(e.contact.getImpactVelocityAlongNormal());
+          if (other.tag === 'floor') S.floorHits++;
+          if (v < 1.2) return;
+          const kind = other.tag === 'floor' ? 'floor' : other.tag === 'wall' ? 'wall' : 'die';
+          const P = c.position, Q = other.position;
+          const im = { step: S.step, v, kind, x: P.x, y: P.y, z: P.z, i: c.dieIndex, j: kind === 'die' ? other.dieIndex : -1, side: other.side || '' };
+          if (kind === 'die') { im.mx = (P.x + Q.x) / 2; im.my = (P.y + Q.y) / 2; im.mz = (P.z + Q.z) / 2; }
+          S.impacts.push(im);
+        });
+        world.addBody(c);
+        S.c = c;
+        S.frames = new Float32Array(MAX_STEPS * 7);
+        return S;
+      }
+      // one step of a live throw: the replayed dice move to their pass-1 poses (with the finite-difference velocity), then the world steps and c is recorded
+      function ckStep(cx, S, s) {
+        S.step = s;
+        for (let m = 0; m < cx.kin.length; m++) {
+          const o = cx.kin[m], b = S.kin[m], F = o.F;
+          const a = Math.max(0, Math.min(s - 1, o.last)), z = Math.min(s, o.last);
+          const o0 = a * 7, o1 = z * 7;
+          b.position.set(F[o0], F[o0 + 1], F[o0 + 2]);
+          b.quaternion.set(F[o0 + 3], F[o0 + 4], F[o0 + 5], F[o0 + 6]);
+          b.velocity.set((F[o1] - F[o0]) * 60, (F[o1 + 1] - F[o0 + 1]) * 60, (F[o1 + 2] - F[o0 + 2]) * 60);
+          if (z === a) b.angularVelocity.set(0, 0, 0);
+          else {
+            const dq = ckMul([F[o1 + 3], F[o1 + 4], F[o1 + 5], F[o1 + 6]], ckInv([F[o0 + 3], F[o0 + 4], F[o0 + 5], F[o0 + 6]]));
+            const sg = dq[3] < 0 ? -1 : 1;
+            const sn = Math.hypot(dq[0], dq[1], dq[2]);
+            if (sn < 1e-9) b.angularVelocity.set(0, 0, 0);
+            else {
+              const ang = 2 * Math.atan2(sn, dq[3] * sg) * 60 / sn * sg;
+              b.angularVelocity.set(dq[0] * ang, dq[1] * ang, dq[2] * ang);
+            }
+          }
+          b.aabbNeedsUpdate = true;
+        }
+        S.world.step(1 / 60);
+        const c = S.c, o = s * 7, F = S.frames;
+        F[o] = c.position.x; F[o + 1] = c.position.y; F[o + 2] = c.position.z;
+        F[o + 3] = c.quaternion.x; F[o + 4] = c.quaternion.y; F[o + 5] = c.quaternion.z; F[o + 6] = c.quaternion.w;
+      }
+
+      // ---- the scripted catch ----
+      // A cube rolling over an edge: the centre is at height ckH(a) when the die is turned a from flat about the edge. Pass 2 builds c's
+      // whole throw from three parts that are all closed-form, so a catch is found at once instead of by luck:
+      //   1. a lob from c's start spot that lands flat in front of a resting die s, the tumble in the air planned so it ends face down;
+      //   2. N + 1 rolls over the edge nearest to s (energy of a cube about its edge, each roll weaker than the one before);
+      //   3. the last roll stops at a lean past the balance point: the tail (ckTail) clacks it against s and lets it rest there.
+      // Every frame is checked against the other dice (the held ones, and the replayed ones at the same step).
+      const CK_KAPPA = 0.8; // a roll that lands on its next face keeps this much of its spin
+      function ckH(a) { return 0.5 * Math.cos(a) + 0.5 * Math.sin(a); }
+      function ckStart(cx, tryNo) {
+        const k = cx.kc, n = cx.n, r = Math.random;
+        if (cx.initArr) {
+          const st = cx.initArr[k];
+          const p = [Math.max(-bounds.halfX + 0.6, Math.min(bounds.halfX - 0.6, st.p.x)), Math.max(0.55, st.p.y), Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, st.p.z))];
+          if (n === 1 && tryNo % 2 === 0) {
+            // standing in the row between its supports there is no run-up: lift off from farther back in the lane (the first frames are blended in)
+            const zm = (bounds.zFar + bounds.zNear) / 2, sgz = p[2] > zm ? -1 : 1;
+            p[2] = Math.max(bounds.zFar + 0.6, Math.min(bounds.zNear - 0.6, p[2] + sgz * (3.2 + r() * 1.2)));
+            p[0] = Math.max(-bounds.halfX + 0.6, Math.min(bounds.halfX - 0.6, p[0] + (r() - 0.5) * 1.4));
+            p[1] += 1 + r() * 1.5;
+          }
+          return { p, q: [st.q.x, st.q.y, st.q.z, st.q.w], fresh: false, far: p[1] > st.p.y + 0.9 };
+        }
+        const dir = n > 1 ? cx.dir : (r() < 0.5 ? 1 : -1);
+        const q = ckMul(ckAx(0, 1, 0, r() * 6.283), ckMul(ckAx(1, 0, 0, r() * 6.283), ckAx(0, 0, 1, r() * 6.283)));
+        return { p: [dir * (bounds.halfX - 0.75) + (r() - 0.5) * 0.3, k % 2 ? 3.7 : 1.9, bounds.zFar + 0.7 + (n > 1 ? (k * cx.zSpan) / (n - 1) : r() * cx.zSpan)], q, fresh: true }; // a lone die has no slot: it may come in from anywhere along the wall
+      }
+      // time from landing to the end of the last roll, for the spins w0[0..N] (the same energy loop the frames use)
+      function ckRollTime(w0, N, ac) {
+        let tt = 0, j = 0, al = 0;
+        for (let i = 0; i < 4000; i++) {
+          const w = Math.sqrt(Math.max(0.25, w0[j] * w0[j] - 75 * (ckH(al) - 0.5)));
+          al += w / 480; tt += 1 / 480;
+          const lim = j === N ? ac : Math.PI / 2;
+          if (al >= lim) { if (j === N) return tt; j++; al -= Math.PI / 2; }
+        }
+        return 9;
+      }
+      // height of the rendered die's centre when it touches the felt at turn q (0.5 lying flat, 0.76 on a corner)
+      function ckHq(q) {
+        const a = ckRot(q, 1, 0, 0), b = ckRot(q, 0, 1, 0), c = ckRot(q, 0, 0, 1);
+        return CK_IN * (Math.abs(a[1]) + Math.abs(b[1]) + Math.abs(c[1])) + CK_R;
+      }
+      // air time of a lob that leaves height y0 with the upward speed vy and comes down to height y1 (gravity 50)
+      function ckAir(vy, y0, y1) { return (vy + Math.sqrt(Math.max(0, vy * vy + 100 * (y0 - y1)))) / 50; }
+      // the frame-by-frame test of c against the other dice: the resting ones, and the replayed ones where they are at that step.
+      // The support itself only has to stay clear until the last frames (nearEnd). pop = a knock or a slam.
+      function ckClearer(cx, sup, pop) {
+        const others = cx.allSups, kin = cx.kin;
+        return (s, p, nearEnd, q) => {
+          if (Math.abs(p[0]) > bounds.halfX - 0.45 || p[2] < bounds.zFar + 0.45 || p[2] > bounds.zNear - 0.45) return false;
+          let pts = null; // the rendered die's sample points, only built when another die is near
+          for (let k = 0; k < others.length; k++) {
+            const o = others[k];
+            if (o.rest > s) continue; // a replayed die that has not stopped yet is checked below
+            const isSup = o === sup && nearEnd;
+            const dd = Math.hypot(o.p[0] - p[0], o.p[1] - p[1], o.p[2] - p[2]);
+            if (dd < (isSup ? 1.02 : 1.2)) return false;
+            if (!isSup && dd < 1.9) {
+              if (!pts) pts = ckPts(p, q);
+              if (ckGap(pts, o) < -0.02) return false; // two tumbling cubes can touch beyond the centre distance
+            }
+          }
+          for (let m = 0; m < kin.length; m++) {
+            const o = kin[m];
+            if (o.rest <= s) continue; // a resting one is in `others`
+            if (pop && s < 7) continue; // knocked dice lift off side by side (a narrow table even squeezes the row): the first frames are blended in from there
+            const u2 = Math.min(s, o.last) * 7;
+            const dd = Math.hypot(o.F[u2] - p[0], o.F[u2 + 1] - p[1], o.F[u2 + 2] - p[2]);
+            if (dd < 1.2 && !(pop && s < 16)) return false; // just after the lift-off only a real overlap counts
+            if (dd < 1.9) {
+              if (!pts) pts = ckPts(p, q);
+              if (ckGap(pts, { q: [o.F[u2 + 3], o.F[u2 + 4], o.F[u2 + 5], o.F[u2 + 6]], vp: [o.F[u2], o.F[u2 + 1], o.F[u2 + 2]] }) < -0.02) return false;
+            }
+          }
+          return true;
+        };
+      }
+      // the rolls after the flat landing, the catch and its tail: shared by the scripted lob and the live throw.
+      // o = { Fr (frames so far), s (next frame), Tair (time of the landing), PL (landing spot), EN (edge of the last turn), rh (the way it rolls),
+      //       qt (pose at the landing), N (N + 1 rolls), w0 (their spins), ac (lean at the face), wc (spin into it), sup, imps, clearAt }
+      function ckRolls(cx, o) {
+        const Fr = o.Fr, Tair = o.Tair, PL = o.PL, EN = o.EN, rh = o.rh, qt = o.qt, N = o.N, w0 = o.w0, ac = o.ac, wc = o.wc, sup = o.sup, imps = o.imps, clearAt = o.clearAt, kin = cx.kin;
+        let s = o.s;
+        const a = [rh[2], 0, -rh[0]];                                             // roll axis: up x rh (positive turns the top toward the face)
+        const put = (s, p, q) => { const o2 = s * 7; Fr[o2] = p[0]; Fr[o2 + 1] = p[1]; Fr[o2 + 2] = p[2]; Fr[o2 + 3] = q[0]; Fr[o2 + 4] = q[1]; Fr[o2 + 5] = q[2]; Fr[o2 + 6] = q[3]; };
+        // the rolls
+        let tt = Tair, j = 0, al = 0, caught = false;
+        const flat = (jj) => ({ p: [PL[0] + rh[0] * jj, 0.5, PL[2] + rh[2] * jj], q: ckMul(ckAx(a[0], a[1], a[2], jj * Math.PI / 2), qt) });
+        const poseAt = (jj, al2) => {
+          const f = flat(jj);
+          const E = [f.p[0] + rh[0] * 0.5, 0, f.p[2] + rh[2] * 0.5];
+          return ckTurn(f, E, a, al2);
+        };
+        for (let it = 0; it < 5000 && !caught && s < MAX_STEPS - 90; it++) {
+          const w = Math.sqrt(Math.max(0.25, w0[j] * w0[j] - 75 * (ckH(al) - 0.5)));
+          al += w / 480; tt += 1 / 480;
+          const lim = j === N ? ac : Math.PI / 2;
+          if (al >= lim) {
+            if (j === N) { caught = true; break; }
+            imps.push({ step: Math.max(0, Math.floor(tt * 60)), v: w * 0.7, kind: 'floor', x: PL[0] + rh[0] * (j + 1), y: 0.5, z: PL[2] + rh[2] * (j + 1), i: cx.cock.i, j: -1, side: '' });
+            j++; al -= Math.PI / 2;
+          }
+          while ((s + 1) / 60 <= tt) {
+            const ps = poseAt(j, al);
+            put(s, ps.p, ps.q);
+            if (!clearAt(s, ps.p, j === N && al > ac - 0.4, ps.q)) return null;
+            s++;
+          }
+        }
+        if (!caught) return null;
+        const sC = s;                                                             // the catch frame: exactly the lean ac
+        const pc = poseAt(N, ac);
+        put(sC, pc.p, pc.q);
+        if (sC < sup.rest + 2) return null;
+        // a die that is still moving must not come close to c afterwards
+        for (let m = 0; m < kin.length; m++) {
+          const o = kin[m];
+          if (o.rest <= sC) continue;
+          for (let u2 = sC; u2 <= o.rest && u2 <= o.last; u2++) if (Math.hypot(o.F[u2 * 7] - pc.p[0], o.F[u2 * 7 + 2] - pc.p[2]) < 1.9) return null;
+        }
+        const Pm = EN;
+        const lean = (pc.p[0] - Pm[0]) * rh[0] + (pc.p[2] - Pm[2]) * rh[2];
+        const I = { p: pc.p, q: pc.q, Pm, t: [-rh[2], 0, rh[0]], nh: rh, a, th: Math.atan2(lean, pc.p[1]), w: wc, rc: 1.0, sup };
+        const tail = ckTail(cx, I, cx.cock.faces.length === 3);
+        if (!tail || sC + tail.fr.length + 7 > MAX_STEPS) return null;
+        return { F: Fr, sC, I, tail, imps };
+      }
+      // one try: a random support, face, lob (with or without a bounce) and roll count; returns the finished script or null.
+      // minHs = the least speed across the felt its first lob may have: a die thrown from the hand travels like the others,
+      // it does not drop where it was let go (the search asks for this first and settles for less only when nothing fits).
+      function ckScript(cx, cands, st, minHs) {
+        const r = Math.random;
+        const c = cands[Math.floor(r() * cands.length)];
+        const sup = c.sup, nf = c.nf;
+        const S0 = st.p;
+        const thc = (8 + r() * 14) * Math.PI / 180, ac = Math.PI / 4 + thc;   // the lean at which it meets the face
+        const wc = 1.8 + r() * 1.2;                                              // its spin into the face
+        // the lob stays as low as any other die's: a die thrown from the hand drops in, a die knocked off the felt pops up
+        const pop = !!cx.initArr && !st.far, vyHi = pop ? Math.min(16.5, Math.sqrt(100 * Math.max(0.5, 5.6 - S0[1]))) : 9, vyLo = pop ? Math.min(8, vyHi) : -3;
+        const tALo = ckAir(vyLo, S0[1], 0.5), tAHi = ckAir(vyHi, S0[1], 0.5);   // one lob straight to the landing
+        const t1Lo = ckAir(vyLo, S0[1], 0.66), t1Hi = ckAir(vyHi, S0[1], 0.66); // a lob to a first bounce
+        const TairHi = t1Hi + ckAir(0.46 * (50 * t1Hi - vyHi), 0.66, 0.5);      // the longest it can stay off the felt (one bounce)
+        // N + 1 rolls after the landing: the spins of each count and the earliest c may land with it (the support must have stopped first)
+        const W = [], TM = [];
+        for (let Nc = 0; Nc < 3; Nc++) {
+          const w = [];
+          w[Nc] = Math.sqrt(wc * wc + 75 * (ckH(ac) - 0.5));
+          for (let j = Nc - 1; j >= 0; j--) w[j] = Math.min(10, Math.max(5.7, w[j + 1] / CK_KAPPA));
+          W.push(w);
+          TM.push(Math.max(0.3, (sup.rest + 3) / 60 - ckRollTime(w, Nc, ac) + 0.02));
+        }
+        // the aim: the face's middle, a little to one side
+        const u = (r() - 0.5) * 0.5;
+        const F = [sup.p[0] + nf[0] * 0.5 + c.tf[0] * u, 0, sup.p[2] + nf[2] * 0.5 + c.tf[2] * u];
+        const dx = F[0] - S0[0], dz = F[2] - S0[2], dl = Math.hypot(dx, dz);
+        const cosA = -(dx * nf[0] + dz * nf[2]) / dl;
+        // straight in with one lob (the start has to look square at the face), or a bounce on the felt that turns it toward the face.
+        // Each way is planned with the roll counts that fit: the time, the felt behind the face, the run from the start.
+        let bounce = cosA < 0.9 || r() < 0.55, rh = null, psi = 0, lamE = 0, N = -1;
+        for (let way = 0; way < 2 && N < 0; way++, bounce = !bounce) {
+          if (!bounce && cosA < 0.9) continue;
+          if (bounce) {
+            // it rolls in up to 22 degrees off square, turned as far toward its own way in as that allows (the bounce does the rest)
+            psi = Math.max(-0.38, Math.min(0.38, Math.atan2(nf[2] * dx - nf[0] * dz, -(nf[0] * dx + nf[2] * dz)) + (r() - 0.5) * 0.3));
+            const cp = Math.cos(psi), sp = Math.sin(psi);
+            rh = [-(nf[0] * cp - nf[2] * sp), 0, -(nf[2] * cp + nf[0] * sp)];
+            psi = Math.abs(psi);
+          } else {
+            rh = [dx / dl, 0, dz / dl];                                           // the way it travels: lob, rolls
+            psi = Math.acos(Math.min(1, cosA));
+          }
+          lamE = Math.sin(ac) + 0.5 * Math.tan(psi);                              // the edge it turns about, in front of the face
+          // the felt behind the face along its way in, up to the rail
+          let room = 99;
+          if (rh[0] > 1e-6) room = Math.min(room, (F[0] + bounds.halfX - 0.6) / rh[0]); else if (rh[0] < -1e-6) room = Math.min(room, (bounds.halfX - 0.6 - F[0]) / -rh[0]);
+          if (rh[2] > 1e-6) room = Math.min(room, (F[2] - bounds.zFar - 0.6) / rh[2]); else if (rh[2] < -1e-6) room = Math.min(room, (bounds.zNear - 0.6 - F[2]) / -rh[2]);
+          const fit = [];
+          for (let Nc = 0; Nc < 3; Nc++) {
+            const back = lamE + Nc + 0.5;                                         // from the face back to the landing
+            if (back > room || TM[Nc] > (bounce ? TairHi : tAHi)) continue;
+            if (!bounce && dl - back < -0.3) continue;                            // one lob cannot fly backwards
+            fit.push(Nc);
+          }
+          if (fit.length) N = fit[Math.floor(r() * fit.length)];
+        }
+        if (N < 0) return null;
+        bounce = !bounce;                                                         // the loop's last step flipped it
+        const w0 = W[N], tMin = TM[N];
+        const EN = [F[0] - rh[0] * lamE, 0, F[2] - rh[2] * lamE];
+        const PL = [EN[0] - rh[0] * (N + 0.5), 0.5, EN[2] - rh[2] * (N + 0.5)];   // where it lands (centre, flat)
+        if (Math.abs(PL[0]) > bounds.halfX - 0.6 || PL[2] < bounds.zFar + 0.6 || PL[2] > bounds.zNear - 0.6) return null;
+        // the flight: t1 to the bounce at B and t2 on to PL, or Tair straight to PL
+        let t1 = 0, t2 = 0, B = null, Tair = 0, hs = 0;
+        if (bounce) {
+          let fits = false;
+          if (minHs > 0) {
+            // it has to cross the felt fast: the quickest lob the timing allows (found by stepping up from the shortest), a little longer at most
+            const e = 0.3 + r() * 0.16;
+            for (let a = 0; a <= 8 && !fits; a++) {
+              t1 = t1Lo + (a / 8) * (t1Hi - t1Lo);
+              t2 = ckAir(e * (50 * t1 - (0.66 - S0[1] + 25 * t1 * t1) / t1), 0.66, 0.5);
+              fits = t1 + t2 >= tMin;
+            }
+            if (fits) { t1 = Math.min(t1Hi, t1 + r() * 0.12 * (t1Hi - t1Lo)); t2 = ckAir(e * (50 * t1 - (0.66 - S0[1] + 25 * t1 * t1) / t1), 0.66, 0.5); }
+          }
+          for (let a = 0; a < 4 && !fits; a++) {
+            t1 = a < 3 ? t1Lo + r() * (t1Hi - t1Lo) : t1Hi;
+            const vy = (0.66 - S0[1] + 25 * t1 * t1) / t1;
+            t2 = ckAir((a < 3 ? 0.3 + r() * 0.16 : 0.46) * (50 * t1 - vy), 0.66, 0.5); // the felt gives back a third to a half of the fall
+            fits = t1 + t2 >= tMin;
+          }
+          if (!fits) return null;
+          // the hop after the bounce runs along rh, slower than the lob: the felt takes some of its speed
+          const kh = 0.55 + r() * 0.25;
+          let d2 = 1;
+          for (let it = 0; it < 4; it++) {
+            B = [PL[0] - rh[0] * d2, 0, PL[2] - rh[2] * d2];
+            d2 = Math.max(0.3, Math.min(2.4, kh * Math.hypot(B[0] - S0[0], B[2] - S0[2]) / t1 * t2));
+          }
+          B = [PL[0] - rh[0] * d2, 0, PL[2] - rh[2] * d2];
+          const g0 = B[0] - S0[0], g2 = B[2] - S0[2], L1 = Math.hypot(g0, g2);
+          hs = L1 / t1;
+          if (hs > 17 || hs < minHs) return null;                                 // no faster than a hard throw, no slower than asked
+          // the bounce may not turn it too sharply; only a die that comes down almost where it went up may hop off any way
+          const turn = L1 > 1e-6 ? (g0 * rh[0] + g2 * rh[2]) / L1 : 1;
+          if (L1 > 0.9 ? turn < 0.74 : (hs > 1.5 && turn < 0)) return null;
+          if (Math.abs(B[0]) > bounds.halfX - 0.6 || B[2] < bounds.zFar + 0.6 || B[2] > bounds.zNear - 0.6) return null;
+          Tair = t1 + t2;
+        } else {
+          const lo = Math.max(tMin, tALo), run = (PL[0] - S0[0]) * rh[0] + (PL[2] - S0[2]) * rh[2];
+          Tair = lo + r() * Math.max(0, tAHi - lo);
+          hs = Math.abs(run) / Tair;
+          if (run < -0.3 || hs > 17 || (minHs > 0 && run / Tair < minHs)) return null;                  // it flies forward to its landing (or comes straight down), no faster than a hard throw
+        }
+        // the tumble in the air: a steady spin (slower after the bounce) that dies over the last moment so it lands face down, edges along rh
+        const beta = Math.atan2(-rh[2], rh[0]);
+        const qt = ckMul(ckAx(0, 1, 0, beta), ckMul(ckAx(1, 0, 0, Math.floor(r() * 4) * Math.PI / 2), ckAx(0, 0, 1, Math.floor(r() * 4) * Math.PI / 2)));
+        let dq = ckMul(qt, ckInv(st.q));
+        if (dq[3] < 0) dq = [-dq[0], -dq[1], -dq[2], -dq[3]];
+        const sn = Math.hypot(dq[0], dq[1], dq[2]);
+        const phi0 = 2 * Math.atan2(sn, dq[3]);
+        const sa = sn > 1e-6 ? [dq[0] / sn, dq[1] / sn, dq[2] / sn] : [0, 0, 1];
+        const tb = bounce ? t1 : 0, tl = bounce ? t2 : Tair;                      // the last stretch in the air: from tb, tl long
+        const tau = Math.min(0.12, 0.6 * tl);
+        const Teff = tb + (bounce ? 0.6 : 1) * (tl - tau / 2);
+        const phi = phi0 + 2 * Math.PI * Math.max(phi0 < 2.5 ? 1 : 0, Math.round(((11 + r() * 6) * Teff - phi0) / (2 * Math.PI)));
+        const ws = phi / Teff, ws2 = bounce ? 0.6 * ws : ws;
+        const angAt = (t) => {
+          if (t <= tb) return ws * t;
+          const x = t - tb, x1 = tl - tau;
+          return ws * tb + ws2 * (x < x1 ? x : x - (x - x1) * (x - x1) / (2 * tau));
+        };
+        let vy1, vy2 = 0, hb = 0.5, vimp = 0;
+        if (bounce) {
+          hb = ckHq(ckMul(ckAx(sa[0], sa[1], sa[2], angAt(t1)), st.q));           // it touches down on whatever corner or edge is lowest then
+          vy1 = (hb - S0[1] + 25 * t1 * t1) / t1;
+          vimp = 50 * t1 - vy1;
+          vy2 = (0.5 - hb + 25 * t2 * t2) / t2;
+          if (vimp < 3 || vy2 < 0.2 * vimp || vy2 > 0.62 * vimp) return null;      // not a bounce the felt would give
+        } else vy1 = (0.5 - S0[1] + 25 * Tair * Tair) / Tair;
+        const a = [rh[2], 0, -rh[0]];                                             // roll axis: up x rh (positive turns the top toward the face)
+        const Fr = new Float32Array(MAX_STEPS * 7);
+        const imps = [];
+        const put = (s, p, q) => { const o = s * 7; Fr[o] = p[0]; Fr[o + 1] = p[1]; Fr[o + 2] = p[2]; Fr[o + 3] = q[0]; Fr[o + 4] = q[1]; Fr[o + 5] = q[2]; Fr[o + 6] = q[3]; };
+        const clearAt = ckClearer(cx, sup, pop);
+        let s = 0;
+        const sL = Math.floor(Tair * 60 + 1e-9) - 1;                              // last frame in the air
+        for (; s <= sL; s++) {
+          const t = (s + 1) / 60;
+          let p;
+          if (!bounce) { const w = t / Tair; p = [S0[0] + (PL[0] - S0[0]) * w, S0[1] + vy1 * t - 25 * t * t, S0[2] + (PL[2] - S0[2]) * w]; }
+          else if (t <= t1) { const w = t / t1; p = [S0[0] + (B[0] - S0[0]) * w, S0[1] + vy1 * t - 25 * t * t, S0[2] + (B[2] - S0[2]) * w]; }
+          else { const x = t - t1, w = x / t2; p = [B[0] + (PL[0] - B[0]) * w, hb + vy2 * x - 25 * x * x, B[2] + (PL[2] - B[2]) * w]; }
+          const q = ckMul(ckAx(sa[0], sa[1], sa[2], angAt(t)), st.q);
+          const hq = ckHq(q);
+          if (p[1] < hq) p[1] = hq;                                               // a corner that reaches the felt drags on it: the die never sinks in
+          put(s, p, q);
+          if (!clearAt(s, p, false, q)) return null;
+        }
+        // the thuds: the bounce, then the landing
+        if (bounce) imps.push({ step: Math.max(0, Math.floor(t1 * 60)), v: vimp, kind: 'floor', x: B[0], y: hb, z: B[2], i: cx.cock.i, j: -1, side: '' });
+        imps.push({ step: Math.max(0, sL + 1), v: Math.abs(bounce ? vy2 - 50 * t2 : vy1 - 50 * Tair), kind: 'floor', x: PL[0], y: 0.5, z: PL[2], i: cx.cock.i, j: -1, side: '' });
+        const sc = ckRolls(cx, { Fr, s, Tair, PL, EN, rh, qt, N, w0, ac, wc, sup, imps, clearAt });
+        if (!sc) return null;
+        sc.bounce = bounce; sc.hs = hs;
+        return sc;
+      }
+      // ---- the live throw ----
+      // The most natural cock: c is thrown by the physics like any other die (same launch, same bounces, the rails, the other dice in its way),
+      // and the script only takes over its last moments: at the latest step where c is on the felt, still moving, and heading for a resting
+      // die, it makes one small hop that lands it flat, rolls on with the speed it has left, and its last roll stops against that die.
+      const CK_PLAIN = { floorF: 0.14, floorR: 0.38, dieF: 0.06, dieR: 0.5 }; // the ordinary materials of a throw
+      // step sb of the live throw S (centre pb, turn qb, velocity vx vyb vz, spin om): plan the rest from here; the finished script or null.
+      // air = c is in the air there: it flies on as it was and is only steered a little; on the felt it makes one more small hop.
+      function ckFrom(cx, S, sb, pb, qb, vx, vyb, vz, om, air) {
+        const r = Math.random, vh = Math.hypot(vx, vz);
+        // the hop it makes: about what it was doing anyway, at least a small one (in the air: exactly the fall it is in)
+        const base = Math.max(0, vyb), tA = ckAir(vyb, pb[1], 0.5);
+        const t2Lo = air ? tA : ckAir(Math.max(2.5, 0.8 * base), pb[1], 0.5), t2Hi = air ? tA : ckAir(Math.min(9, Math.max(4, 1.25 * base)), pb[1], 0.5);
+        const kLo = air ? 0.8 : 0.5, kHi = air ? 1.15 : 1.3, kMid = air ? 1 : 0.85, turnMin = air ? 0.978 : 0.766; // speed kept, and the turn allowed (12 degrees in the air, 40 off the felt)
+        const T0 = (sb + 1) / 60;
+        const cands = ckCandidates(cx, pb);
+        if (!cands.length) return null;
+        const clearers = new Map();
+        for (let rep = 0; rep < 2; rep++) {
+          const off = Math.floor(r() * cands.length);
+          for (let ci = 0; ci < cands.length; ci++) {
+            const cd = cands[(ci + off) % cands.length], sup = cd.sup, nf = cd.nf;
+            const thc = (8 + r() * 14) * Math.PI / 180, ac = Math.PI / 4 + thc, wc = 1.8 + r() * 1.2;
+            const u = (r() - 0.5) * 0.5;
+            const F = [sup.p[0] + nf[0] * 0.5 + cd.tf[0] * u, 0, sup.p[2] + nf[2] * 0.5 + cd.tf[2] * u];
+            const dx = F[0] - pb[0], dz = F[2] - pb[2];
+            // it rolls in up to 24 degrees off square, turned as far toward its own way in as that allows
+            let psi = Math.max(-0.42, Math.min(0.42, Math.atan2(nf[2] * dx - nf[0] * dz, -(nf[0] * dx + nf[2] * dz)) + (r() - 0.5) * 0.2));
+            const cp = Math.cos(psi), sp = Math.sin(psi);
+            const rh = [-(nf[0] * cp - nf[2] * sp), 0, -(nf[2] * cp + nf[0] * sp)];
+            psi = Math.abs(psi);
+            const lamE = Math.sin(ac) + 0.5 * Math.tan(psi);                      // the edge it turns about, in front of the face
+            // the roll count is set by the speed it lands with: a fast die rolls further (N + 1 rolls, each weaker than the one before)
+            const n0 = Math.floor(r() * 4);
+            for (let ni = 0; ni < 4; ni++) {
+              const N = (n0 + ni) % 4;
+              const PL = [F[0] - rh[0] * (lamE + N + 0.5), 0.5, F[2] - rh[2] * (lamE + N + 0.5)]; // where it lands (centre, flat)
+              const h0 = PL[0] - pb[0], h2 = PL[2] - pb[2], d2 = Math.hypot(h0, h2); // the hop's run across the felt
+              if (d2 < 0.2) continue;
+              if ((h0 * rh[0] + h2 * rh[2]) / d2 < 0.866) continue;                // it would have to veer more than 30 degrees as it lands
+              if ((vx * h0 + vz * h2) / (vh * d2) < turnMin) continue;             // it would have to turn too sharply
+              // it keeps about the speed it had: the hop lasts as long as that takes, within what its bounce allows
+              const lo = Math.max(t2Lo, d2 / (kHi * vh)), hi = Math.min(t2Hi, d2 / (kLo * vh));
+              if (lo > hi) continue;
+              const t2 = Math.max(lo, Math.min(hi, d2 / (kMid * vh))), hv = d2 / t2, vy = (0.5 - pb[1] + 25 * t2 * t2) / t2;
+              const w0 = [];
+              w0[N] = Math.sqrt(wc * wc + 75 * (ckH(ac) - 0.5));
+              for (let j = N - 1; j >= 0; j--) w0[j] = Math.min(10, Math.max(5.7, w0[j + 1] / CK_KAPPA));
+              const vN = w0[0] / 0.75;                                            // the landing speed that tips a cube over at that spin
+              if (hv < 0.5 * vN || hv > 1.4 * vN) continue;
+              if (T0 + t2 < (sup.rest + 3) / 60 - ckRollTime(w0, N, ac) + 0.02) continue; // the support must have stopped before c reaches it
+              if (Math.abs(PL[0]) > bounds.halfX - 0.6 || PL[2] < bounds.zFar + 0.6 || PL[2] > bounds.zNear - 0.6) continue;
+              const EN = [PL[0] + rh[0] * (N + 0.5), 0, PL[2] + rh[2] * (N + 0.5)];
+              // the hop: it keeps tumbling about as fast as it was, and the tumble dies over the last moment so it lands face down, edges along rh.
+              // Of the flat poses it could land in, it takes the one its own tumble comes nearest to (no sudden spin-up at the hand-over).
+              const beta = Math.atan2(-rh[2], rh[0]), tau = Math.min(0.12, 0.6 * t2), Teff = t2 - tau / 2, want = Math.max(4, Math.min(18, om)) * Teff;
+              let qt = null, sa = null, phi = 0, miss = 1e9;
+              for (let ia = 0; ia < 4; ia++) for (let ib = 0; ib < 4; ib++) {
+                const q1 = ckMul(ckAx(0, 1, 0, beta), ckMul(ckAx(1, 0, 0, ia * Math.PI / 2), ckAx(0, 0, 1, ib * Math.PI / 2)));
+                let dq = ckMul(q1, ckInv(qb));
+                if (dq[3] < 0) dq = [-dq[0], -dq[1], -dq[2], -dq[3]];
+                const sn = Math.hypot(dq[0], dq[1], dq[2]), p0 = 2 * Math.atan2(sn, dq[3]);
+                const ph = p0 + 2 * Math.PI * Math.max(0, Math.round((want - p0) / (2 * Math.PI)));
+                const m = Math.abs(ph - want) + r() * 0.05;
+                if (m < miss) { miss = m; qt = q1; phi = ph; sa = sn > 1e-6 ? [dq[0] / sn, dq[1] / sn, dq[2] / sn] : [0, 0, 1]; }
+              }
+              const ws = phi / Teff, x1 = t2 - tau;
+              if (ws > 24) continue;                                              // it would have to spin faster than a thrown die does
+              const Fr = S.frames, imps = [];
+              let clearAt = clearers.get(sup);
+              if (!clearAt) { clearAt = ckClearer(cx, sup, false); clearers.set(sup, clearAt); }
+              let s = sb + 1, ok = true;
+              for (; (s + 1) / 60 <= T0 + t2 + 1e-9; s++) {
+                const t = (s + 1) / 60 - T0, w = t / t2;
+                const p = [pb[0] + h0 * w, pb[1] + vy * t - 25 * t * t, pb[2] + h2 * w];
+                const q = ckMul(ckAx(sa[0], sa[1], sa[2], ws * (t < x1 ? t : t - (t - x1) * (t - x1) / (2 * tau))), qb);
+                const hq = ckHq(q);
+                if (p[1] < hq) p[1] = hq;                                         // a corner that reaches the felt drags on it: the die never sinks in
+                const o = s * 7;
+                Fr[o] = p[0]; Fr[o + 1] = p[1]; Fr[o + 2] = p[2]; Fr[o + 3] = q[0]; Fr[o + 4] = q[1]; Fr[o + 5] = q[2]; Fr[o + 6] = q[3];
+                if (!clearAt(s, p, false, q)) { ok = false; break; }
+              }
+              if (!ok) continue;
+              imps.push({ step: Math.max(0, Math.floor((T0 + t2) * 60)), v: Math.abs(vy - 50 * t2), kind: 'floor', x: PL[0], y: 0.5, z: PL[2], i: cx.cock.i, j: -1, side: '' });
+              const sc = ckRolls(cx, { Fr, s, Tair: T0 + t2, PL, EN, rh, qt, N, w0, ac, wc, sup, imps, clearAt });
+              if (!sc) continue;
+              sc.imps = S.impacts.filter((im) => im.step <= sb).concat(sc.imps);    // what the physics heard up to the hand-over, then the script
+              sc.bounce = !air; sc.hs = vh; sc.live = true; sc.from = sb;
+              return sc;
+            }
+          }
+        }
+        return null;
+      }
+      // one live throw of c among the replayed dice, then the latest moment the script can take over; returns the finished script or null
+      function ckLive(cx) {
+        const S = ckSetup(cx, CK_PLAIN);
+        const c = S.c, V = [], F = S.frames;
+        let last = -1, first = 10;
+        // a knock or a slam: the row lifts off squeezed side by side (as the ordinary dice of such a throw do), so c does not meet the replayed
+        // dice until it has come clear of them (or 16 steps have passed)
+        let ghost = !!cx.initArr;
+        if (ghost) c.collisionFilterMask = -3;
+        sim: for (let s = 0; s < 220; s++) {
+          const n0 = S.impacts.length;
+          ckStep(cx, S, s);
+          if (!(c.position.y > 0.35) || c.position.y > 6.8) break;               // shoved out of the world by a replayed die
+          // the replayed dice cannot give way: where one of them is driven into c the two would be seen passing through each other,
+          // so the throw is only good up to the step before
+          const o7 = s * 7;
+          let pts = null, into = false;
+          for (let m = 0; m < cx.kin.length && !into; m++) {
+            const kd = cx.kin[m], KF = kd.F, u2 = Math.min(s, kd.last) * 7;
+            if (Math.hypot(KF[u2] - F[o7], KF[u2 + 1] - F[o7 + 1], KF[u2 + 2] - F[o7 + 2]) > 1.74) continue;
+            if (!pts) pts = ckPts([F[o7], F[o7 + 1], F[o7 + 2]], [F[o7 + 3], F[o7 + 4], F[o7 + 5], F[o7 + 6]]);
+            into = ckGap(pts, { q: [KF[u2 + 3], KF[u2 + 4], KF[u2 + 5], KF[u2 + 6]], vp: [KF[u2], KF[u2 + 1], KF[u2 + 2]] }) < -0.06;
+          }
+          if (ghost) {
+            if (into && s < 15) first = s + 2;                                    // no take-over while it is still inside the row
+            else { ghost = false; c.collisionFilterMask = -1; }
+          } else if (into) break;
+          for (let i = n0; i < S.impacts.length; i++) {
+            const im = S.impacts[i];
+            if (im.kind !== 'die' || im.v < 3.5) continue;
+            // a replayed die cannot answer a hit: a knock on one that already lies still would show it frozen in place, and a very hard one on
+            // a moving die would fling c off it like off a wall, so the throw ends before either
+            for (let m = 0; m < cx.kin.length; m++) if (cx.kin[m].die === im.j && (im.v >= 10 || cx.kin[m].rest <= s)) break sim;
+          }
+          if (c.velocity.x * c.velocity.x + c.velocity.z * c.velocity.z > 289) break; // faster across the felt than any die is thrown (17): something flung it
+          V.push(c.velocity.x, c.velocity.y, c.velocity.z, c.angularVelocity.length());
+          last = s;
+          if (s > 25 && c.velocity.lengthSquared() < 0.3 && c.angularVelocity.lengthSquared() < 0.5) break; // it has come to rest
+        }
+        for (let s = last; s >= first; s--) {
+          const o = s * 7, k = s * 4;
+          if (Math.hypot(V[k], V[k + 2]) < 2.2) continue;                        // too slow to roll on
+          const q = [F[o + 3], F[o + 4], F[o + 5], F[o + 6]];
+          const a = ckRot(q, 1, 0, 0), b = ckRot(q, 0, 1, 0), d = ckRot(q, 0, 0, 1);
+          const air = F[o + 1] - 0.5 * (Math.abs(a[1]) + Math.abs(b[1]) + Math.abs(d[1])) > 0.05; // its lowest corner is off the felt
+          if (air) { const tA = ckAir(V[k + 1], F[o + 1], 0.5); if (F[o + 1] > 2.4 || tA < 0.08 || tA > 0.6) continue; } // too high, or about to touch down
+          else if (V[k + 1] < -2) continue;                                      // on the felt but still coming down hard: its bounce is a step later
+          const p = [F[o], F[o + 1], F[o + 2]];
+          if (Math.abs(p[0]) > bounds.halfX - 0.6 || p[2] < bounds.zFar + 0.6 || p[2] > bounds.zNear - 0.6) continue;
+          const sc = ckFrom(cx, S, s, p, q, V[k], V[k + 1], V[k + 2], V[k + 3], air);
+          if (sc) return sc;
+        }
+        return null;
+      }
+      // c's frames after the catch step, its impacts, and the numbers for the stats
+      function ckFinish(cx, sc) {
+        const tail = sc.tail, sC = sc.sC, F = sc.F, P = sc.I;
+        for (let n = 0; n < tail.fr.length; n++) { const o = (sC + 1 + n) * 7; for (let k = 0; k < 7; k++) F[o + k] = tail.fr[n][k]; }
+        const lastStep = sC + tail.fr.length;
+        const imps = sc.imps.slice();
+        tail.hits.forEach((h) => {
+          if (h.v < 1.2) return;
+          const st = sC + h.n;
+          const f = Math.min(lastStep, st) * 7;
+          const cxp = F[f], cyp = F[f + 1], czp = F[f + 2];
+          imps.push({ step: st, v: h.v, kind: 'die', x: cxp, y: cyp, z: czp, i: cx.cock.i, j: P.sup.id, side: '', mx: (cxp + P.sup.p[0]) / 2, my: (cyp + P.sup.p[1]) / 2, mz: (czp + P.sup.p[2]) / 2 });
+        });
+        return { frames: F, last: lastStep, impacts: imps, end: tail.end, tip: tail.tip, support: P.sup.id, theta: P.th, hits: tail.hits.length };
+      }
+      // the faces c may roll up to: every side face of every resting die that c's start stands in front of (a bounce can turn it the rest of the way)
+      function ckCandidates(cx, S0) {
+        const out = [];
+        cx.allSups.forEach((sup) => {
+          if (sup.rest > 125) return; // it stops too late for c to still be on its way
+          [ckRot(sup.q, 1, 0, 0), ckRot(sup.q, 0, 1, 0), ckRot(sup.q, 0, 0, 1)].forEach((e) => {
+            const hl = Math.hypot(e[0], e[2]);
+            if (hl < 0.9) return; // that axis is the vertical one
+            for (let sg = -1; sg <= 1; sg += 2) {
+              const nf = [(sg * e[0]) / hl, 0, (sg * e[2]) / hl];
+              if (nf[0] * (S0[0] - sup.p[0]) + nf[2] * (S0[2] - sup.p[2]) < 1.5) continue;
+              const dx = sup.p[0] + nf[0] * 0.5 - S0[0], dz = sup.p[2] + nf[2] * 0.5 - S0[2];
+              if (-(dx * nf[0] + dz * nf[2]) / Math.hypot(dx, dz) < 0.5) continue; // too far to the side even for a bounce
+              out.push({ sup, nf, tf: [-nf[2], 0, nf[0]] });
+            }
+          });
+        });
+        return out;
+      }
+      // pass 1 and the context of the search for cock die c
+      function ckPrepare(heldArr, rollingIdx, init, cock) {
+        const n = rollingIdx.length, kc = rollingIdx.indexOf(cock.i);
+        // pass 1: the other rolling dice, exactly as today (the same launch slots), until they all lie flat
+        let p1 = null, initArr = null;
+        if (n > 1) {
+          for (let at = 0; at < 6; at++) {
+            initArr = typeof init === 'function' ? init() : init;
+            p1 = runSim(heldArr, rollingIdx, initArr, kc);
+            if (p1.ok) break;
+          }
+        } else initArr = typeof init === 'function' ? init() : init;
+        const cx = {
+          heldArr, rollingIdx, n, kc, cock, initArr, p1, dir: p1 ? p1.dir : (Math.random() < 0.5 ? 1 : -1),
+          zSpan: Math.max(1, bounds.zNear - bounds.zFar - 1.4), kin: [], held: [], allSups: [], shape: null
+        };
+        for (let i = 0; i < 5; i++) {
+          if (!heldArr[i]) continue;
+          const q0 = D[i].baseQuat;
+          cx.held.push({ id: i, p: [slots[i].x, 0.5, slots[i].z], vp: [slots[i].x, 0.86, slots[i].z], q: [q0.x, q0.y, q0.z, q0.w], rest: 0 });
+        }
+        if (p1) {
+          let m = 0;
+          rollingIdx.forEach((dieI, k) => {
+            if (k === kc) return;
+            const F = p1.frames[m++], last = p1.steps - 1, lo = last * 7;
+            let rest = last;
+            while (rest > 0) {
+              const o = (rest - 1) * 7;
+              const dp = Math.abs(F[o] - F[lo]) + Math.abs(F[o + 1] - F[lo + 1]) + Math.abs(F[o + 2] - F[lo + 2]);
+              const dq = 1 - Math.abs(F[o + 3] * F[lo + 3] + F[o + 4] * F[lo + 4] + F[o + 5] * F[lo + 5] + F[o + 6] * F[lo + 6]);
+              if (dp > 0.03 || dq > 0.0002) break; // within a hair of where it ends: its last tremble does not matter to a die that comes to lean on it
+              rest--;
+            }
+            const sup = { id: dieI, p: [F[lo], F[lo + 1], F[lo + 2]], vp: [F[lo], F[lo + 1], F[lo + 2]], q: [F[lo + 3], F[lo + 4], F[lo + 5], F[lo + 6]], rest };
+            cx.kin.push({ die: dieI, F, last, rest, sup });
+          });
+        }
+        cx.allSups = cx.held.concat(cx.kin.map((o) => o.sup));
+        return cx;
+      }
+
+      // The search. Returns a sim like simulate() plus sim.meshQ (the mesh offset of c) and sim.cock (stats).
+      function simulateCock(heldArr, rollingIdx, init, cock, trial) {
+        const t0 = performance.now();
+        const kc = rollingIdx.indexOf(cock.i);
+        let cx = ckPrepare(heldArr, rollingIdx, init, cock);
+        // Two ways to throw c, tried in this order:
+        //   1. the live throw (ckLive): the physics throws c like any die and the script takes over its last moments. The natural one.
+        //   2. the scripted lob (ckScript): slower across the felt, but it finds a way in on almost any table. The reliable one.
+        // The scripted search is counted in tries, never in milliseconds, so a slow phone finds the same catches as a fast desktop; the clock
+        // only decides how many of the costlier live throws a device gets, and stops a search that has already run very long.
+        // A knock or a slam (init) gives up a little sooner: dice that pop up in a crowd may leave c no way in, and the throw must not wait for it.
+        const stat = { caught: false, tries: 0, ms: 0, support: -1 };
+        const perThrow = 90, maxRedo = init ? 4 : 5, netMs = init ? 220 : 280;
+        // pass 1 just ran: its time tells how fast this device is. A slow one gets no live throws (each costs about a fifth of a throw).
+        let win = null, redo = 0, liveLeft = performance.now() - t0 > 80 ? 0 : 2;
+        search: for (;;) {
+          if (liveLeft > 0) {
+            liveLeft--;
+            for (let a = 0; a < 14; a++) {
+              if (performance.now() - t0 > 110) { liveLeft = 0; break; } // a slow device: the scripted lob is cheaper
+              stat.tries++;
+              const sc = ckLive(cx);
+              if (sc) { win = ckFinish(cx, sc); win.hs = sc.hs; win.bounce = sc.bounce; win.live = true; win.from = sc.from; break search; }
+            }
+            // a second throw of the other dice for more live throws, on a device fast enough for it
+            if (liveLeft > 0 && cx.n > 1 && performance.now() - t0 <= 70) { redo++; cx = ckPrepare(heldArr, rollingIdx, init, cock); continue; }
+            liveLeft = 0;
+          }
+          let none = 0;
+          for (let k = 0; k < perThrow; k++) {
+            stat.tries++;
+            const st = ckStart(cx, stat.tries);
+            const cands = ckCandidates(cx, st.p);
+            if (cands.length) {
+              none = 0;
+              // a die thrown from the hand should cross the felt like the others: asked for first, relaxed when this throw has no such way in
+              const sc = ckScript(cx, cands, st, init ? 0 : k < 30 ? 5.5 : k < 55 ? 3 : 0);
+              if (sc) { win = ckFinish(cx, sc); win.hs = sc.hs; win.bounce = sc.bounce; break search; }
+            } else if (++none >= 6 && cx.n > 1) break; // no face to roll up to in this throw of the others
+            if (performance.now() - t0 > 450) break search;
+          }
+          // nothing fits with this throw of the other dice: throw them again (pass 1 only)
+          if (cx.n === 1) { if (stat.tries >= 3 * perThrow + 28) break; continue; } // a lone die has no other throw to redo; its own start is drawn again
+          if (++redo > maxRedo || performance.now() - t0 > netMs) break;
+          cx = ckPrepare(heldArr, rollingIdx, init, cock);
+        }
+        const p1 = cx.p1;
+        let res;
+        if (win) {
+          const p1steps = p1 ? p1.steps : 0;
+          const steps = Math.min(MAX_STEPS, Math.max(p1steps, win.last + 1 + 6));
+          const frames = [], tops = [], meshQ = [];
+          let m = 0;
+          rollingIdx.forEach((dieI, k) => {
+            if (k === kc) {
+              const F = win.frames, lo = win.last * 7;
+              for (let u = win.last + 1; u < steps; u++) for (let j = 0; j < 7; j++) F[u * 7 + j] = F[lo + j];
+              const mm = ckMesh(win.end.q, cock.faces);
+              frames.push(F); tops.push(mm.top); meshQ.push(mm.mesh);
+            } else {
+              const F = p1.frames[m];
+              const lo = (p1.steps - 1) * 7;
+              for (let u = p1.steps; u < steps; u++) for (let j = 0; j < 7; j++) F[u * 7 + j] = F[lo + j];
+              frames.push(F); tops.push(p1.tops[m]); meshQ.push(null);
+              m++;
+            }
+          });
+          const imps = (p1 ? p1.impacts : []).concat(win.impacts);
+          imps.sort((a, b) => a.step - b.step);
+          res = { frames, steps, impacts: imps, tops, ok: true, meshQ };
+          stat.caught = true; stat.support = win.support; stat.theta = win.theta; stat.hits = win.hits; stat.tip = win.tip; stat.hs = win.hs; stat.bounce = win.bounce; stat.live = !!win.live; stat.from = win.from; stat.at = win.last;
+        } else {
+          res = null; // no catch: simulate() goes on to an ordinary throw of all the dice (c lands flat and is leaned at the gather)
+        }
+        stat.ms = performance.now() - t0;
+        cockStat = Object.assign({}, stat);
+        if (res) res.cock = stat;
+        return res || stat;
+      }
+      // sets the mesh offset of a rolling die: faces its value to the top (a cock die: the faces of the catch)
+      function applyMesh(d, sim, k, v) {
+        if (sim.meshQ && sim.meshQ[k]) d.mesh.quaternion.copy(sim.meshQ[k]);
+        else d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(v)], sim.tops[k]);
       }
 
       // ---------- playback ----------
@@ -14776,13 +15730,14 @@
           centroid: new THREE.Vector3(),
           // five 1s thrown on a fuse are a bust, not a yacht: no gold flood
           stops: pickStops(imps), yacht: values.every((v) => v === values[0]) && !(fuse && rollingIdx.some((i) => values[i] === 1)),
-          revealStep, dramaFired: false, revealed: false, fuse, fuseFired: false
+          revealStep, dramaFired: false, revealed: false, fuse, fuseFired: false,
+          cockSup: sim.cock && sim.cock.caught ? sim.cock.support : -1 // the die the cock die leans on (-1 = none)
         };
       }
       function startRolling(d) {
         d.rolling = true; d.tween = null; d.hopT0 = -9; d.landAt = 0; d.hover = false;
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
-        d.cockFaces = null; d.cockKey = ''; d.cockVis = 0; // any throw ends a lean: the die tumbles out of its pose
+        dropCock(d); // any throw ends a lean (and its settle and the neighbour's offset): the die tumbles out of its pose
         if (cockWant && cockWant.i === d.i) cockWant = null;
         tsUntil = 0; // a new throw starts: no stop outlives it
       }
@@ -14797,12 +15752,12 @@
         if (!rollingIdx.length) { setTimeout(() => opts.onDone && opts.onDone(), 0); return; }
         apexAt = null; // the dice that earned a pending payoff are being thrown again
         cancelBlast();
-        const sim = simulate(heldArr, rollingIdx);
+        const sim = simulate(heldArr, rollingIdx, undefined, opts.cock);
         rollingIdx.forEach((i, k) => {
           const d = D[i];
           d.startP.copy(d.group.position);
           const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
-          d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(values[i])], sim.tops[k]);
+          applyMesh(d, sim, k, values[i]);
           d.startQ.copy(worldQ).multiply(d.mesh.quaternion.clone().invert());
           startRolling(d);
         });
@@ -14839,13 +15794,16 @@
             v: new THREE.Vector3((F[o1] - F[o0]) * 60, (F[o1 + 1] - F[o0 + 1]) * 60, (F[o1 + 2] - F[o0 + 2]) * 60)
           };
         });
-        const sim = simulate(D.map((d) => d.held), a.rolling, init);
+        const sim = simulate(D.map((d) => d.held), a.rolling, init, cockSpec);
         const values = a.values.slice();
         a.rolling.forEach((i, k) => {
           const d = D[i];
           if (forced) {
             values[i] = forced[i];
-            d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(forced[i])], sim.tops[k]);
+            applyMesh(d, sim, k, forced[i]);
+          } else if (sim.meshQ && sim.meshQ[k]) {
+            d.mesh.quaternion.copy(sim.meshQ[k]); // the caught cock die shows the faces of its catch
+            values[i] = cockSpec.faces[0];
           } else {
             // the face that ends up on top, through this die's current mesh offset
             const local = sim.tops[k].clone().applyQuaternion(d.mesh.quaternion.clone().invert());
@@ -15236,7 +16194,7 @@
         const a = anim;
         anim = null;
         if (a.fuse && !a.fuseFired) fireFuse(a); // the roll was cut short (finishNow, a hidden tab): the result still shows
-        let maxEnd = 0;
+        let maxEnd = 0, othersEnd = 0, cockD = null;
         a.rolling.forEach((i, k) => {
           const d = D[i];
           const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
@@ -15247,20 +16205,39 @@
           const ys = a.opts && a.opts.yaw; // the host's draw for this roll; a missing entry lands at 0
           d.yaw = ys && ys[i] != null ? ((ys[i] | 0) & 3) : 0;
           d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
-          if (a.opts && a.opts.cock && a.opts.cock.i === i) applyLean(d, a.opts.cock.faces); // the die lands INTO the lean
+          if (a.opts && a.opts.cock && a.opts.cock.i === i) applyLean(d, a.opts.cock.faces); // the die flies on leaning and lands in the lean (caught in the throw, or flat when no catch was found)
+          const isCock = !!d.cockFaces;
           const delay = k * 0.05, dur = a.homeDur || 0.4;
           d.tween = {
-            fromP: d.group.position.clone(), fromQ: worldQ, toQ: d.baseQuat.clone(), t0: clock + delay, dur, hop: a.homeHop || 0.6, sq: -3.2,
+            fromP: d.group.position.clone(), fromQ: worldQ, toQ: (isCock ? d.cockQ : d.baseQuat).clone(), t0: clock + delay, dur, hop: a.homeHop || 0.6, sq: isCock ? -1.5 : -3.2,
             onEnd: () => {
               // landing flash: "this is your result"
               flashDie(d, 0.3);
               if (a.homeRing != null) spawnRing(d.group.position.x, d.group.position.z, 9, a.homeRing);
               else spawnRing(d.group.position.x, d.group.position.z, 5, null, STEEP);
+              if (isCock) cockDock(d, a.opts, true); // the clack against its neighbour (a.opts is reached by this closure: anim is null by now)
               if (a.opts.onLand) a.opts.onLand(k);
             }
           };
+          if (isCock) cockD = d; else othersEnd = Math.max(othersEnd, delay + dur);
           maxEnd = Math.max(maxEnd, delay + dur);
         });
+        if (cockD) {
+          // the leaning die comes down on its row neighbour just after that one has landed, in the same quick hop as the others.
+          // It leaves with the die it was caught on (or at its own turn if that is sooner), so it is not left leaning on nothing;
+          // a neighbour that lands late can hold it back a moment, never long enough to make the hop slow.
+          const tw = cockD.tween, dur0 = a.homeDur || 0.4;
+          const ks = a.rolling.indexOf(a.cockSup), kc = a.rolling.indexOf(cockD.i), kn = a.rolling.indexOf(cockD.cockNb);
+          let delay = (ks >= 0 ? Math.min(ks, kc) : kc) * 0.05;
+          const endAt = Math.max(delay + dur0, kn >= 0 ? kn * 0.05 + dur0 + 0.06 : 0);
+          delay = Math.max(delay, endAt - dur0 - 0.1);
+          tw.t0 = clock + delay;
+          tw.dur = endAt - delay;
+          targetPos(cockD, _p);
+          const nx = slots[cockD.cockNb].x;
+          if ((tw.fromP.x - nx) * (_p.x - nx) < 0) tw.hop = Math.max(tw.hop, 0.95); // it tumbled to the far side of its support: over the top
+          maxEnd = Math.max(othersEnd, endAt);
+        }
         gather = { at: clock + maxEnd + 0.04, cb: a.opts.onDone, values: a.values.slice() };
         if (a.dramaFired) {
           // a yacht keeps the camera on the row (FOV 30) through the payoff hop; a miss releases fast
@@ -15276,6 +16253,10 @@
         boomAt = null;
         D.forEach((d) => { if (d.flight) { d.flight = null; d.group.visible = true; } });
         D.forEach((d) => { if (d.tween) d.tween = null; });
+        // a leaning die goes straight into its rest pose against its neighbour: no flight, no settle
+        D.forEach((d) => {
+          if (d.cockFaces && !d.cockOn && !d.rolling) { cockDock(d, null, false); targetPos(d, _p); d.group.position.copy(_p); d.group.quaternion.copy(d.cockQ); }
+        });
         if (gather) { const g = gather; gather = null; if (g.cb) g.cb(g.values); }
       }
       function targetPos(d, out) {
@@ -15285,7 +16266,10 @@
         if (hp > 0 && hp < 1) out.y += Math.sin(Math.PI * hp) * d.hopAmp;
         const jp = (clock - d.joltT0) / 0.32;
         if (jp > 0 && jp < 1) out.y += Math.sin(Math.PI * jp) * d.joltAmp;
-        out.y += d.cockVis * d.cockLift; out.z += d.cockVis * d.cockDz; out.x -= Math.sign(out.x) * d.cockVis * d.cockDx; // standing on an edge or a corner
+        if (d.cockFaces) { out.x = slots[d.cockNb].x + D[d.cockNb].nbX - d.cockDir * d.cockSep; out.y += d.cockY - 0.5; } // leaning: flush against its neighbour, wherever that stands now
+        out.x += d.nbX; // a die a leaning one props on has made room (its own eased offset)
+        const np = (clock - d.nudgeT0) / 0.16;
+        if (np > 0 && np < 1) out.x += d.nudgeDir * d.nudgeAmp * Math.sin(Math.PI * np); // the knock of the landing
         if (yf) { const yy = yachtY(clock - yf.t0); out.y += yy; out.x *= 1 - 0.16 * Math.min(1, yy / Y_H); } // the outer dice lean in so they stay on the felt
         return out;
       }
@@ -15344,6 +16328,11 @@
       function updateDice(dt) {
         const k = 1 - Math.exp(-dt * 14);
         const ns = dt > 0.025 ? 2 : 1, h = dt / ns;
+        // the room a leaning die's neighbour makes: eased first, so the leaning die reads this frame's value
+        for (let di = 0; di < D.length; di++) {
+          const d = D[di];
+          if (d.nbX !== d.nbGoal) d.nbX = REDUCED || Math.abs(d.nbGoal - d.nbX) < 0.0008 ? d.nbGoal : d.nbX + (d.nbGoal - d.nbX) * k;
+        }
         for (let di = 0; di < D.length; di++) {
           const d = D[di];
           if (d._ph !== d.held) { d._ph = d.held; if (!d.rolling && !d.tween && !d.flight) onHold(d); }
@@ -15359,7 +16348,6 @@
           d.hoverVis += ((d.hover ? 1 : 0) - d.hoverVis) * k;
           d.dimVis += ((d.dim ? 1 : 0) - d.dimVis) * k;
           d.hlVis += ((d.hl ? 1 : 0) - d.hlVis) * k;
-          d.cockVis += ((d.cockFaces ? 1 : 0) - d.cockVis) * k;
           if (!d.rolling) {
             if (cockWant && cockWant.i === d.i) applyWanted(d); // a lean that had to wait for a tween
             targetPos(d, _p);
@@ -15380,7 +16368,11 @@
                 }
               }
             } else {
-              if (yf) d.group.position.copy(_p); else d.group.position.lerp(_p, 1 - Math.exp(-dt * 20));
+              if (yf || d.cockOn) d.group.position.copy(_p);
+              else if (d.nbX !== 0 || d.nbGoal !== 0 || clock - d.nudgeT0 < 0.2) { // a die that gives way: its sideways spot is exact so the pair never overlaps or lags
+                d.group.position.y += (_p.y - d.group.position.y) * (1 - Math.exp(-dt * 20));
+                d.group.position.x = _p.x; d.group.position.z = _p.z;
+              } else d.group.position.lerp(_p, 1 - Math.exp(-dt * 20));
               const hp = (clock - d.hopT0) / 0.6, wt = clock - d.wobT0;
               if (yf) { _qs.setFromAxisAngle(UP, yachtAng(clock - yf.t0)).multiply(d.baseQuat); d.group.quaternion.copy(_qs); }
               else if (hp > 0 && hp < 1 && d.hopSpin) { _qs.setFromAxisAngle(UP, easeInOut(hp) * Math.PI * 2).multiply(d.baseQuat); d.group.quaternion.copy(_qs); }
@@ -15390,16 +16382,10 @@
                 d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 40));
               }
               else if (d.cockFaces) {
-                const ct = clock - d.cockT0;
-                if (REDUCED) d.group.quaternion.slerp(d.baseQuat, 1 - Math.exp(-dt * 16));
-                else if (d.cockFaces.length === 2) { // an edge: rocks about the edge it stands on and never settles
-                  _qw.setFromAxisAngle(d.cockAxis, (0.10 + 0.12 * Math.exp(-ct * 3.5)) * Math.sin(ct * 7.2));
-                  _qs.copy(_qw).multiply(d.baseQuat);
-                  d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 30));
-                } else { // a corner: precesses and slowly spins like a top
-                  _qw.setFromAxisAngle(_v3.set(Math.cos(ct * 4.4), 0, Math.sin(ct * 4.4)), 0.13);
-                  _qs.setFromAxisAngle(UP, ct * 0.9).multiply(_qw).multiply(d.baseQuat);
-                  d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 30));
+                if (d.cockOn) cockPoseNow(d);
+                else { // a lean set while the die was elsewhere: it eases in, then stays put
+                  d.group.quaternion.slerp(d.cockQ, 1 - Math.exp(-dt * 16));
+                  if (d.group.position.distanceToSquared(_p) < 1e-4 && d.group.quaternion.angleTo(d.cockQ) < 0.02) { cockDock(d, null, false); d.group.quaternion.copy(d.cockQ); }
                 }
               }
               else d.group.quaternion.slerp(d.baseQuat, 1 - Math.exp(-dt * 16));
@@ -15593,7 +16579,7 @@
           if ((v >= 1 && v <= 6 && d.value !== v) || y !== d.yaw) {
             if (v >= 1 && v <= 6) d.value = v;
             d.yaw = y;
-            d.cockFaces = null; d.cockKey = ''; // a value or turn from the state always ends a lean (a pick that arrived by state first)
+            dropCock(d); // a value or turn from the state always ends a lean (a pick that arrived by state first)
             const fromQ = d.group.quaternion.clone();
             d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
             d.tween = { fromP: d.group.position.clone(), fromQ, toQ: d.baseQuat.clone(), t0: clock + i * 0.03, dur: 0.35, hop: 0.8, sq: -2.2, onEnd: null };
@@ -15614,12 +16600,12 @@
           const d = D[i];
           return { p: d.group.position.clone(), q: d.group.quaternion.clone().multiply(d.mesh.quaternion), v: new THREE.Vector3() };
         });
-        const sim = simulate(D.map((d, i) => !moving[i]), rollingIdx, init);
+        const sim = simulate(D.map((d, i) => !moving[i]), rollingIdx, init, opts.cock);
         rollingIdx.forEach((i, k) => {
           const d = D[i];
           d.startP.copy(d.group.position);
           const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
-          d.mesh.quaternion.setFromUnitVectors(FACE_N[faceIdx(values[i])], sim.tops[k]);
+          applyMesh(d, sim, k, values[i]);
           d.startQ.copy(worldQ).multiply(d.mesh.quaternion.clone().invert());
           startRolling(d);
           spawnRing(d.group.position.x, d.group.position.z, 12);
@@ -15993,6 +16979,16 @@
         slam,
         canSlam: () => !!anim && anim.playhead < anim.steps - 3,
         setState,
+        // 모서리 착지: the last catch search ({ caught, tries, ms, support, ... }) and a test hook that runs only the search
+        get cockStat() { return cockStat ? Object.assign({}, cockStat) : null; },
+        _cockTrial: (heldArr, i, faces) => {
+          const held = [0, 1, 2, 3, 4].map((k) => !!(heldArr && heldArr[k]));
+          const rolling = [];
+          for (let k = 0; k < 5; k++) if (!held[k]) rolling.push(k);
+          if (!faces || held[i] || rolling.indexOf(i) < 0) return null;
+          simulateCock(held, rolling, undefined, { i, faces: faces.slice() }, true);
+          return cockStat ? Object.assign({}, cockStat) : null;
+        },
         // 모서리 착지: setCock = the table's state (idempotent, never animates); uncock = the pick, tipping the die onto face v (turn y, or null = the shortest way)
         setCock: (spec) => {
           cockWant = spec && spec.faces && spec.faces.length >= 2 ? { i: spec.i, faces: spec.faces.slice() } : null;
@@ -16000,7 +16996,7 @@
             const on = !!cockWant && cockWant.i === d.i;
             if (on) applyWanted(d);
             else if (d.cockKey && !d.rolling && !anim && !gather) { // back to a flat pose, or the die would keep its lean with no lift
-              d.cockFaces = null; d.cockKey = '';
+              dropCock(d);
               const fq = d.group.quaternion.clone();
               d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
               d.tween = { fromP: d.group.position.clone(), fromQ: fq, toQ: d.baseQuat.clone(), t0: clock, dur: 0.35, hop: 0.8, sq: -2.2, onEnd: null };
@@ -16014,11 +17010,17 @@
           cockWant = null; apexAt = null; cancelBlast();
           const cur = d.group.quaternion.clone().multiply(d.mesh.quaternion);
           d.mesh.quaternion.identity(); d.group.quaternion.copy(cur);
-          const hasY = y != null && y >= 0 && y <= 3;
-          const to = hasY ? canonQuat(v, yawRad(y) + jitter()) : tipQuat(cur, v);
-          d.cockFaces = null; d.cockKey = ''; d.value = v; if (hasY) d.yaw = y | 0;
+          let yq = y | 0;
+          if (!(y != null && y >= 0 && y <= 3)) { // no turn given: the quarter turn nearest to where the die is tipping
+            const tq = tipQuat(cur, v);
+            let best = -1;
+            for (let r = 0; r < 4; r++) { const dd = Math.abs(canonQuat(v, yawRad(r)).dot(tq)); if (dd > best) { best = dd; yq = r; } }
+          }
+          const to = canonQuat(v, yawRad(yq) + jitter());
+          dropCock(d); // the settle ends here and the neighbour eases back while the die tips over, hops clear of it and goes home
+          d.value = v; d.yaw = yq;
           d.baseQuat = to.clone();
-          d.tween = { fromP: d.group.position.clone(), fromQ: cur, toQ: to, t0: clock + 0.02, dur: REDUCED ? 0.01 : 0.34, hop: REDUCED ? 0 : 0.14, sq: -5.5,
+          d.tween = { fromP: d.group.position.clone(), fromQ: cur, toQ: to, t0: clock + 0.02, dur: REDUCED ? 0.01 : 0.34, hop: REDUCED ? 0 : 0.3, sq: -5.5,
             onEnd: () => { flashDie(d, 0.5, GOLD); spawnRing(d.group.position.x, d.group.position.z, 12, 0xffd77a); puffCircle(d.group.position.x, d.group.position.z, 8, 0.7, 1.4, KNOCK_PUFF); hitstop(0.04); } };
           return true;
         },
