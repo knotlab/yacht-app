@@ -3074,7 +3074,7 @@
       function tableHeld() { return !!cock || cupLive(); }
       function tiltBlocked() { return tableHeld(); }
       // 뻥카, stage a: one human against bots, offline. The flag only decides whether the draft deals the card.
-      const BLUFF_ENABLED = true;
+      const BLUFF_ENABLED = false; // switched off by the owner (the look was not good enough): the card is never dealt; the code stays for a later redo
       const BLUFF_MS = 6000, BLUFF_SHAKE_MS = 1000, BLUFF_DOWN_MS = 90000, BLUFF_STAKE = 10;
       let LOOKAWAY_READY = false; // the shared-device look-away gate is not built yet: a table with 2+ humans never gets the card
       let cupVals = null, cupPeek = false, cupTimer = 0, cupDeadline = 0, cupComps = null, cupAt = 0, closeTries = 0, cupLegal = {};
