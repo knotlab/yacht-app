@@ -1885,22 +1885,11 @@
      Chromium and Safari; backdrop-filter does not sample a WebGL canvas reliably and needs a prefix in Safari. The disc
      and its rim live on <body>, outside #fxLayer: that layer is its own stacking context and would isolate the blend. */
   .ts-disc { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 63; pointer-events: none; background: #fff; mix-blend-mode: difference; clip-path: circle(0px at 50% 50%); -webkit-clip-path: circle(0px at 50% 50%); transition: opacity 0.3s ease-out; }
-  .ts-disc.veil { mix-blend-mode: normal; background: rgba(150, 175, 205, 0.38); }
   .ts-rim { position: fixed; z-index: 64; pointer-events: none; box-sizing: border-box; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.96); box-shadow: 0 0 18px rgba(190, 225, 255, 0.9), inset 0 0 14px rgba(190, 225, 255, 0.7); }
-  /* the cold world: the app goes grey and blue-ish, except the stopper's own card (.ts-by) */
-  body.ts-grey #app > :not(.hud), body.ts-grey .hud-btns, body.ts-grey .seats > .seat:not(.ts-by) { filter: grayscale(0.92) sepia(0.28) hue-rotate(176deg) saturate(1.15) contrast(1.07); transition: filter 0.28s ease-out; }
   .fx.ts-clock { width: var(--s, 220px); height: var(--s, 220px); margin: calc(var(--s, 220px) / -2) 0 0 calc(var(--s, 220px) / -2); opacity: 0; }
   .ts-clock svg { display: block; width: 100%; height: 100%; fill: none; stroke: #dff0ff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(150, 200, 255, 0.6)); }
   .ts-clock .a { fill: #bfe0ff; stroke: none; }
   .ts-clock .ts-hand { transform-origin: 50px 50px; }
-  .fx-screen.fx-tsflash { background: rgba(150, 175, 205, 0.4); animation: tsFlash 0.25s ease-out both; }
-  @keyframes tsFlash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
-  /* the clock tags pop in one after another (50 ms apart) when the throw lands */
-  .slot-marks .aug-badge[data-aug="timeStop"].pop { animation-fill-mode: backwards; }
-  .slot-btn:nth-child(2) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(2) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.05s; }
-  .slot-btn:nth-child(3) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(3) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.1s; }
-  .slot-btn:nth-child(4) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(4) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.15s; }
-  .slot-btn:nth-child(5) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(5) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.2s; }
   .fx-screen.fx-rewind { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 5px), rgba(30, 60, 90, 0.2); animation: scanRoll 0.95s linear both; }
   @keyframes scanRoll { 0% { opacity: 0; background-position: 0 0, 0 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; background-position: 0 -120px, 0 0; } }
   .fx-rewind .rw { position: absolute; left: 50%; top: 42%; width: 110px; height: 110px; margin: -55px 0 0 -55px; color: #cfe8ff; filter: drop-shadow(0 0 20px #7fc4ff); animation: rwSpin 0.95s cubic-bezier(0.3, 0, 0.2, 1) both; }
@@ -2040,16 +2029,28 @@
     content: ""; position: absolute; left: 50%; bottom: 14%; width: 46%; height: 9px; transform: translateX(-50%);
     border-radius: 50%; background: radial-gradient(ellipse, rgba(125, 255, 154, 0.75), rgba(125, 255, 154, 0)); pointer-events: none;
   }
-  .slot-btn.stopped::before {
-    content: ""; position: absolute; left: 50%; bottom: 14%; width: 46%; height: 9px; transform: translateX(-50%);
-    border-radius: 50%; background: radial-gradient(ellipse, rgba(159, 208, 255, 0.75), rgba(159, 208, 255, 0)); pointer-events: none;
-  }
   .tile.is-bust { background: linear-gradient(180deg, #4a4038, #2c2621); color: #c9b9a6; }
   .tile.is-bust .t-val { color: #ff9a7a; }
   .tile.is-defuse { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #4fd1ff, 0 0 14px rgba(79, 209, 255, 0.55); }
   .tile.is-duel { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #ff5b72, 0 0 16px rgba(255, 91, 114, 0.6); }
   .tile.is-duel .t-val { color: #ff5b72; font-size: 0.86em; }
   .tile.is-twofer { box-shadow: 0 4px 0 #0a0908, 0 0 0 2px #ff9f5a, 0 0 14px rgba(255, 159, 90, 0.55); }
+  /* 시간 정지: the boxes the caster may name, and the one they named */
+  .tile.is-tspick { box-shadow: 0 4px 0 var(--ivory-edge), 0 0 0 2px #7fb6ff, 0 0 14px rgba(80, 150, 255, 0.55); }
+  .tile.is-tsmark { box-shadow: 0 4px 0 var(--ivory-edge), 0 0 0 3px #fff, 0 0 20px rgba(150, 200, 255, 0.95); }
+  .ts-prompt { pointer-events: none; }
+  .ts-prompt .ts-sub { font: 600 11px var(--f-body); color: #bfe0ff; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ts-prompt .cp-cap, .ts-prompt .ts-sub { max-width: min(330px, 86vw); }
+  .ts-prompt .ts-bar { display: block; width: 168px; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+  .ts-prompt .ts-bar b { display: block; height: 100%; background: #bfe0ff; transform-origin: left center; animation: tsDrain linear forwards; }
+  @keyframes tsDrain { from { transform: scaleX(var(--f, 1)); } to { transform: scaleX(0); } }
+  .ts-clock .ts-ring { stroke: #bfe0ff; stroke-width: 3.4; }
+  .tile.is-tsmark { animation: tsStamp 0.38s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  @keyframes tsStamp { 0% { transform: scale(1.22); filter: brightness(1.8); } 100% { transform: none; filter: none; } }
+  /* the roller's counter key: ruby, not the caster's blue, and it carries its own word */
+  .pw-btn[data-pw="timeStop"].is-live.is-counter { background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 3px 0 #7d0f24, 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 26px rgba(224, 49, 75, 0.9); }
+  .pw-btn[data-pw="timeStop"].is-live.is-counter .pw-ico { color: var(--ruby); }
+  .pw-btn[data-pw="timeStop"].is-live.is-counter .pw-n { color: var(--ruby-lo); }
   .aug-badge { position: relative; }
   .aug-badge .mirror-mark { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, #4fd1ff); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6); }
   .pwa-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
@@ -2282,7 +2283,6 @@
   @keyframes billUnroll { from { transform: scaleY(0.05); } to { transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     .fx-screen.fx-bill { animation: rmFade 1.2s linear both !important; }
-    .fx-screen.fx-tsflash { animation: rmFade 0.25s linear both !important; }
     .fx-bill .bill-in { animation: none !important; }
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     /* these play forwards to opacity 0, so a jump to their end would hide them: fade them in place instead */
@@ -2355,6 +2355,7 @@
         </div>
         <div id="bluffBubble" class="bluff-bubble" aria-hidden="true" hidden><b></b><span>믿을지 까볼지 정합니다.</span></div>
         <div id="bluffLive" class="sr-live" aria-live="polite"></div>
+        <div id="tsPrompt" class="face-pick cock-pick ts-prompt" role="status" hidden><span class="cp-cap"></span><span class="ts-sub"></span><i class="ts-bar"><b></b></i></div>
         <div id="turnSweep" class="turn-sweep" hidden><span></span></div>
         <div id="loader" class="loader">
           <div class="loader-die"><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
@@ -2632,7 +2633,7 @@
       ];
       const UPPER_FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
       // signature color of each augment skin: the die's edge glow in 3D, its outline in 2D
-      const SKIN_EDGE = { gold: '#ffc233', lead: '#dfe6f5', curse: '#ff3b57', twin: '#5fd4ff', cocoon: '#e9d9a6', wing: '#7fe9ff', wild: '#b98cff', glue: '#6dff8a', stop: '#9fd0ff' };
+      const SKIN_EDGE = { gold: '#ffc233', lead: '#dfe6f5', curse: '#ff3b57', twin: '#5fd4ff', cocoon: '#e9d9a6', wing: '#7fe9ff', wild: '#b98cff', glue: '#6dff8a' };
       window.SKIN_EDGE = SKIN_EDGE;
       const PLAYER_COLORS = ['#4fd1ff', '#ff6b8b', '#ffc94d', '#7cf29c'];
 
@@ -3052,7 +3053,7 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 6; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 가린 증강 선택, 7 = 뻥카
+      const NET_V = 7; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 가린 증강 선택, 7 = 시간 정지 (칸 고르기), 8 = 뻥카
       function memberV(m) { return Number(m && m.v) || 0; }
       // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
       let roomV = 99, roomSeen = {};
@@ -3978,6 +3979,7 @@
           });
           b.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && selectedTile !== cat.id) setHighlight(null); });
           b.addEventListener('click', function () {
+            if (tstop) { onTsTile(cat.id); return; } // 시간 정지: the tiles are the caster's to name
             if (cupLive()) { cupTileTap(cat.id); return; }
             if (armedPower === 'swap') { handleSwapTap(cat.id); return; }
             if (armedPower === 'gauntlet') { handleGauntletTap(cat.id); return; }
@@ -4328,7 +4330,6 @@
         players.forEach(function (p, idx) {
           const s = seatsEl.children[idx];
           if (!s) return;
-          s.classList.toggle('ts-by', !!tsRun && tsRun.p === idx); // 시간 정지: the stopper's card keeps its colour in the cold world
           s.classList.toggle('is-turn', idx === currentPlayerIdx && gameActive);
           s.classList.toggle('is-sooty', sootP === idx);
           s.classList.toggle('is-me', idx === me);
@@ -4429,7 +4430,7 @@
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stopTurn >= 0 ? ' stopped' : stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
+            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (cupHides(i) ? '컵에 덮여 있음' : dice[i]) + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
@@ -4531,6 +4532,9 @@
           });
         }
         const flipRecent = lastScored && Date.now() - lastScored.at < 800 && lastScored.pIdx === currentPlayerIdx;
+        // 시간 정지: nothing has landed, so no numbers; the boxes the caster may name light up (for the caster), the chosen one is marked for everyone
+        const tsOn = !!tstop && gameActive && !!cur && currentPlayerIdx === tstop.q;
+        const tsLegal = tsOn ? tsLegalCats(cur) : [], tsTap = tsOn && tsPickMine();
 
         CATEGORIES.forEach(function (c) {
           const t = tileEls[c.id];
@@ -4590,6 +4594,15 @@
             vEl.textContent = duel && duel.cat === c.id ? 'VS ' + duel.val : '';
           }
           if (flipRecent && lastScored.catId === c.id) cls += ' is-flip';
+          if (tsOn) {
+            vEl.textContent = '';
+            if (!filled && tstop.box === c.id) { cls = 'tile is-open is-tsmark'; enabled = false; label += ', 고른 칸'; }
+            else if (!filled && tsTap && tsLegal.indexOf(c.id) !== -1) { cls = 'tile is-open is-live is-tspick'; enabled = true; label += ', 기록할 칸으로 고를 수 있습니다'; }
+            else { enabled = false; if (!filled) cls = 'tile is-idle' + (tsLegal.indexOf(c.id) === -1 ? ' is-dim' : ''); }
+          } else if (tsMarkCat === c.id && tsMarkQ === currentPlayerIdx && !filled) {
+            // the stop is over, the throw is still landing: the chosen box stays marked until the record flies in
+            vEl.textContent = ''; cls = 'tile is-open is-tsmark'; enabled = false; label += ', 고른 칸';
+          }
           const gl = lawGlyph(c); // '' while the box is unchanged (or its law has not been revealed yet)
           const ib = t.querySelector('.t-ico b');
           const want = gl || c.glyph;
@@ -4633,7 +4646,7 @@
       function renderAction() {
         const cur = players[currentPlayerIdx];
         const mine = isMyTurn();
-        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft && !twoferPend && !restTurn && !tableHeld() && stopTurn < 0;
+        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft && !twoferPend && !restTurn && !tableHeld() && !tstop;
         rollBtn.disabled = gameActive ? !canRoll : false;
         rollBtn.classList.toggle('is-ready', canRoll && !hasRolledThisTurn);
 
@@ -4650,7 +4663,6 @@
         else if (isRolling) main = 'ROLLING';
         else if (cockShown()) main = 'PICK FACE';
         else if (isScoring) main = 'NICE';
-        else if (stopTurn >= 0) main = 'PICK';
         else if (rollsLeft === 1 && hasRolledThisTurn) main = 'LAST ROLL';
         else if (rollsLeft > 0 && hasRolledThisTurn) main = 'REROLL';
         else if (rollsLeft === 0) main = 'PICK';
@@ -4812,6 +4824,8 @@
         renderPowers();
         renderCockPick();
         renderBluffBar();
+        renderTsPrompt();
+        tsSndPrep();
         renderSheet();
         updateChatUi();
         syncDraftUi();
@@ -4833,7 +4847,7 @@
             };
           }),
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
-          stuck: stuck, stopTurn: stopTurn, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          stuck: stuck, tstop: tsWire(), fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: publicDice(), held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
           cup: cup ? { by: cup.by, phase: cup.phase, free: cup.free, box: cup.box, decl: cup.decl, ms: cup.ms, caller: cup.caller, pass: cup.pass } : undefined, // never a die value
@@ -4866,7 +4880,7 @@
         hv.length = 5;
         const yv = cleanYaw(extra.yaw); // absent = every die rests at 0; a guest never commits yaw from an fx, only STATE sets it
         const ck = extra.power ? null : cockOk(extra.cock, vals, hv); // 모서리 착지: the die that leans when this roll lands
-        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck, single: rerollIdx(extra, hv) >= 0, stopped: false };
+        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck, single: rerollIdx(extra, hv) >= 0, fuse: extra.power === 'fuse', ride: extra.power === 'ride', stopped: false, forced: false };
         const isFuse = extra.power === 'fuse';
         const era = fxEra, gmid = matchId;
         playRoll(vals, hv, function (finalV) {
@@ -4876,7 +4890,7 @@
           renderCockPick();
           const v = finalV && finalV.length === 5 ? finalV : vals;
           if (era !== fxEra || gmid !== matchId) return; // the host has already moved on: no celebration over the next turn
-          if (lr.stopped) tsLandFx();
+          if (lr.forced && lr.cock) tsUncock(lr.cock.i, v[lr.cock.i], yv[lr.cock.i]); // the stop recorded this throw with no pick: the die on its edge lies down
           if (isFuse && fuseHits(v, hv).length) { lastDrama = null; revealPreviews(); } // a fuse bust: nothing to celebrate
           else if (!lr.cock) postRollFx(v); // a die on its edge: the payoff waits for the pick
         }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv, cock: ck });
@@ -4886,7 +4900,7 @@
         if (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end') fxEra++;
         if (kind === 'roll' || kind === 'power' || kind === 'end') { yrSeq++; const yr = $('yrec'); if (yr) { yr._k = (yr._k || 0) + 1; yr.hidden = true; } }
         if (yfxState && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end')) yfxClear(true);
-        if (tsRun && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end')) tsEnd(); // the stop ends with its throw
+        if (tsRun && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end') && !(tsRun.closed && kind === 'score')) tsEnd(); // a closing effect finishes by itself // the stop ends with its throw
         if (kind === 'roll') {
           guestRoll(extra);
         } else if (kind === 'power') {
@@ -4912,6 +4926,8 @@
           }
         } else if (kind === 'timeStop') {
           timeStopFx(extra);
+        } else if (kind === 'timeGo') {
+          timeGoFx(extra);
         } else if (kind === 'hold') {
           sfxHold(extra.held);
         } else if (kind === 'score') {
@@ -4960,7 +4976,7 @@
       function handleRollInput() {
         ensureAudio();
         if (!gameActive) { openTitle(); return; }
-        if (!isMyTurn() || draft || rollsLeft <= 0 || isRolling || isScoring || tableHeld() || stopTurn >= 0) return;
+        if (!isMyTurn() || draft || rollsLeft <= 0 || isRolling || isScoring || tableHeld() || tstop) return;
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'roll' }); return; }
         rollDice(undefined, { bluff: !!armed.bluff });
       }
@@ -4988,7 +5004,7 @@
       }
       function toggleHold(idx) {
         if (!gameActive || !hasRolledThisTurn || isRolling || isScoring || tableHeld()) return;
-        if (stuck[idx]) { fx('aug', stopTurn >= 0 ? { id: 'timeStop', q: currentPlayerIdx, idx: [idx], phase: 'poke' } : { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
+        if (stuck[idx]) { fx('aug', { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
         held[idx] = !held[idx];
         fx('hold', { held: held[idx] });
         buzz(6);
@@ -5041,7 +5057,7 @@
         displayDice = dice.slice();
         fallbackRolling = true;
         const iv = setInterval(function () {
-          if (tsRun && performance.now() < tsRun.until) return; // 시간 정지: the dice hang
+          if (tstop || (tsRun && !tsRun.closed)) return; // 시간 정지: the dice hang until the stop ends (the host's state, a guest's effect)
           for (let i = 0; i < 5; i++) if (!heldSnap[i]) displayDice[i] = 1 + Math.floor(Math.random() * 6);
           renderDice();
           sfxClack(4 + Math.random() * 4, 'die');
@@ -5058,7 +5074,7 @@
       }
 
       function rollDice(onComplete, opt) {
-        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld() || stopTurn >= 0) return; // 시간 정지: the rolls stay, but no die can be thrown
+        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld() || tstop) return; // 시간 정지: nobody throws while time is stopped
         if (cup && cup.phase === 'spent') { cupScrub(); cupDrop(); } // the table is thrown again: the old cups go
         const cupRoll = !!(opt && opt.bluff) && canUsePower('bluff'); // decided before anything is rolled: a cup throw never cocks
         rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn, stuck: stuck.slice() };
@@ -5112,7 +5128,7 @@
         const liveY = yawLive(), newYaw = drawYaw(heldSnap);
         const yawExtra = liveY ? { yaw: newYaw.slice() } : null; // never an undefined key; an old client ignores it
         const cockSpec = !extra && cock ? { i: cock.i, faces: cock.faces.slice() } : null; // only a normal roll can stand a die on its edge
-        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore, single: rerollIdx(extra, heldSnap) >= 0, fuse: isFuse, stopped: false, stopBy: -1 };
+        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore, single: rerollIdx(extra, heldSnap) >= 0, fuse: isFuse, ride: !!(extra && extra.power === 'ride'), stopped: false, stopBy: -1 };
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra, yawExtra)); powerFx(extra); }
         else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra, cockSpec ? { cock: cockSpec } : null));
         broadcastState();
@@ -5120,7 +5136,7 @@
 
         aiConsiderSlam();
         aiConsiderStop();
-        playRoll(next, heldSnap, function (finalV) {
+        const finish = function (finalV) {
           if (liveRoll === roll) liveRoll = null;
           if (matchId !== myMatch) { renderDice(); return; }
           const v = finalV && finalV.length === 5 ? finalV : next;
@@ -5128,16 +5144,23 @@
           yaw = newYaw;
           isRolling = false;
           if (firstThrowPending) { firstThrowPending = false; applyGlue(); }
-          const stopped = landStop(roll); // 시간 정지: the stopped throw lands with every die held and stuck
+          // 시간 정지: the stop ended with a choice and the throw has landed as it was thrown: it is recorded into that box for the roller
+          const force = tsForce;
+          tsForce = null;
+          if (force && force.roll === roll && tsForceRecord(force)) { lastDrama = null; augRollFx(roll.notes); return; } // the turn passes; a bot's own follow-up goes with it
           broadcastState();
           renderAll();
-          if (stopped) tsLandFx();
           // a fuse roll that shows a 1 is a zero: no combo is celebrated over it
           if (cock) cockLanded(); // a die stands on its edge: the payoff waits for the pick
           else if (isFuse && fuseHits(v, heldSnap).length) { lastDrama = null; revealPreviews(); }
           else postRollFx(v);
           augRollFx(roll.notes);
           if (typeof onComplete === 'function') onComplete();
+        };
+        playRoll(next, heldSnap, function (finalV) {
+          // the host never depends on an animation: a throw that completes while the stop is live (a hidden tab, a slow frame) lands when the stop ends
+          if (tstop && liveRoll === roll && matchId === myMatch) { tsHeld = function () { finish(finalV); }; return; }
+          finish(finalV);
         }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null, fuse: isFuse, yaw: newYaw.slice(), cock: cockSpec });
         renderPowers(); // the slam window opens once the dice are actually moving
       }
@@ -5774,7 +5797,7 @@
         { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
         { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
-        { id: 'timeStop', tier: 2, cat: 'time', name: '시간 정지', desc: '상대가 굴릴 때 시간을 멈춥니다. 그 주사위가 모두 고정됩니다.', ch: { timeStop: 2 }, ev: 16, show: true, art: { zoom: 0.85, glyph: 1, dice: [{ v: 6, skin: 'stop', y: 0.9, ry: 0.5, tx: 0.3 }] } },
+        { id: 'timeStop', tier: 3, cat: 'time', name: '시간 정지', desc: '상대가 굴릴 때 시간을 멈춥니다. 그 굴림을 기록할 칸을 내가 고릅니다.', ch: { timeStop: 1 }, ev: 41, show: true, art: { zoom: 0.95, glyph: 1, dice: [{ v: 6, x: -0.65, y: 0.9, ry: 0.5, tx: 0.3 }, { v: 1, x: 0.7, y: 0.45, ry: -0.4, tx: -0.25 }] } },
         { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17, show: true },
         { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, show: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
@@ -5854,8 +5877,13 @@
       let turnLost = false;    // this turn was taken by 시간 도둑
       let riseTurn = false;    // 칠전팔기: this turn has two extra rolls
       let stuck = [false, false, false, false, false]; // 끈끈이: dice glued for the rest of this turn
-      let stopTurn = -1;       // 시간 정지: the seat that stopped time on this turn's last throw (-1 = none); then every die is held and stuck
-      let tsRun = null;        // 시간 정지, this screen only: the stop that is playing { p, q, ms, mid, until, timers, nodes, anims, raf }
+      let tstop = null;        // 시간 정지: the live stop { by: caster seat, q: roller seat, box: chosen box | null, ... } or null (the host owns it, a guest reads STATE)
+      let tsForce = null;      // 시간 정지, host: the stop ended with a choice { cat, by, roll }: the landing records it
+      let tsHeld = null;       // 시간 정지, host: the throw completed while the stop was live; its completion waits here until the stop ends
+      let tsAiT = 0;           // 시간 정지, bots: the timer of the next bot decision inside a stop
+      let tsRun = null;        // 시간 정지, this screen only: the effect that is playing { p, q, ms, late, mid, t0, timers, nodes, anims, rafs, closed, close }
+      let tsMarkCat = null, tsMarkQ = -1, tsMarkT = 0; // 시간 정지, this screen only: the chosen box stays marked from the end of the stop until the record lands
+      let tsBarT = 0;          // 시간 정지, reduced motion only: the countdown bar in steps (a CSS animation would jump to its end)
       let firstThrowPending = false; // host: this turn's first dice haven't landed yet (끈끈이 checks them)
       let fuseBust = false;    // 도화선 went off: this turn's record is a zero
       // 도화선 effect state (local to each screen, never broadcast): the burning cord, when a die lit up, pending beats,
@@ -6021,6 +6049,9 @@
           }
         } else if (id === 'allin' && mine && allinTurn && charges(p, 'allin') > 0) {
           st.cls = 'is-hot'; st.n = String(charges(p, 'allin')); st.tip = '이번 턴 기록이 2배입니다.';
+        } else if (id === 'timeStop' && tstop && gameActive && (idx === tstop.by || (idx === tstop.q && charges(p, 'timeStop') > 0))) {
+          if (idx === tstop.by) { st.cls = 'is-hot'; st.tip = tstop.box ? '칸을 골랐습니다.' : '지금 칸을 고르는 중입니다.'; }
+          else { st.cls = 'is-hot'; st.n = String(charges(p, 'timeStop')); st.tip = '시간 정지로 막을 수 있습니다.'; }
         } else if (key) {
           const n = charges(p, key);
           if (n > 0) { st.n = String(n); st.tip = '남은 횟수 ' + b(n); }
@@ -6259,15 +6290,13 @@
         if (augHas(p, 'golden')) m[2].push('golden');
         if (augHas(p, 'pupa')) m[4].push('pupa');
         if (cursedBy(p)) m[4].push('curse');
-        if (stopTurn >= 0) m.forEach(function (x) { x.push('timeStop'); }); // 시간 정지: the clock tag on every die, never the glue's
-        else stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
+        stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) viewDice().forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
         if (cockShown()) m[cock.i].push('cocked');
         return m;
       }
       // whose augment a die mark is (for its tooltip): the roller's own, or the opponent's who put it there
       function markOwner(id) {
-        if (id === 'timeStop') return players[stopTurn] ? stopTurn : -1;
         if (id !== 'curse' && id !== 'glue') return currentPlayerIdx;
         for (let j = 0; j < players.length; j++) if (j !== currentPlayerIdx && augHas(players[j], id)) return j;
         return -1;
@@ -6286,8 +6315,7 @@
         if (augHas(p, 'golden')) s[2] = 'gold';
         if (augHas(p, 'pupa')) s[4] = round >= (p.hatch || 99) ? 'wing' : 'cocoon';
         if (cursedBy(p)) s[4] = 'curse';
-        if (stopTurn >= 0) { for (let i = 0; i < 5; i++) s[i] = 'stop'; } // 시간 정지: cold steel on all five
-        else stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
+        stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) viewDice().forEach(function (v, i) { if (v === 1 && !s[i]) s[i] = 'wild'; });
         return s;
       }
@@ -6303,7 +6331,7 @@
         if (a.id === 'tilt' && !newCardsOk(4)) return false; // protocol 4: an older client has no tilt picker and no cock chips
         if (a.id === 'cocked' && (!COCK_LIVE || !newCardsOk(4))) return false;
         if (a.id === 'bluff' && (!BLUFF_ENABLED || !bluffOk())) return false; // stage a: offline, one human against bots (also what 모방 and a reroll may offer)
-        if (a.id === 'timeStop' && (players.length < 2 || !newCardsOk(5))) return false; // 시간 정지: needs an opponent and a room that knows the card
+        if (a.id === 'timeStop' && (players.length < 2 || !newCardsOk(7))) return false; // 시간 정지: needs an opponent and a room that knows the card (protocol 7: the stop state and the pick)
         if (a.id === 'amend') {
           // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
           if (roundNo < 5 || players.length < 2 || lastRound - roundNo < 3) return false;
@@ -6551,8 +6579,9 @@
         rollsMax = 3; rollsLeft = 3; prevRollsLeft = 3;
         armedPower = null; armedReset(); rewindSnap = null; turnLost = false;
         riseTurn = false;
-        stuck = [false, false, false, false, false]; stopTurn = -1; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
+        stuck = [false, false, false, false, false]; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
         twoferPend = null; restTurn = false;
+        tsReset(); // a turn change, a draft opening: no stop outlives the turn it was cast on
         clearTimeout(gagT);
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false;
       }
@@ -8099,14 +8128,6 @@
             if (ones.length) sample('sparkle', { vol: 0.25 });
             break;
           }
-          case 'timeStop': {
-            // a poke at a stopped die: a cold ring and a tick (the slot already says it is held)
-            const i = Number(toArr(e.idx)[0]);
-            if (use3D() && i >= 0 && i < 5) window.Dice3D.ring(i, '#9fd0ff', 8);
-            burst(diePt(i), { shape: 'glow', count: 2, dist: 12, color: '#bfe0ff', dur: 500 });
-            tone(520, 0.05, 'triangle', 0.05, 380);
-            break;
-          }
           case 'glue': {
             const qp = players[e.q];
             if (e.phase === 'set') {
@@ -8615,7 +8636,7 @@
         const cur = players[currentPlayerIdx];
         const def = POWER_DEFS[kind];
         if (!matchAug || !def || def.kind === 'live' || !gameActive || draft || !cur || charges(cur, kind) <= 0) return false;
-        if (stopTurn >= 0 && (kind === 'reroll' || kind === 'fuse' || kind === 'twins')) return false; // 시간 정지: every die is stuck, nothing is thrown again (flip / psychic turn a die in place and still work)
+        if (tstop) return false; // 시간 정지: nothing is used while time is stopped
         if (tableHeld()) return false; // a pending pick or a live cup holds the table
         if (isRolling || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
         if (kind === 'twins') return augHas(cur, 'twins') && rollsLeft > 0; // before or between rolls, on the holder's own turn; no roll left = nothing to switch
@@ -8628,7 +8649,7 @@
         if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
         if (kind === 'tableFlip') return flipUsable();
         if (!hasRolledThisTurn) return false;
-        if (kind === 'bluff') return bluffOk() && rollsLeft === 1 && stopTurn < 0 && !allinOn() && held.some(function (h) { return !h; }) && !encoreTurn && !duel && !sealTurn && !cup && bluffAnyLegal(cur);
+        if (kind === 'bluff') return bluffOk() && rollsLeft === 1 && !tstop && !allinOn() && held.some(function (h) { return !h; }) && !encoreTurn && !duel && !sealTurn && !cup && bluffAnyLegal(cur);
         if (kind === 'tilt') return !tiltBlocked() && tiltMoves().some(Boolean); // a roll has landed and at least one free die can fall
         if (kind === 'rewind') return rollsLeft < rollsMax || (!!rewindSnap && !!rewindSnap.fuse);
         if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
@@ -8649,7 +8670,7 @@
         const p = players[pIdx];
         if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
         if (cup) return cup.phase === 'down' && pIdx !== cup.by && !isRolling; // 뻥카: a cup that is not declared yet can be knocked over, by anyone but its owner; never after that
-        if (tsRun || (liveRoll && liveRoll.stopped)) return false; // 시간 정지: nothing knocks the dice while time is stopped
+        if (tstop || tsRun || (liveRoll && liveRoll.stopped)) return false; // 시간 정지: nothing knocks the dice while time is stopped (nor after it: the throw is already decided)
         if (isRolling) return (isOnlineMatch && onlineRole === 'guest') || slamOpen() || slamSettling();
         return hasRolledThisTurn && held.some(function (h) { return !h; });
       }
@@ -8716,42 +8737,138 @@
         if (p) pingChip(pIdx, augIdForPower(p, 'slam'));
       }
       // ---------- 시간 정지 ----------
-      // Anyone but the roller may stop a throw that is in the air: once per throw, and only while it takes something away
-      // (the roller could still throw again afterwards: a roll left, or a 도화선 throw). The values in the air are not touched.
-      // The dice hang for TS_HOLD_MS, the throw lands as it would have, and at the landing all five dice are held and stuck
-      // until the record (landStop). The host decides; the effect on every screen is the one fx 'timeStop'.
-      const TS_HOLD_MS = 1900;
+      // A holder who is not the roller stops a throw that is in the air (once per throw, on any throw of the turn). Time stands
+      // still for the whole table: the caster picks ONE box of the roller's card (the dice have not landed, so nobody knows
+      // what they show), and the throw then lands as it was thrown and is recorded into that box. The roller may counter with
+      // a 시간 정지 of their own. The host owns tstop = { by, q, box, t0, endAt, roll }; a guest reads { by, q, box, left, at }
+      // from STATE and only sends 'tsPick' (the caster) and 'timeStop' (the roller's counter). No time crosses the wire.
+      const TS_MIN = 3300, TS_TAIL = 1250, TS_MAX = 6000; // host clock: the least a stop lasts (the boom, then the resume), the least it still lasts after the choice (the resume), the most it lasts without a choice
+      let tsTimer = 0, tsAiBox = null, tsSent = null;
       function stopWindow() { return !!liveRoll && (use3D() ? window.Dice3D.isAnimating() : !!fbRoll); }
+      // the boxes the caster may name: what the roller could record this turn (the same test commitScore applies)
+      function tsLegalCats(roller) {
+        if (!roller) return [];
+        const seal = sealCatFor(roller);
+        return openCats(roller).filter(function (id) { return id !== seal; });
+      }
+      // the screen that taps the tiles: the caster's own screen, or a shared device (where anyone may tap for them)
+      function tsPickMine() {
+        return !!tstop && !tstop.box && !tsSent && gameActive && !players[tstop.by].isAI && (hotSeat() || tstop.by === powerOwnerIdx());
+      }
+      // milliseconds this stop may still last on this screen
+      function tsLeftMs() {
+        if (!tstop) return 0;
+        if (tstop.endAt) return Math.max(0, Math.round(tstop.endAt - performance.now()));
+        return Math.max(0, Math.round(tstop.left - (performance.now() - tstop.at)));
+      }
+      function tsWire() {
+        return tstop ? { by: tstop.by, q: tstop.q, box: tstop.box, left: tsLeftMs() } : undefined; // absent = no stop (JSON drops undefined)
+      }
+      // a guest's read of STATE: anything that is not a clean stop is no stop; never throws
+      function tsParse(o) {
+        if (!o || typeof o !== 'object') return null;
+        const n = players.length;
+        const seat = function (x) { return typeof x === 'number' && Math.floor(x) === x && x >= 0 && x < n; };
+        if (!seat(o.by) || !seat(o.q) || o.by === o.q) return null;
+        let box = null;
+        if (o.box !== null && o.box !== undefined) {
+          if (typeof o.box !== 'string' || CAT_IDS.indexOf(o.box) === -1) return null;
+          box = o.box;
+        }
+        if (typeof o.left !== 'number' || !isFinite(o.left)) return null;
+        return { by: o.by, q: o.q, box: box, left: Math.max(0, Math.min(8000, o.left)), at: performance.now() };
+      }
+      function tsReset() {
+        clearTimeout(tsTimer); clearTimeout(tsAiT);
+        tstop = null; tsForce = null; tsHeld = null; tsAiBox = null; tsSent = null;
+        tsMarkCat = null; clearTimeout(tsMarkT); clearInterval(tsBarT); tsBarT = 0;
+      }
+      // pIdx may press now: a holder who is not the roller while a throw is in the air, or (during a live stop) the roller's counter
       function canTimeStop(pIdx) {
         const p = players[pIdx];
-        if (!matchAug || !gameActive || draft || !p || charges(p, 'timeStop') <= 0 || !isRolling || tsRun || stopTurn >= 0 || cupLive()) return false; // a throw under the cup cannot be stopped
-        if (isScoring || turnLost || restTurn || fuseBust || twoferPend) return false;
-        const guest = isOnlineMatch && onlineRole === 'guest';
+        if (!matchAug || !gameActive || draft || !p || charges(p, 'timeStop') <= 0 || !isRolling || isScoring) return false;
+        if (tstop) return pIdx === tstop.q; // a live stop: only the roller may answer it, with a charge of their own
+        if (turnLost || restTurn || fuseBust || twoferPend || duel || encoreTurn || cupLive()) return false; // a cock is no obstacle: it is hidden until the dice land
         const roll = liveRoll; // a guest asks while its own replay of the throw is in the air (a tilt or a pick also sets isRolling, with no throw); the host decides
-        if (!roll || roll.stopped || roll.single || roll.roller === pIdx || roll.roller !== currentPlayerIdx) return false; // one stop per throw, never on a single die, never on your own throw
-        const roller = players[roll.roller];
-        if (!roller || !(rollsLeft > 0 || charges(roller, 'fuse') > 0)) return false;
-        return guest || stopWindow();
+        if (!roll || roll.stopped || roll.single || roll.fuse || roll.ride || roll.roller === pIdx || roll.roller !== currentPlayerIdx) return false; // one stop per throw, never on a single die, a fuse throw or a 편승 throw (its dice are public), never on your own throw
+        if (!tsLegalCats(players[roll.roller]).length) return false;
+        return (isOnlineMatch && onlineRole === 'guest') || stopWindow();
       }
-      // authoritative (local / host)
+      // authoritative (local / host): the press, or the roller's counter
       function doTimeStop(pIdx) {
-        if (!canTimeStop(pIdx) || !liveRoll) return false;
-        const roll = liveRoll;
-        players[pIdx].ch.timeStop -= 1; // spent at once, and never refunded (a rewind does not give it back)
+        if (!canTimeStop(pIdx)) return false;
+        const p = players[pIdx];
+        p.ch.timeStop -= 1; // spent at once, and never refunded (a rewind does not give it back)
+        if (tstop) { tsEndStop('counter'); return true; }
+        const roll = liveRoll, now = performance.now();
         roll.stopped = true; roll.stopBy = pIdx;
-        fx('timeStop', { p: pIdx, q: roll.roller, ms: TS_HOLD_MS });
+        const st = tstop = { by: pIdx, q: roll.roller, box: null, t0: now, endAt: now + TS_MAX, roll: roll };
+        clearTimeout(tsTimer);
+        const mid = matchId;
+        tsTimer = setTimeout(function () { if (matchId === mid && tstop === st) tsEndStop(st.box ? 'pick' : 'none'); }, TS_MAX);
+        fx('timeStop', { p: pIdx, q: roll.roller, ms: TS_MAX + 1000 }); // the freeze outlasts the stop a little: only a lost 'timeGo' ever meets it
+        broadcastState();
+        renderAll();
+        aiStopPlan(st);
+        return true;
+      }
+      // authoritative: the caster names the box (once, legal boxes only)
+      function tsPick(pIdx, cat) {
+        const st = tstop;
+        if (!st || st.box || pIdx !== st.by || typeof cat !== 'string') return false;
+        if (tsLegalCats(players[st.q]).indexOf(cat) === -1) return false;
+        st.box = cat;
+        const now = performance.now(), wait = Math.max(0, Math.min(Math.max(st.t0 + TS_MIN, now + TS_TAIL), st.t0 + TS_MAX) - now);
+        clearTimeout(tsTimer);
+        if (wait <= 0) { tsEndStop('pick'); return true; }
+        st.endAt = now + wait;
+        const mid = matchId;
+        tsTimer = setTimeout(function () { if (matchId === mid && tstop === st) tsEndStop('pick'); }, wait);
         broadcastState();
         renderAll();
         return true;
       }
-      // the stopped throw has landed (called from its completion on the host): returns true when this throw was stopped
-      function landStop(roll) {
-        if (!roll || !(roll.stopBy >= 0)) return false;
-        stopTurn = roll.stopBy;
-        stuck = [true, true, true, true, true];
-        held = [true, true, true, true, true];
-        armedPower = null; psychicDie = -1;
+      // the stop is over: kind 'pick' | 'none' | 'counter'. The throw goes on and lands as it was thrown; with a choice it is then recorded.
+      function tsEndStop(kind) {
+        const st = tstop;
+        if (!st) return;
+        clearTimeout(tsTimer); clearTimeout(tsAiT);
+        tstop = null; tsAiBox = null;
+        const cat = kind === 'pick' ? st.box : null;
+        if (cat) tsForce = { cat: cat, by: st.by, roll: st.roll };
+        fx('timeGo', { kind: kind, by: st.by, q: st.q, cat: cat });
+        broadcastState();
+        if (tsHeld) { const h = tsHeld; tsHeld = null; h(); } // the throw had already landed on this screen: its completion runs now
+        else renderAll();
+      }
+      // the chosen box is written for the roller as an ordinary record (host / local, the throw has just landed). false = nothing was forced.
+      function tsForceRecord(f) {
+        const cur = players[currentPlayerIdx];
+        if (!f || !cur || f.roll.roller !== currentPlayerIdx || !gameActive) return false;
+        const kept = cock;
+        cock = null; // 모서리 착지: a die on its edge settles on its rolled face, no pick
+        if (tsLegalCats(cur).indexOf(f.cat) === -1) { cock = kept; tsForceFail(); return false; } // a 봉인 now locks that box: nothing is forced
+        commitScore(f.cat, {}); // no flags: 조커 / 덮어쓰기 / 일석이조 stay armed-and-dropped, 올인 and every record extra act as for any record
+        if (!isScoring) { cock = kept; tsForceFail(); return false; }
+        if (kept) { cockSound(false); tsUncock(kept.i, dice[kept.i], yaw[kept.i]); }
         return true;
+      }
+      // the chosen box could not be written (a 봉인 on the landed dice): the mark goes and the table is told
+      function tsForceFail() {
+        tsMarkCat = null; clearTimeout(tsMarkT);
+        showChip('고른 칸이 봉인돼 기록되지 않습니다.', 'cool');
+        renderTiles();
+      }
+      // the die that stood on its edge lies down on its face; waits while this screen's own dice are still landing
+      function tsUncock(i, face, y) {
+        const mid = matchId;
+        let tries = 0;
+        const go = function () {
+          if (matchId !== mid || !use3D() || !window.Dice3D.uncock) return;
+          if (window.Dice3D.isAnimating() && tries++ < 8) { setTimeout(go, 200); return; }
+          window.Dice3D.uncock(i, face, y);
+        };
+        go();
       }
       // ---------- 밥상 엎기 ----------
       // p.last = the newest record { cat, prev, val }: prev = what the box held before (null = empty), val = what the record wrote.
@@ -8897,8 +9014,7 @@
         if (rewindSnap.fuse) cur.ch.fuse = (cur.ch.fuse || 0) + 1;
         if (rewindSnap.ride) { cur.ch.ride = (cur.ch.ride || 0) + 1; rideTurn = false; }
         if (!rewindSnap.hasRolled) stuck = [false, false, false, false, false]; // the first roll is undone: nothing stays glued
-        else if (rewindSnap.stuck) stuck = rewindSnap.stuck.slice(); // what was glued before this throw (a stopped throw had stuck all five)
-        stopTurn = -1; // 시간 정지: the stopped throw is undone with its stop (the charge is not refunded)
+        else if (rewindSnap.stuck) stuck = rewindSnap.stuck.slice(); // what was glued before this throw
         rewindSnap = null;
         rollSeq++;
         armedPower = null; psychicDie = -1; selectedTile = null;
@@ -9449,9 +9565,11 @@
         doSwap(cat);
       }
       // ================= 시간 정지: effect and sound =================
-      // One fx 'timeStop' { p: the stopper's seat, q: the roller's seat, ms } plays this on every screen. The rule is not here:
-      // the throw lands through its normal completion and landStop does the rest. Everything below can fail without
-      // harm: timeStopFx cleans up after itself, and tsEnd is called wherever a screen effect is cleared.
+      // One fx 'timeStop' { p: the caster's seat, q: the roller's seat, ms } starts this on every screen and one fx 'timeGo'
+      // { kind: 'pick' | 'none' | 'counter', by, q, cat } ends it (tsRun.close). The rule is not here (see tstop above).
+      // Everything below can fail without harm: timeStopFx cleans up after itself, and tsEnd is called wherever a screen
+      // effect is cleared. HOOKS for the look (job B2): tsPlay (the held inversion and its countdown), tsRun.close (the closing
+      // disc), timeGoFx (the counter wave and its hit, the chosen tile's mark).
       let tsDeaf = false, tsHum = null;
       const TS_CLOCK = (function () {
         let t = '';
@@ -9460,6 +9578,7 @@
           t += 'M' + (50 + sn * r1).toFixed(1) + ' ' + (50 - cs * r1).toFixed(1) + 'L' + (50 + sn * r2).toFixed(1) + ' ' + (50 - cs * r2).toFixed(1);
         }
         return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47"/><path d="' + t + '"/>' +
+          '<circle class="ts-ring" cx="50" cy="50" r="47" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>' +
           '<g class="ts-hand ts-hh"><path d="M50 50V30"/></g><g class="ts-hand ts-mh"><path d="M50 50V17"/></g><circle class="a" cx="50" cy="50" r="3.4"/></svg>';
       })();
       function tsHumOff() {
@@ -9468,130 +9587,471 @@
         if (!h || !audioCtx) return;
         try { const n = audioCtx.currentTime; h.g.gain.cancelScheduledValues(n); h.g.gain.setTargetAtTime(0.0001, n, 0.03); h.o.stop(n + 0.2); } catch (e) {}
       }
-      // everything this stop put on the screen and in the air goes: the cold world, the disc, the clock, the low-pass, the hum, the freeze
+      // everything this stop put on the screen and in the air goes: the disc, the clock, the low-pass, the hum, the freeze
       function tsEnd() {
         const r = tsRun;
         tsRun = null;
         if (tsDeaf) { deafReset(); tsDeaf = false; } // the low-pass is always opened again
         tsHumOff();
+        tsSndStop(0.05); // (after an ordinary end the resume has already been let go, so it rings out)
         if (!r) return;
         r.timers.forEach(clearTimeout);
-        if (r.raf) cancelAnimationFrame(r.raf);
+        Object.keys(r.rafs).forEach(function (k) { cancelAnimationFrame(r.rafs[k]); });
         r.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
         r.nodes.forEach(dropFx);
-        document.body.classList.remove('ts-grey');
-        Array.prototype.forEach.call(seatsEl.children, function (s) { s.classList.remove('ts-by'); });
         if (use3D() && window.Dice3D.timeGo) window.Dice3D.timeGo();
       }
-      document.addEventListener('visibilitychange', function () { if (document.hidden && tsRun) tsEnd(); }); // nothing animated in a hidden tab
+      document.addEventListener('visibilitychange', function () { if (document.hidden && tsRun && !tstop) tsEnd(); }); // nothing animated in a hidden tab (a live stop keeps its effect and its freeze)
+      window.addEventListener('resize', function () { const r = tsRun; if (r && !r.closed && r.refit) setTimeout(function () { if (tsRun === r && !r.closed) r.refit(); }, 150); });
       function timeStopFx(e) {
         if (!e || !gameActive) return;
         const p = seatIdx(e.p), q = seatIdx(e.q);
         if (p < 0 || q < 0) return;
-        const ms = typeof e.ms === 'number' && isFinite(e.ms) ? Math.max(0, Math.min(2500, Math.round(e.ms))) : TS_HOLD_MS;
+        const ms = typeof e.ms === 'number' && isFinite(e.ms) ? Math.max(0, Math.min(8000, Math.round(e.ms))) : TS_MAX + 1000;
         tsEnd();
-        const late = !liveRoll; // the throw already landed on this screen: the short form plus the lock line, no freeze to give
-        if (liveRoll) liveRoll.stopped = true; // this screen's throw is the stopped one: it lands with the lock beat
+        const late = !liveRoll; // the throw already landed on this screen: the effect, but no freeze to give
+        if (liveRoll) liveRoll.stopped = true; // this screen's throw is the stopped one
         if (document.hidden) return;
         const mid = matchId;
-        const r = tsRun = { p: p, q: q, ms: late ? 0 : ms, mid: mid, until: performance.now() + (REDUCED ? 0 : ms), timers: [], nodes: [], anims: [], raf: 0 };
+        const r = tsRun = { p: p, q: q, ms: ms, late: late, mid: mid, t0: performance.now(), timers: [], nodes: [], anims: [], rafs: {}, closed: false, close: null };
         try { tsPlay(r); } catch (err) { if (tsRun === r) tsEnd(); } // a broken effect never keeps the table stuck
-        if (late) tsLandFx();
       }
       function tsPlay(r) {
-        const mid = r.mid, long = !REDUCED && r.ms >= 1000;
+        const mid = r.mid;
         const T = function (ms, fn) { r.timers.push(setTimeout(function () { if (tsRun === r && matchId === mid) fn(); }, ms)); };
         const by = players[r.p];
         ensureAudio();
-        const seat = seatsEl.children[r.p];
-        if (seat) seat.classList.add('ts-by');
-        if (use3D() && window.Dice3D.timeStop && liveRoll && r.ms > 0) window.Dice3D.timeStop(r.ms); // the dice hang where they are (a no-op for reduced motion)
+        if (use3D() && window.Dice3D.timeStop && liveRoll && !r.late) window.Dice3D.timeStop(r.ms); // the dice hang where they are until timeGo (also for reduced motion: only the effect is reduced)
         if (by && r.p !== powerOwnerIdx()) showChip(by.name + ' 님이 시간을 멈췄습니다.', 'cool');
         buzz(20);
         const st = stagePt() || { x: window.innerWidth / 2, y: window.innerHeight / 2, r: { width: 300, height: 300 } };
-        sfxTimeStop(r.ms, !long);
-        if (!long) {
-          // reduced motion or a very short stop: a grey flash, the word, the chip
-          screenFx('tsflash', 250);
-          wordFx(st, '시간 정지', 'cold');
-          T(REDUCED ? 450 : Math.max(450, r.ms + 120), tsEnd);
-          return;
-        }
-        const c = seatPt(r.p) || st, W = window.innerWidth, H = window.innerHeight;
-        const R = Math.ceil(Math.max(Math.hypot(c.x, c.y), Math.hypot(W - c.x, c.y), Math.hypot(c.x, H - c.y), Math.hypot(W - c.x, H - c.y))) + 6;
-        const disc = document.createElement('div'), rim = document.createElement('div');
-        disc.className = 'ts-disc'; rim.className = 'ts-rim';
-        rim.style.opacity = '0'; // sized and shown by the first frame of the sweep
-        disc.setAttribute('aria-hidden', 'true'); rim.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(disc); document.body.appendChild(rim);
-        r.nodes.push(disc, rim);
-        // the disc is a clip-path circle on a full-screen layer; the rim is a ring at its edge. One loop drives both, so they never drift apart.
-        const sweep = function (from, to, dur, ease) {
+        sfxTimeStop(r.ms, false); // sound is not motion: the low-pass and the held tone stay for reduced motion too
+        const snd = function () { // the resume sound starts early enough for its crack to land on the end of the stop
+          if (r.closed) return;
+          if (tstop) { const left = tsLeftMs(); if (left <= 1400) tsSndResume(left / 1000); }
+          T(60, snd);
+        };
+        T(60, snd);
+        T(r.ms + 600, tsEnd); // a lost 'timeGo' ends it here
+        const W = window.innerWidth, H = window.innerHeight;
+        const reach = function (c) { return Math.ceil(Math.max(Math.hypot(c.x, c.y), Math.hypot(W - c.x, c.y), Math.hypot(c.x, H - c.y), Math.hypot(W - c.x, H - c.y))) + 6; };
+        const mk = function (cls) {
+          const d = document.createElement('div');
+          d.className = cls; d.setAttribute('aria-hidden', 'true');
+          document.body.appendChild(d); r.nodes.push(d);
+          return d;
+        };
+        const fade = function (el, from, to, dur, delay) {
+          if (el.animate) r.anims.push(el.animate([{ opacity: from }, { opacity: to }], { duration: dur, delay: delay || 0, fill: 'forwards' }));
+          else el.style.opacity = String(to);
+        };
+        const whole = function (d, c, R) { const cp = 'circle(' + R + 'px at ' + c.x.toFixed(1) + 'px ' + c.y.toFixed(1) + 'px)'; d.style.clipPath = cp; d.style.webkitClipPath = cp; };
+        const outE = function (k) { return 1 - Math.pow(1 - k, 3); }, inE = function (k) { return 1 - (1 - k) * (1 - k); };
+        // a disc is a clip-path circle on a full-screen layer, its rim a ring at the edge. One loop drives both, so they never drift apart.
+        const sweep = function (d, rm, ctr, from, to, dur, ease, slot) {
           const t0 = performance.now();
           const step = function () {
             if (tsRun !== r) return;
             const k = Math.min(1, Math.max(0, (performance.now() - t0) / dur)), v = from + (to - from) * ease(k);
-            const cp = 'circle(' + v.toFixed(1) + 'px at ' + c.x.toFixed(1) + 'px ' + c.y.toFixed(1) + 'px)';
-            disc.style.clipPath = cp; disc.style.webkitClipPath = cp;
-            rim.style.left = (c.x - v).toFixed(1) + 'px'; rim.style.top = (c.y - v).toFixed(1) + 'px';
-            rim.style.width = rim.style.height = (2 * v).toFixed(1) + 'px';
-            rim.style.opacity = v < 4 || v > R - 3 ? '0' : '1';
-            r.raf = k < 1 ? requestAnimationFrame(step) : 0;
+            const cp = 'circle(' + v.toFixed(1) + 'px at ' + ctr.x.toFixed(1) + 'px ' + ctr.y.toFixed(1) + 'px)';
+            d.style.clipPath = cp; d.style.webkitClipPath = cp;
+            rm.style.left = (ctr.x - v).toFixed(1) + 'px'; rm.style.top = (ctr.y - v).toFixed(1) + 'px';
+            rm.style.width = rm.style.height = (2 * v).toFixed(1) + 'px';
+            rm.style.opacity = v < 4 || v > reach(ctr) - 3 ? '0' : '1';
+            r.rafs[slot] = k < 1 ? requestAnimationFrame(step) : 0;
           };
-          if (r.raf) cancelAnimationFrame(r.raf);
-          r.raf = requestAnimationFrame(step);
+          if (r.rafs[slot]) cancelAnimationFrame(r.rafs[slot]);
+          r.rafs[slot] = requestAnimationFrame(step);
         };
-        // 0 ms: the disc grows from the stopper's coin until it covers the screen (colours inverted inside it)
-        sweep(0, R, 420, function (k) { return 1 - Math.pow(1 - k, 3); });
-        // as it fills the screen the inversion gives way to the cold world, which holds until the resume
-        T(400, function () { document.body.classList.add('ts-grey'); disc.style.opacity = '0'; });
-        // the clock at the centre of the table: it fades in, the hands spin and slow to a dead stop (500 ms), then it stays, faint
+        let c = seatPt(r.p) || st, R = reach(c);
+        const disc = mk('ts-disc');
+        let rim = null;
+        // 0 ms: the disc grows from the caster's coin until it covers the screen (colours inverted inside it), and STAYS: the screen is inverted for as long as time is stopped.
+        // Reduced motion: no sweep, the inversion fades in where it is.
+        if (REDUCED) { whole(disc, c, R); fade(disc, 0, 1, 260); }
+        else { rim = mk('ts-rim'); rim.style.opacity = '0'; sweep(disc, rim, c, 0, R, 420, outE, 'a'); }
+        // the clock at the centre of the table: it fades in, the hands spin and slow to a dead stop (500 ms), then it stays, faint, and its ring is the countdown
         const size = Math.max(130, Math.min(300, Math.min(st.r ? st.r.width : 300, st.r ? st.r.height : 300) * 0.8));
         const clock = addFx('ts-clock', st.x, st.y, TS_CLOCK);
         clock.style.setProperty('--s', size + 'px');
         r.nodes.push(clock);
-        const hm = clock.querySelector('.ts-mh'), hh = clock.querySelector('.ts-hh');
-        T(260, function () {
-          if (clock.animate) r.anims.push(clock.animate([{ opacity: 0 }, { opacity: 0.95, offset: 0.4 }, { opacity: 0.38 }], { duration: 760, fill: 'forwards' }));
-          if (hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(2160deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
-          if (hh && hh.animate) r.anims.push(hh.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(300deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
-        });
-        T(760, function () { wordFx(stagePt() || st, '시간 정지', 'cold'); buzz(15); flashTo(0.08, '#bfe0ff'); }); // no shake: the world is still // the word lands as the hands stop
-        // resume (320 ms before the dice fall): a disc closes back to the stopper's coin over the grey world, colours return
-        const tc = Math.max(700, r.ms - 380);
-        T(tc, function () {
-          sfxTimeGo();
-          if (hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(2160deg)' }, { transform: 'rotate(2166deg)' }], { duration: 90, easing: 'steps(1, end)', fill: 'forwards' })); // one tick forward
-          if (clock.animate) r.anims.push(clock.animate([{ opacity: 0.38 }, { opacity: 0 }], { duration: 260, delay: 90, fill: 'forwards' }));
-        });
-        T(tc + 80, function () {
-          document.body.classList.remove('ts-grey');
-          disc.className = 'ts-disc veil'; disc.style.transition = 'none'; disc.style.opacity = '1'; // a cold veil, not the inverting disc: no second white flash
-          sweep(R, 0, 320, function (k) { return 1 - (1 - k) * (1 - k); }); // closes back to the stopper's coin, the real colours outside it
-        });
-        T(Math.max(tc + 520, r.ms + 60), tsEnd);
-      }
-      // the stopped throw has landed on this screen: a ring and a click on each die, 50 ms apart (the clock tags pop in on the same
-      // beat, see the CSS), and the line for everyone. Never in a hidden tab.
-      function tsLandFx() {
-        if (document.hidden) return;
-        const mid = matchId;
-        showChip('주사위가 모두 고정됐습니다.', 'cool');
-        buzz(12);
-        for (let i = 0; i < 5; i++) {
-          setTimeout(function () {
-            if (matchId !== mid || !gameActive) return;
-            if (!REDUCED) { ringFx(diePt(i), '#bfe0ff', 1.8); if (use3D()) window.Dice3D.ring(i, '#9fd0ff', 10); }
-            tone(760 - i * 55, 0.05, 'triangle', 0.045, 520 - i * 40);
-          }, i * 50);
+        const hm = clock.querySelector('.ts-mh'), hh = clock.querySelector('.ts-hh'), ring = clock.querySelector('.ts-ring');
+        // the window changed in the middle of the stop: the clock goes back to the middle of the table and the disc is made big enough for the new window again
+        r.refit = function () {
+          const s2 = stagePt();
+          if (!s2) return;
+          const W2 = window.innerWidth, H2 = window.innerHeight, c2 = seatPt(r.p) || s2;
+          clock.style.left = s2.x + 'px'; clock.style.top = s2.y + 'px';
+          clock.style.setProperty('--s', Math.max(130, Math.min(300, Math.min(s2.r ? s2.r.width : 300, s2.r ? s2.r.height : 300) * 0.8)) + 'px');
+          c = c2; R = Math.ceil(Math.max(Math.hypot(c2.x, c2.y), Math.hypot(W2 - c2.x, c2.y), Math.hypot(c2.x, H2 - c2.y), Math.hypot(W2 - c2.x, H2 - c2.y))) + 6;
+          if (!r.rafs.a) whole(disc, c, R); // not while the opening sweep still runs
+        };
+        const rt = function () {
+          if (tsRun !== r || r.closed) return;
+          if (ring) ring.style.strokeDashoffset = (100 * (1 - (tstop ? Math.min(1, tsLeftMs() / TS_MAX) : 1))).toFixed(1); // guests run it from tstop.left
+          r.rafs.ring = requestAnimationFrame(rt);
+        };
+        r.rafs.ring = requestAnimationFrame(rt);
+        if (REDUCED) {
+          fade(clock, 0, 0.5, 260);
+          wordFx(st, '시간 정지', 'cold');
+        } else {
+          T(260, function () {
+            if (clock.animate) r.anims.push(clock.animate([{ opacity: 0 }, { opacity: 0.95, offset: 0.4 }, { opacity: 0.5 }], { duration: 760, fill: 'forwards' }));
+            if (hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(2160deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
+            if (hh && hh.animate) r.anims.push(hh.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(300deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
+          });
+          T(760, function () { wordFx(stagePt() || st, '시간 정지', 'cold'); buzz(15); flashTo(0.08, '#bfe0ff'); }); // no shake: the world is still // the word lands as the hands stop
         }
+        // the end (fx 'timeGo'): a pick or no choice = one tick forward, the clock fades, the disc closes back to the caster's coin and the real colours return.
+        // A counter = a second disc grows from the roller's coin: difference over difference is the true colours again.
+        r.close = function (kind) {
+          r.closed = true;
+          if (kind === 'counter') sfxCounter(); else sfxTimeGo();
+          if (!REDUCED && hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(2160deg)' }, { transform: 'rotate(2166deg)' }], { duration: 90, easing: 'steps(1, end)', fill: 'forwards' }));
+          fade(clock, 0.5, 0, 260, REDUCED ? 0 : 90);
+          if (kind === 'counter') {
+            const c2 = seatPt(r.q) || st, R2 = reach(c2), disc2 = mk('ts-disc');
+            if (REDUCED) { whole(disc2, c2, R2); fade(disc2, 0, 1, 260); T(520, tsEnd); }
+            else {
+              const rim2 = mk('ts-rim'); rim2.style.opacity = '0';
+              sweep(disc2, rim2, c2, 0, R2, 380, outE, 'b');
+              buzz(35);
+              T(800, tsEnd); // both discs stand over the screen for a beat, then both go: the colours never change at that moment
+            }
+            return;
+          }
+          if (REDUCED) { fade(disc, 1, 0, 260); T(300, tsEnd); return; }
+          sweep(disc, rim, c, R, 0, 320, inE, 'a');
+          T(380, tsEnd);
+        };
       }
-      // The stop: a reversed-cymbal swell (band-passed noise sweeping up, 350 ms) into a deep impact, then five clock ticks whose
-      // gaps grow (120, 190, 300, 460 ms) while pitch and level fall until they stop. The bus low-pass closes to ~500 Hz, so
-      // everything else sounds far away (the stop's own sounds skip it, sfxDry), and a very quiet high sine holds. short = no swell, no low-pass.
+      // fx 'timeGo' { kind, by, q, cat }: the stop is over on every screen. The dice fall at once; the words say what happens next.
+      function timeGoFx(e) {
+        if (!e || typeof e !== 'object') return;
+        const kind = e.kind === 'pick' || e.kind === 'none' || e.kind === 'counter' ? e.kind : 'none';
+        const by = seatIdx(e.by), q = seatIdx(e.q);
+        const cat = typeof e.cat === 'string' && CAT_IDS.indexOf(e.cat) !== -1 ? e.cat : null;
+        if (use3D() && window.Dice3D.timeGo) window.Dice3D.timeGo(); // the dice resume now, whatever the effect is still doing
+        if (liveRoll && kind === 'pick' && cat) liveRoll.forced = true; // this screen's throw will be recorded when it lands
+        if (kind === 'pick' && cat && gameActive && !document.hidden) tsMarkFx(cat, q); // the chosen box is marked on every screen before the score flies
+        const r = tsRun;
+        if (r && r.close) r.close(kind); else tsEnd();
+        if (!gameActive || document.hidden) return;
+        const who = players[by], roller = players[q];
+        if (kind === 'counter') {
+          wordFx(stagePt(), '카운터');
+          showChip((roller ? roller.name : '') + ' 님이 시간 정지를 막았습니다.', 'gold');
+        } else if (kind === 'pick' && cat) showChip((who ? who.name : '') + ' 님이 고른 칸에 기록됩니다.', 'cool');
+        else showChip('칸을 고르지 못했습니다.', 'cool');
+      }
+      // the chosen box: marked (a stamp and a ring) from the end of the stop until the record lands, or five seconds
+      function tsMarkFx(cat, q) {
+        tsMarkCat = cat; tsMarkQ = q;
+        clearTimeout(tsMarkT);
+        const mid = matchId;
+        tsMarkT = setTimeout(function () { if (matchId === mid && tsMarkCat === cat) { tsMarkCat = null; renderTiles(); } }, 5000);
+        renderTiles();
+        const el = tileEls[cat];
+        if (el && !REDUCED) ringFx(ptOf(el), '#bfe0ff', 1.8);
+      }
+      // ---------- 시간 정지: its sounds are synthesized once into two buffers (off-line, the same notes every time) and then played like samples ----------
+      // tsBuf.cast = the stop (2.75 s). tsBuf.res = two ticks (a strong one peaking at 0.06 s, a soft one at 0.22 s) and, from 0.4 s on,
+      // the resume, whose crack falls TS_LEAD seconds in. Nothing here is a recording: oscillators, filtered noise and one small synthetic room.
+      let tsBuf = null, tsBufBusy = false, tsBufFail = false;
+      let tsSnd = null; // this stop's sound: { g, srcs, tickAt, tickN, tickT, resAt, crackAt }
+      const TS_LEAD = 1.228;
+      function tsSynth(o, SR, what) {
+        // ---------- shared pieces ----------
+        const kit = (o) => {
+          const comp = o.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 2.5; comp.attack.value = 0.003; comp.release.value = 0.12; comp.connect(o.destination);
+          const out = o.createGain(); out.connect(comp);
+          const mkNoise = () => { const b = o.createBuffer(1, SR * 3, SR), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
+          const nbL = mkNoise(), nbR = mkNoise();
+          // a short dark room for the tails
+          const irLen = Math.floor(SR * 1.1), ir = o.createBuffer(2, irLen, SR);
+          for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); let y = 0; for (let i = 0; i < irLen; i++) { const t = i / SR; y += 0.25 * ((Math.random() * 2 - 1) - y); d[i] = y * Math.exp(-t / 0.22); } }
+          const room = o.createConvolver(); room.buffer = ir; const roomG = o.createGain(); roomG.gain.value = 0.5; room.connect(roomG); roomG.connect(out);
+          const pan = (node, p) => { if (!o.createStereoPanner) return node; const s = o.createStereoPanner(); s.pan.value = p; node.connect(s); return s; };
+          return { comp, out, nbL, nbR, room, pan };
+        };
+        // a partial that glides: two oscillators a few cents apart, one left of centre and one right (the beating and the width)
+        const partial = (o, K, dest, f0, f1, t0, t1, level, opts) => {
+          opts = opts || {};
+          [0, -1, 1].forEach((side) => {
+            const s = o.createOscillator(); s.type = opts.type || 'sine';
+            const det = 1 + (side < 0 ? -0.7 : side) * (opts.det == null ? 0.006 : opts.det);
+            s.frequency.setValueAtTime(f0 * det, t0); s.frequency.exponentialRampToValueAtTime(f1 * det, t1);
+            const g = o.createGain(); const a = opts.att == null ? 0.02 : opts.att, r = opts.rel == null ? 0.12 : opts.rel, lv = level * (side ? 0.13 : 0.92);
+            g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(lv, t0 + a); g.gain.setValueAtTime(lv, Math.max(t0 + a, t1 - r)); g.gain.linearRampToValueAtTime(0, t1);
+            s.connect(g); K.pan(g, side * (opts.width == null ? 0.45 : opts.width)).connect(dest); s.start(t0); s.stop(t1 + 0.05);
+          });
+        };
+        // a bed of air: two unrelated noises left and right, shaped, and roughened by a slow random wobble plus a fast flutter
+        const air = (o, K, dest, t0, t1, level, hp, lp, opts) => {
+          opts = opts || {};
+          [[K.nbL, -0.7], [K.nbR, 0.7]].forEach((p) => {
+            const s = o.createBufferSource(); s.buffer = p[0]; s.loop = true;
+            const h = o.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = hp; const l = o.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = lp;
+            const g = o.createGain(); const a = opts.att == null ? 0.02 : opts.att, r = opts.rel == null ? 0.05 : opts.rel;
+            g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(level, t0 + a); if (opts.to) g.gain.exponentialRampToValueAtTime(opts.to, Math.max(t0 + a + 0.01, t1 - r)); else g.gain.setValueAtTime(level, Math.max(t0 + a, t1 - r)); g.gain.exponentialRampToValueAtTime(0.0001, t1);
+            const rough = o.createGain(); rough.gain.value = 1;
+            const lfo = o.createOscillator(); lfo.frequency.value = opts.flutter || 41; const lg = o.createGain(); lg.gain.value = opts.depth == null ? 0.3 : opts.depth; lfo.connect(lg); lg.connect(rough.gain); lfo.start(t0); lfo.stop(t1 + 0.1);
+            const wob = o.createBufferSource(); wob.buffer = p[0] === K.nbL ? K.nbR : K.nbL; wob.loop = true; const wl = o.createBiquadFilter(); wl.type = 'lowpass'; wl.frequency.value = 18; const wg = o.createGain(); wg.gain.value = opts.wobble == null ? 2.2 : opts.wobble; wob.connect(wl); wl.connect(wg); wg.connect(rough.gain); wob.start(t0, 1.3); wob.stop(t1 + 0.1);
+            s.connect(h); h.connect(l); l.connect(g); g.connect(rough); K.pan(rough, p[1]).connect(dest); s.start(t0, Math.random()); s.stop(t1 + 0.1);
+          });
+        };
+        const burst = (o, K, dest, t, dur, type, f, q, level, p) => { const s = o.createBufferSource(); s.buffer = K.nbL; const fl = o.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = o.createGain(); g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(fl); fl.connect(g); K.pan(g, p || 0).connect(dest); s.start(t, Math.random() * 2, dur + 0.05); };
+
+        // ---------- the cast: about 2 s of full, steady sound that sinks, then turns low and glassy, a snap, a short tail ----------
+        const CP = {};
+        const cast = (o, K, T, dest) => {
+          const c = (v, d) => (v == null ? d : v);
+          const CUT = T + c(CP.cut, 1.967), SNAP = T + c(CP.snapAt, 2.052), DK = c(CP.dark, 2300);
+          // everything that is "air" goes through one tone control: open at first, closing through the middle, half open again before the end
+          const bright = o.createBiquadFilter(); bright.type = 'lowpass'; bright.Q.value = 0.6;
+          const bf = bright.frequency; bf.setValueAtTime(2600, T); bf.exponentialRampToValueAtTime(12000, T + 0.11); bf.setValueAtTime(12000, T + 1.2);
+          [[1.25, 4500], [1.33, 3600], [1.4, DK]].forEach((p) => bf.exponentialRampToValueAtTime(p[1], T + p[0]));
+          bf.setValueAtTime(DK, T + 1.62);
+          [[1.68, 3800], [1.71, 5200], [1.77, 3000], [1.86, 5000], [1.92, 9000], [1.97, 12000]].forEach((p) => bf.exponentialRampToValueAtTime(p[1], T + p[0]));
+          const main = o.createGain(); main.gain.setValueAtTime(1, T); main.gain.setValueAtTime(1, CUT); main.gain.linearRampToValueAtTime(0, CUT + 0.015);
+          bright.connect(main); main.connect(dest); const rs = o.createGain(); rs.gain.value = c(CP.room, 0.2); main.connect(rs); rs.connect(K.room);
+          // the first instant: a knock in the middle and a short thump under it, before the low notes have arrived
+          const kn = (f, q, lvl, tau, a) => { const src = o.createBufferSource(); src.buffer = K.nbL; const fl2 = o.createBiquadFilter(); fl2.type = 'bandpass'; fl2.frequency.value = f; fl2.Q.value = q; const gg = o.createGain(); gg.gain.setValueAtTime(0, T); gg.gain.linearRampToValueAtTime(lvl, T + a); gg.gain.setTargetAtTime(0, T + a, tau); src.connect(fl2); fl2.connect(gg); gg.connect(main); src.start(T, 0.3, 0.8); };
+          kn(900, 1.2, c(CP.knock, 9), c(CP.knockTau, 0.035), 0.002); kn(450, 1.2, c(CP.knock2, 4.5), 0.08, 0.004);
+          { const s = o.createOscillator(); s.frequency.setValueAtTime(150, T); s.frequency.exponentialRampToValueAtTime(100, T + 0.08); const gg = o.createGain(); gg.gain.setValueAtTime(c(CP.thump, 0.3), T); gg.gain.setTargetAtTime(0, T + 0.01, 0.035); s.connect(gg); gg.connect(main); s.start(T); s.stop(T + 0.3); }
+          air(o, K, main, T, T + 0.3, c(CP.open, 0.6), 220, 900, { att: 0.004, rel: 0.2, flutter: 3, depth: 0.05 });
+          // the low notes swell in over a quarter of a second
+          const low = o.createGain(); low.gain.setValueAtTime(c(CP.low0, 0.25), T); low.gain.linearRampToValueAtTime(1, T + 0.27); low.connect(main);
+          // first half: a chord that sinks from 138 to 120 Hz and then holds (the upper notes sit a little off the true multiples, so it never buzzes as one note)
+          const sink = (f0, f1, t1, lvl, opts) => { partial(o, K, low, f0, f1, T, T + 0.8, lvl, Object.assign({ att: 0.01, rel: 0.001 }, opts)); partial(o, K, low, f1, f1, T + 0.8, t1, lvl, Object.assign({ att: 0.001, rel: 0.08 }, opts)); };
+          sink(138, 120, T + 1.3, c(CP.n1, 0.5));
+          sink(134, 116.5, T + 1.3, c(CP.n1b, 0.12), { det: 0.004 });
+          sink(70.5, 61.2, T + 1.27, c(CP.n0, 0.17));
+          sink(204, 177.5, T + 1.27, c(CP.n15, 0.24), { det: 0.01 });
+          sink(280, 243.5, T + 1.27, c(CP.n2, 0.24));
+          sink(409, 355.5, T + 1.25, c(CP.n3, 0.2));
+          air(o, K, low, T, T + 1.3, c(CP.lowN, 0.75), 70, 380, { flutter: 3, depth: 0.1, rel: 0.1 });
+          air(o, K, low, T, T + 1.3, c(CP.subN, 0.2), 28, 70, { flutter: 3, depth: 0.1, rel: 0.1 });
+          // second half: the third harmonic leads at first, then a low note that creeps up and runs away at the very end
+          const low2 = o.createGain(); low2.gain.value = 1; { const l = o.createOscillator(); l.frequency.value = 11.8; const lg = o.createGain(); lg.gain.value = c(CP.wob2, 0.2); l.connect(lg); lg.connect(low2.gain); l.start(T + 1.1); l.stop(CUT + 0.1); }
+          low2.connect(main);
+          const climb = (m, lvl, a) => { [0, -1, 1].forEach((side) => { const s = o.createOscillator(); const det = 1 + (side < 0 ? -0.7 : side) * 0.004; const f = s.frequency; f.setValueAtTime(67 * m * det, T + 1.1); f.linearRampToValueAtTime(70 * m * det, T + 1.6); f.linearRampToValueAtTime(74 * m * det, T + 1.8); f.linearRampToValueAtTime(78 * m * det, T + 1.9); f.exponentialRampToValueAtTime(90 * m * det, CUT + 0.015); const gg = o.createGain(); const lv = lvl * (side ? 0.13 : 0.92); gg.gain.setValueAtTime(0, T + 1.1); gg.gain.linearRampToValueAtTime(lv, T + 1.1 + a); gg.gain.setValueAtTime(lv, CUT); gg.gain.linearRampToValueAtTime(0, CUT + 0.015); s.connect(gg); K.pan(gg, side * 0.4).connect(low2); s.start(T + 1.1); s.stop(CUT + 0.06); }); };
+          climb(1, c(CP.m1, 0.42), 0.5); climb(2.985, c(CP.m3, 0.4), 0.14); climb(5.04, c(CP.m5, 0.25), 0.2); climb(2.03, c(CP.m2, 0.26), 0.25);
+          partial(o, K, low2, 202, 205, T + 1.2, T + 1.56, c(CP.lead3, 0.34), { att: 0.05, rel: 0.25, det: 0.006 });
+          air(o, K, low2, T + 1.15, CUT + 0.015, c(CP.lowN2, 0.6), 70, 420, { flutter: 3, depth: 0.1, att: 0.15, rel: 0.012 });
+          // glass over it from the middle on (it sits under the tone control, so it dulls with the rest)
+          [[1667, 0.2], [2247, 0.07], [3038, 0.11], [3501, 0.1], [4184, 0.07]].forEach((p) => partial(o, K, bright, p[0], p[0] * 1.004, T + 1.08, CUT + 0.015, p[1] * c(CP.glass, 1.15), { att: 0.14, rel: 0.012, det: 0.0015, width: 0.8 }));
+          // the bed of air; the middle of it swells where the sound turns and then thins out until the end
+          const midG = o.createGain(); const mg = midG.gain; mg.setValueAtTime(1, T); mg.setValueAtTime(1, T + 1.2);
+          [[1.27, 1.45], [1.33, 1.3], [1.45, 0.4], [1.7, 0.5], [1.9, 0.75], [1.96, 1.1]].forEach((p) => mg.linearRampToValueAtTime(p[1], T + p[0])); midG.connect(bright);
+          air(o, K, midG, T, CUT + 0.015, c(CP.aMid, 1), 420, 1300, { flutter: 5, depth: 0.1, att: 0.004, rel: 0.012 });
+          air(o, K, bright, T, CUT + 0.015, c(CP.aHi, 0.42), 1200, 4600, { flutter: 7, depth: 0.1, att: 0.004, rel: 0.012 });
+          air(o, K, bright, T, CUT + 0.015, c(CP.aTop, 0.09), 4400, 10000, { flutter: 9, depth: 0.1, att: 0.004, rel: 0.012 });
+          // the rattle: hard little bursts, never quite regular, mostly between 1 and 5 kHz, with a few soft ones between them
+          let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+          const hit = (t, lvl, f, tau, dst) => { const src = o.createBufferSource(); src.buffer = rnd() < 0.5 ? K.nbL : K.nbR; const fl2 = o.createBiquadFilter(); fl2.type = 'bandpass'; fl2.frequency.value = f; fl2.Q.value = 0.8; const gg = o.createGain(); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(lvl, t + 0.002); gg.gain.setTargetAtTime(0, t + 0.004, tau); src.connect(fl2); fl2.connect(gg); K.pan(gg, rnd() * 1.2 - 0.6).connect(dst || bright); src.start(t, rnd() * 2, 0.4); };
+          const RT = c(CP.rattle, 1.27), db = (d) => Math.pow(10, d / 20);
+          [[0.105, -9, 2950], [0.165, -14, 3160], [0.25, -11, 2980], [0.42, -18, 3000], [0.48, -12, 4040], [0.58, -16, 3230], [0.645, -11, 3550], [0.76, -11, 3185], [0.84, -15, 2970], [0.9, -10, 3540], [0.955, -11, 3130], [1.01, -9, 3485], [1.105, -14, 3620], [1.19, -12, 2735], [1.26, -13, 2150], [1.325, -16, 2100]].forEach((p) => hit(T + p[0], RT * db(p[1] + 13), p[2], 0.01 + rnd() * 0.02));
+          for (let t = T + 0.3; t < T + 1.2; t += 0.05 + rnd() * 0.05) hit(t, RT * c(CP.soft, 0.5) * (0.6 + rnd() * 0.6), 1400 + rnd() * 2800, 0.008 + rnd() * 0.02);
+          // two flashes in the dark stretch: these are not dulled with the rest, only rounded off on top
+          const flp = o.createBiquadFilter(); flp.type = 'lowpass'; flp.frequency.value = 6000; flp.Q.value = 0.5; flp.connect(main);
+          hit(T + 1.39, RT * db(6) * c(CP.flash, 1), 3700, 0.02, flp); hit(T + 1.66, RT * db(1) * c(CP.flash2, 1), 2950, 0.05, flp);
+          // a hiss bridges the cut and the snap
+          air(o, K, dest, CUT - 0.01, SNAP + 0.004, c(CP.gapHiss, 0.4), 1800, 5200, { att: 0.01, rel: 0.004, flutter: 3, depth: 0.05 });
+          // the snap that ends it: the lows are already gone, the middle cracks once and rings away in the room
+          const snap = o.createGain(); snap.gain.value = 1; snap.connect(dest);
+          const sr = o.createGain(); sr.gain.value = c(CP.snapRoom, 0.28); snap.connect(sr); sr.connect(K.room);
+          const sn = (hp, lp, lvl, t0, a, tau) => { [[K.nbL, -0.5], [K.nbR, 0.5]].forEach((p) => { const src = o.createBufferSource(); src.buffer = p[0]; const h = o.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = hp; const l = o.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = lp; const l2 = o.createBiquadFilter(); l2.type = 'lowpass'; l2.frequency.value = lp * 1.25; const gg = o.createGain(); gg.gain.setValueAtTime(0, t0); gg.gain.linearRampToValueAtTime(lvl, t0 + a); gg.gain.setTargetAtTime(0, t0 + a, tau); src.connect(h); h.connect(l); l.connect(l2); l2.connect(gg); K.pan(gg, p[1]).connect(snap); src.start(t0, 1.2 + p[1], 0.5); }); };
+          sn(900, 1900, c(CP.snapMid, 3.2), SNAP - 0.004, 0.004, c(CP.snapTau, 0.016));
+          sn(430, 950, c(CP.snapLo, 1), SNAP - 0.004, 0.012, 0.04);
+          sn(1900, 3800, c(CP.snapHi, 1.1), SNAP, 0.02, 0.028);
+          // what hangs in the room afterwards: a low ring that holds for half a second and is then cut
+          const tailEnv = (bump) => { const g = o.createGain(); const gn = g.gain; gn.setValueAtTime(0, CUT + (bump ? 0.02 : 0)); if (bump) { gn.setValueAtTime(0, T + 2.05); gn.linearRampToValueAtTime(0.4, T + 2.1); gn.linearRampToValueAtTime(bump, T + 2.16); gn.linearRampToValueAtTime(1, T + 2.23); } else gn.linearRampToValueAtTime(1, CUT + 0.06); gn.setValueAtTime(1, T + 2.56); gn.linearRampToValueAtTime(0.25, T + 2.63); gn.linearRampToValueAtTime(0, T + 2.69); g.connect(dest); return g; };
+          const tailLo = tailEnv(0), tailHi = tailEnv(c(CP.tailBump, 1.7)), TL = c(CP.tail, 0.9);
+          [[132, 0.045], [100, 0.026], [196, 0.03], [229, 0.03], [264, 0.034]].forEach((p) => partial(o, K, tailLo, p[0], p[0] * 0.995, CUT, T + 2.7, p[1] * TL, { att: 0.03, rel: 0.02, det: 0.004 }));
+          [[66, 0.012], [48, 0.008]].forEach((p) => partial(o, K, tailLo, p[0], p[0] * 0.995, T + 2.16, T + 2.7, p[1] * TL, { att: 0.08, rel: 0.02, det: 0.004 }));
+          [[363, 0.045], [466, 0.026], [516, 0.03]].forEach((p) => partial(o, K, tailHi, p[0], p[0] * 0.995, CUT, T + 2.7, p[1] * TL, { att: 0.03, rel: 0.02, det: 0.004 }));
+          air(o, K, tailHi, T + 2.05, T + 2.7, c(CP.tailMid, 0.1), 560, 1400, { flutter: 3, depth: 0.05 });
+        };
+
+        // ---------- the resume: a buzzing low hum with a thin whine over it and ticks that grow, then the whine opens into a bright chord, a crack, a thump, then nothing ----------
+        const P = { m640: 0.16, hiss: 0.12, h5: 0.22, body: 2.6, bodyN: 0.75, bodyTau: 0.06 };
+        // 째깍: a tick that swells for a few hundredths of a second and is cut at its peak
+        const swellTick = (o, K, dest, tp, L, q) => {
+          q = q || {}; const t0 = tp - (q.rise || 0.018);
+          const lay = (f, Q, lvl, pan) => { const src = o.createBufferSource(); src.buffer = K.nbR; const fl2 = o.createBiquadFilter(); fl2.type = 'bandpass'; fl2.frequency.value = f; fl2.Q.value = Q; const gg = o.createGain(); gg.gain.setValueAtTime(0, t0 - 0.002); gg.gain.linearRampToValueAtTime(lvl * (q.from || 0.22), t0); gg.gain.exponentialRampToValueAtTime(lvl, tp); gg.gain.setTargetAtTime(lvl * (q.tail || 0.25), tp + 0.0005, 0.0012); gg.gain.setTargetAtTime(0, tp + 0.005, q.tau || 0.012); src.connect(fl2); fl2.connect(gg); K.pan(gg, pan).connect(dest); src.start(t0 - 0.002, Math.random() * 2, 0.3); };
+          lay(7200, 2, L, 0.15); lay(3600, 1.5, L * (q.mid == null ? 0.35 : q.mid), -0.15); lay(1800, 1.5, L * 0.2, 0); if (q.top) lay(12500, 1.5, L * q.top, 0);
+        };
+        const resume = (o, K, T, dest) => {
+          const A = T + 0.08, S = T + 0.69, B = T + 0.8, C = T + 1.215, D = T + 1.375, HC = C + 0.009;
+          const g = (v, d) => (v == null ? d : v);
+          // --- the hum: 67 Hz with a third harmonic as strong as the note itself, throbbing about ten times a second ---
+          const hum = o.createGain(); hum.gain.setValueAtTime(0, A); hum.gain.linearRampToValueAtTime(g(P.hum0, 0.3), A + 0.06); hum.gain.linearRampToValueAtTime(g(P.hum1, 0.68), S); hum.gain.linearRampToValueAtTime(g(P.hum2, 0.3), B); hum.gain.linearRampToValueAtTime(0, B + 0.03);
+          const trem = o.createGain(); trem.gain.value = 1; { const l = o.createOscillator(); l.frequency.value = 9.5; const lg = o.createGain(); lg.gain.value = g(P.trem, 0.3); l.connect(lg); lg.connect(trem.gain); l.start(A); l.stop(B + 0.1); }
+          hum.connect(trem); trem.connect(dest);
+          partial(o, K, hum, 67.3, 67.3, A, B + 0.05, g(P.h1, 0.5), { att: 0.01, rel: 0.02, det: 0.002, width: 0.15 });
+          partial(o, K, hum, 202, 202, A, B + 0.05, g(P.h3, 0.42), { att: 0.01, rel: 0.02, det: 0.002, width: 0.2 });
+          partial(o, K, hum, 336.5, 336.5, A, B + 0.05, g(P.h5, 0.11), { att: 0.01, rel: 0.02, det: 0.002, width: 0.25 });
+          partial(o, K, hum, 471, 471, A, B + 0.05, g(P.h7, 0.05), { att: 0.01, rel: 0.02, det: 0.002, width: 0.25 });
+          // the third harmonic and the ones above it swell just before the chord
+          const PS = g(P.pre, 1);
+          [[1, 0.38], [2, 0.2], [3, 0.1], [4, 0.06], [5, 0.06]].forEach((p) => partial(o, K, dest, 202 * p[0], 211 * p[0], S - 0.02, B + 0.02, p[1] * PS, { att: 0.05, rel: 0.03, det: 0.004, width: 0.3 + 0.05 * p[0] }));
+          // --- the whine and the chord: held notes whose levels follow [time, level] points; nothing here flutters ---
+          const hi = o.createGain(); hi.gain.setValueAtTime(1, T); hi.gain.setValueAtTime(1, HC); hi.gain.linearRampToValueAtTime(0, HC + 0.004); hi.connect(dest);
+          { const rs = o.createGain(); rs.gain.value = 0.12; hi.connect(rs); rs.connect(K.room); }
+          const GL = g(P.glass, 1);
+          const held = (f, pts, width) => { [0, -1, 1].forEach((side) => { const s = o.createOscillator(); s.frequency.value = f * (1 + (side < 0 ? -0.7 : side) * 0.0012); const gg = o.createGain(); const k = (side ? 0.13 : 0.92) * GL; gg.gain.setValueAtTime(0, T + pts[0][0]); pts.slice(1).forEach((p) => gg.gain.linearRampToValueAtTime(p[1] * k, T + p[0])); s.connect(gg); K.pan(gg, side * (width == null ? 0.6 : width)).connect(hi); s.start(T + pts[0][0]); s.stop(T + pts[pts.length - 1][0] + 0.05); }); };
+          held(1664, [[0.08, 0], [0.12, 0.022], [0.34, 0.026], [0.62, 0.05], [0.8, 0.12], [0.86, 0.2], [0.96, 0.22], [1.08, 0.14], [1.17, 0.11], [1.24, 0.11]]);
+          held(1418, [[0.08, 0], [0.11, 0.052], [0.34, 0.052], [0.62, 0.014], [0.8, 0]]);
+          held(1313, [[0.08, 0], [0.11, 0.026], [0.6, 0.02], [0.8, 0]]);
+          held(1441, [[0.08, 0], [0.11, 0.026], [0.5, 0.014], [0.8, 0]]);
+          held(1043, [[0.45, 0], [0.62, 0.022], [0.8, 0.01], [0.9, 0]]);
+          held(2496, [[0.45, 0], [0.62, 0.02], [0.8, 0.01], [0.9, 0]]);
+          held(2250, [[0.45, 0], [0.62, 0.02], [0.8, 0.05], [0.86, 0.08], [0.96, 0.09], [1.08, 0.07], [1.17, 0.056], [1.24, 0.05]]);
+          held(1289, [[0.78, 0], [0.86, 0.04], [0.96, 0.063], [1.08, 0.08], [1.17, 0.11], [1.24, 0.12]]);
+          held(3504, [[0.78, 0], [0.86, 0.08], [0.96, 0.1], [1.24, 0.1]]);
+          held(4184, [[0.78, 0], [0.86, 0.056], [0.96, 0.09], [1.08, 0.1], [1.17, 0.126], [1.24, 0.14]]);
+          held(2379, [[0.78, 0], [0.86, 0.035], [0.96, 0.05], [1.08, 0.11], [1.24, 0.11]]);
+          held(3035, [[0.8, 0], [0.86, 0.01], [0.96, 0.035], [1.08, 0.126], [1.17, 0.16], [1.24, 0.18]]);
+          held(5719, [[0.9, 0], [0.96, 0.02], [1.08, 0.07], [1.17, 0.18], [1.24, 0.27]]);
+          held(6570, [[1, 0], [1.08, 0.05], [1.17, 0.14], [1.24, 0.21]]);
+          held(6480, [[1, 0], [1.08, 0.04], [1.17, 0.07], [1.24, 0.1]]);
+          // a little grit in the middle and a trace of air on top, with most of the air near 8 kHz
+          const mid = o.createGain(); mid.gain.setValueAtTime(0, A); mid.gain.linearRampToValueAtTime(g(P.mid0, 0.6), A + 0.02); mid.gain.linearRampToValueAtTime(1, B); mid.gain.linearRampToValueAtTime(0, B + 0.03); mid.connect(dest);
+          air(o, K, mid, A, B + 0.05, g(P.grit, 0.08), 900, 2400, { flutter: 9.5, depth: 0.3 });
+          air(o, K, mid, A, B + 0.05, g(P.m640, 0.065), 450, 900, { flutter: 9.5, depth: 0.3 });
+          air(o, K, mid, A, B + 0.05, g(P.hiss, 0.06) * 0.75, 2500, 12000, { flutter: 13, depth: 0.2 });
+          air(o, K, mid, A, B + 0.05, g(P.hissB, 0.1), 6800, 9200, { flutter: 13, depth: 0.2 });
+          // --- 째깍째깍: each one swells for a few hundredths of a second and is cut at its peak; they come closer and louder ---
+          const tick = (tp, L, q) => swellTick(o, K, dest, tp, L, q);
+          const tk = g(P.tick, 1), dB = (d) => 0.6 * Math.pow(10, (d + 22) / 20);
+          [[0.265, -15.5, { mid: 0.45 }], [0.409, -17, { mid: 0.7, top: 0.5 }], [0.565, -12, { rise: 0.022, from: 0.3, mid: 0.25 }], [0.678, -18, { mid: 0.3, top: 0.4 }], [0.794, -9, { mid: 0.25, top: 0.4 }], [0.897, -12, { mid: 0.3, top: 0.35 }], [1.009, -4, { rise: 0.012, from: 0.15, mid: 0.2, top: 0.3, tau: 0.03, tail: 0.2 }]].forEach((p) => tick(T + p[0], dB(p[1]) * tk, p[2]));
+          // --- the roar under the chord: the note climbs, the third harmonic leads, all of it fluttering ---
+          const roar = o.createGain(); roar.gain.setValueAtTime(0, B - 0.015); roar.gain.linearRampToValueAtTime(1, B + 0.01); roar.gain.setValueAtTime(1, C); roar.gain.linearRampToValueAtTime(0, C + 0.025);
+          const fl = o.createGain(); fl.gain.value = 1; { const l = o.createOscillator(); l.frequency.value = 40; const lg = o.createGain(); lg.gain.value = g(P.flut, 0.16); l.connect(lg); lg.connect(fl.gain); l.start(B - 0.02); l.stop(C + 0.1); }
+          roar.connect(fl); fl.connect(dest); const rs = o.createGain(); rs.gain.value = 0.15; fl.connect(rs); rs.connect(K.room);
+          partial(o, K, roar, 70, 79, B - 0.015, C + 0.03, g(P.r1, 0.75), { att: 0.01, rel: 0.02, det: 0.004, width: 0.15 });
+          partial(o, K, roar, 212, 240, B - 0.015, C + 0.03, g(P.r3, 0.8), { att: 0.01, rel: 0.02, det: 0.006, width: 0.3 });
+          partial(o, K, roar, 141, 158, B - 0.015, C + 0.03, g(P.r2, 0.4), { att: 0.01, rel: 0.02, det: 0.004, width: 0.3 });
+          [[3, 0.06], [4, 0.06], [5, 0.06]].forEach((p) => partial(o, K, roar, 212 * p[0], 240 * p[0], B - 0.015, C + 0.03, p[1] * g(P.r3h, 1), { att: 0.02, rel: 0.02, det: 0.004, width: 0.5 }));
+          partial(o, K, roar, 48, 52, B - 0.015, C + 0.03, g(P.rsub, 0.2), { att: 0.01, rel: 0.02, det: 0.004, width: 0.1 });
+          [[350, 0.2], [420, 0.14], [270, 0.2]].forEach((p) => partial(o, K, roar, p[0], p[0] * 1.12, B - 0.015, C + 0.03, p[1] * g(P.r5, 1.5), { att: 0.01, rel: 0.02, det: 0.006, width: 0.45 }));
+          air(o, K, roar, B - 0.015, C + 0.03, g(P.rlow, 0.25), 80, 500, { flutter: 40, depth: 0.2 });
+          air(o, K, roar, B - 0.015, C + 0.03, g(P.rmid, 0.06), 500, 950, { flutter: 40, depth: 0.2 });
+          air(o, K, roar, B - 0.015, C + 0.03, g(P.rshh, 0.08), 1000, 3600, { flutter: 40, depth: 0.2 });
+          air(o, K, roar, B - 0.015, C + 0.03, g(P.rair, 0.07), 3600, 12000, { flutter: 47, depth: 0.2 });
+          // --- the end: the middle cracks for a moment, the top swells to its peak, both are cut together; a low thump holds a moment, then a clean stop ---
+          const cut = (f, Q, pts, dst) => { const src = o.createBufferSource(); src.buffer = K.nbL; const fl2 = o.createBiquadFilter(); fl2.type = 'bandpass'; fl2.frequency.value = f; fl2.Q.value = Q; const gg = o.createGain(); gg.gain.setValueAtTime(0, T + pts[0][0]); pts.slice(1).forEach((p) => gg.gain.linearRampToValueAtTime(p[1], T + p[0])); src.connect(fl2); fl2.connect(gg); gg.connect(dst); src.start(T + pts[0][0], 0.9, 0.6); };
+          cut(1800, 1, [[1.19, 0], [1.194, g(P.crackMid, 1.6)], [1.24, g(P.crackMid, 1.6)]], hi);
+          cut(7000, 1, [[1.204, 0], [1.21, 0.4 * g(P.crackTop, 1.2)], [1.224, g(P.crackTop, 1.2)], [1.24, g(P.crackTop, 1.2)]], hi);
+          burst(o, K, dest, C - 0.025, 0.09, 'bandpass', 1300, 0.4, g(P.crack, 1.6), 0);
+          // what is left after the cut: a splash that dies from the top down
+          const splash = (f, Q, lvl, tau) => { const src = o.createBufferSource(); src.buffer = K.nbR; const fl2 = o.createBiquadFilter(); fl2.type = 'bandpass'; fl2.frequency.value = f; fl2.Q.value = Q; const gg = o.createGain(); gg.gain.setValueAtTime(0, HC); gg.gain.linearRampToValueAtTime(lvl, HC + 0.004); gg.gain.setTargetAtTime(0, HC + 0.004, tau); src.connect(fl2); fl2.connect(gg); gg.connect(dest); src.start(HC, 0.4, 0.7); };
+          const SPL = g(P.splash, 1);
+          splash(7000, 2, 0.4 * SPL, 0.012); splash(3600, 1.2, 0.24 * SPL, 0.06); splash(1800, 1.2, 0.5 * SPL, 0.008); splash(1800, 1.2, 0.24 * SPL, 0.1);
+          const th = o.createGain(); th.gain.setValueAtTime(0, C - 0.02); th.gain.linearRampToValueAtTime(1.5, C + 0.004); th.gain.linearRampToValueAtTime(0.85, C + 0.07); th.gain.setValueAtTime(0.85, D - 0.02); th.gain.linearRampToValueAtTime(0, D + 0.02); th.connect(dest);
+          [[64, 0.5], [50, 0.27], [41, 0.2], [80, 0.34]].forEach((p) => partial(o, K, th, p[0], p[0] * 0.97, C - 0.02, D + 0.03, p[1] * g(P.thump, 1), { att: 0.008, rel: 0.02, det: 0.004, width: 0.1 }));
+          air(o, K, th, C, D + 0.03, g(P.thN, 0.12), 30, 140, { flutter: 23, depth: 0.2 });
+          // the body of the thump dies in a tenth of a second
+          const body = o.createGain(); body.gain.setValueAtTime(0, C); body.gain.linearRampToValueAtTime(1, C + 0.008); body.gain.setTargetAtTime(0, C + 0.02, g(P.bodyTau, 0.045)); body.connect(dest);
+          [[128, 0.4], [190, 0.32], [260, 0.24], [340, 0.16]].forEach((p) => partial(o, K, body, p[0], p[0] * 0.95, C, C + 0.4, p[1] * g(P.body, 1), { att: 0.008, rel: 0.05, det: 0.006, width: 0.3 }));
+          air(o, K, body, C, C + 0.4, g(P.bodyN, 0.3), 300, 1200, { flutter: 23, depth: 0.2 });
+        };
+        const K = kit(o);
+        if (what === 'cast') cast(o, K, 0, K.out);
+        else { swellTick(o, K, K.out, 0.06, 1.07, { mid: 0.4, top: 0.4 }); swellTick(o, K, K.out, 0.22, 0.67, { mid: 0.6, top: 0.4 }); resume(o, K, 0.4, K.out); }
+      }
+      // rendered when the card is first held by anyone at the table (well before it can be used); a failure leaves the short synthesized sounds
+      function tsSndPrep() {
+        if (tsBuf || tsBufBusy || tsBufFail || !audioCtx || !matchAug || !gameActive) return;
+        if (!players.some(function (p) { return augHas(p, 'timeStop'); })) return;
+        const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!OAC) { tsBufFail = true; return; }
+        tsBufBusy = true;
+        const SR = audioCtx.sampleRate;
+        const one = function (dur, what, peak) {
+          return new Promise(function (res, rej) {
+            const o = new OAC(2, Math.ceil(SR * dur), SR);
+            tsSynth(o, SR, what);
+            o.oncomplete = function (e) { res(e.renderedBuffer); };
+            const p = o.startRendering();
+            if (p && p.then) p.then(res, rej);
+          }).then(function (b) {
+            let pk = 0;
+            for (let c = 0; c < b.numberOfChannels; c++) { const d = b.getChannelData(c); for (let i = 0; i < d.length; i++) { const v = d[i] < 0 ? -d[i] : d[i]; if (v > pk) pk = v; } }
+            const k = pk > 0 ? peak / pk : 0;
+            for (let c = 0; c < b.numberOfChannels; c++) { const d = b.getChannelData(c); for (let i = 0; i < d.length; i++) d[i] *= k; }
+            return b;
+          });
+        };
+        let done = null;
+        try { done = one(2.75, 'cast', 0.42).then(function (a) { return one(2.25, 'res', 0.45).then(function (b) { tsBuf = { cast: a, res: b }; }); }); } catch (e) { tsBufFail = true; tsBufBusy = false; return; }
+        done.catch(function () { tsBufFail = true; }).then(function () { tsBufBusy = false; });
+      }
+      // everything this stop is still playing fades out
+      function tsSndStop(fade) {
+        const s = tsSnd;
+        tsSnd = null;
+        if (!s) return;
+        clearTimeout(s.tickT);
+        try {
+          const n = audioCtx.currentTime;
+          s.g.gain.cancelScheduledValues(n); s.g.gain.setValueAtTime(1, n); s.g.gain.linearRampToValueAtTime(0, n + fade);
+          s.srcs.forEach(function (x) { try { x.stop(n + fade + 0.02); } catch (e) {} });
+        } catch (e) {}
+      }
+      // while time stands still: a steady tick, strong and soft in turn, from the end of the boom until the resume takes over
+      function tsSndTicks() {
+        const s = tsSnd;
+        if (!s || !audioCtx || !tsBuf) return;
+        try {
+          const now = audioCtx.currentTime;
+          while (s.tickAt < now + 0.35) {
+            if (s.resAt && s.tickAt > s.resAt - 0.2) return;
+            if (s.tickAt > now + 0.05) {
+              const src = audioCtx.createBufferSource();
+              src.buffer = tsBuf.res; src.connect(s.g);
+              src.start(s.tickAt - 0.05, s.tickN % 2 ? 0.17 : 0.01, 0.13);
+              s.srcs.push(src);
+            }
+            s.tickAt += 0.3; s.tickN++;
+          }
+        } catch (e) { return; }
+        s.tickT = setTimeout(tsSndTicks, 150);
+      }
+      // the resume is aimed at the end of the stop: left = seconds until that end. Started late, it skips its beginning; its crack still lands on the end.
+      function tsSndResume(left) {
+        const s = tsSnd;
+        if (!s || s.resAt || !tsBuf || !audioCtx || isMuted) return;
+        try {
+          const now = audioCtx.currentTime, skip = Math.max(0, TS_LEAD - left), when = now + Math.max(0, left - TS_LEAD);
+          const src = audioCtx.createBufferSource();
+          src.buffer = tsBuf.res; src.connect(s.g);
+          src.start(when, 0.4 + skip);
+          s.srcs.push(src);
+          s.resAt = when; s.crackAt = when + TS_LEAD - skip;
+        } catch (e) {}
+      }
+      // The stop. With the buffers ready: the long boom at the press, then a steady tick for as long as time stands still. The bus low-pass
+      // closes to ~500 Hz, so everything else sounds far away (the stop's own sounds go straight to the master, sfxDry). Without the buffers
+      // (the first moments of a session): a short swell, an impact, five slowing ticks and a very quiet high tone that holds.
       function sfxTimeStop(ms, short) {
         ensureAudio();
         if (isMuted || !audioCtx || !noiseBuf || !master) return;
+        tsSndStop(0.02);
+        if (tsBuf) {
+          try {
+            const ctx = audioCtx, t = ctx.currentTime, g = ctx.createGain(), src = ctx.createBufferSource();
+            g.gain.value = 1; g.connect(master);
+            src.buffer = tsBuf.cast; src.connect(g); src.start(t);
+            tsSnd = { g: g, srcs: [src], tickAt: t + 2.45, tickN: 0, tickT: 0, resAt: 0, crackAt: 0 };
+            if (deaf) { deaf.frequency.cancelScheduledValues(t); deaf.frequency.setTargetAtTime(500, t + 0.05, 0.07); tsDeaf = true; }
+            tsSndTicks();
+          } catch (e) {}
+          return;
+        }
+        tsSndPrep();
         sfxDry = true;
         try {
           const ctx = audioCtx, t = ctx.currentTime, at = short ? 0 : 0.35;
@@ -9624,12 +10084,14 @@
             o.type = 'sine'; o.frequency.value = 2960;
             hg.gain.setValueAtTime(0.0001, t + 0.45); hg.gain.exponentialRampToValueAtTime(0.011, t + 0.9);
             o.connect(hg); hg.connect(master);
-            o.start(t + 0.45); o.stop(t + 3.2);
+            o.start(t + 0.45); o.stop(t + 0.5 + Math.max(3, (ms || 7000) / 1000) + 0.5); // holds for the whole stop; tsHumOff cuts it at the end
             tsHum = { o: o, g: hg };
           }
         } catch (e) {} finally { sfxDry = false; }
       }
-      // The resume: two quick ticks speeding up, a downward noise sweep, a short bright two-note chime, and the low-pass opens again.
+      // The resume. Its long form (ticks that close in, a bright chord, a crack) is started by the stop itself a moment before the end
+      // (tsSndResume), so here only the low-pass opens. If the end came with no warning, the last moment of it plays now. Without the
+      // buffers: two quick ticks, a downward noise sweep and a short two-note chime.
       function sfxTimeGo() {
         ensureAudio();
         tsHumOff();
@@ -9638,6 +10100,22 @@
           if (tsDeaf && deaf) { const t = audioCtx.currentTime; deaf.frequency.cancelScheduledValues(t); deaf.frequency.setTargetAtTime(20000, t, 0.05); }
         } catch (e) {}
         tsDeaf = false;
+        const s = tsSnd;
+        if (s) {
+          if (isMuted || !tsBuf || !master) { tsSndStop(0.03); return; }
+          tsSnd = null;
+          clearTimeout(s.tickT);
+          try {
+            const now = audioCtx.currentTime;
+            if (s.resAt && Math.abs(s.crackAt - now) < 0.35) return; // on time: it rings out by itself
+            s.g.gain.cancelScheduledValues(now); s.g.gain.setValueAtTime(1, now); s.g.gain.linearRampToValueAtTime(0, now + 0.03);
+            s.srcs.forEach(function (x) { try { x.stop(now + 0.05); } catch (e) {} });
+            const g = audioCtx.createGain(), src = audioCtx.createBufferSource();
+            g.gain.value = 1; g.connect(master);
+            src.buffer = tsBuf.res; src.connect(g); src.start(now, 0.4 + TS_LEAD - 0.13);
+          } catch (e) {}
+          return;
+        }
         if (isMuted || !noiseBuf || !master) return;
         sfxDry = true;
         try {
@@ -9646,6 +10124,25 @@
           noise(7000, 1.2, 0.3, 0.12, 'bandpass', 0.12, 600);
           tone(1318, 0.22, 'sine', 0.07, 0, 0.36);
           tone(1760, 0.34, 'sine', 0.06, 0, 0.44);
+        } catch (e) {} finally { sfxDry = false; }
+      }
+      // The counter: the low-pass opens at once and a hard hit lands (a deep thump, a snapped crack, a short burst of noise).
+      function sfxCounter() {
+        ensureAudio();
+        tsHumOff();
+        tsSndStop(0.04); // the boom, the ticks and the resume are cut by the hit
+        try {
+          if (tsDeaf && deaf && audioCtx) { const t = audioCtx.currentTime; deaf.frequency.cancelScheduledValues(t); deaf.frequency.setTargetAtTime(20000, t, 0.03); }
+        } catch (e) {}
+        tsDeaf = false;
+        if (isMuted || !audioCtx || !noiseBuf || !master) return;
+        sfxDry = true;
+        try {
+          tone(58, 0.5, 'sine', 0.55, 24, 0);
+          tone(190, 0.14, 'square', 0.24, 55, 0);
+          tone(1500, 0.05, 'square', 0.14, 420, 0.01);
+          noise(2600, 0.9, 0.2, 0.5, 'bandpass', 0, 500);
+          noise(200, 0.8, 0.35, 0.4, 'lowpass', 0.02);
         } catch (e) {} finally { sfxDry = false; }
       }
       function sfxSlam() {
@@ -9775,6 +10272,12 @@
           b.classList.toggle('is-live', (k === 'slam' || k === 'timeStop') && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || (k === 'allin' ? allinTurn && me === currentPlayerIdx : !!armed[k]));
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
+          if (k === 'timeStop') { // during a live stop the roller's key is the counter: ruby, pulsing, and it says so
+            const cn = !!tstop && ok && me === tstop.q, lb = b.querySelector('.pw-lb'), w = cn ? '막기' : POWER_DEFS[k].label;
+            b.classList.toggle('is-counter', cn);
+            if (lb && lb.textContent !== w) lb.textContent = w;
+            if (cn) b.setAttribute('aria-label', '시간 정지로 막기 ' + n + '회');
+          }
           if (POWER_DEFS[k].kind === 'dir') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           if (k === 'tableFlip') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           if (k === 'bluff') b.setAttribute('aria-pressed', armed.bluff ? 'true' : 'false');
@@ -10090,6 +10593,60 @@
         cockPick.classList.toggle('tight', $('diceStage').clientHeight < 300); // a short felt: smaller chips, so the strip fits under the dice
         placeCockPick();
         syncSeatChips();
+      }
+      // 시간 정지: the line above the keys while time is stopped (the caster's prompt, everyone else's wait, the roller's counter), and the countdown
+      function tsLine() {
+        if (!tstop) return { cap: '', sub: '' };
+        const by = players[tstop.by], nm = by ? by.name : '';
+        let cap;
+        if (tsPickMine()) cap = hotSeat() ? nm + ' 님이 칸을 고르는 중입니다.' : '기록할 칸을 고릅니다.';
+        else if (tstop.box) cap = nm + ' 님이 칸을 골랐습니다.';
+        else cap = nm + ' 님이 칸을 고르는 중입니다.';
+        const me = hotSeat() ? tstop.q : powerOwnerIdx();
+        const sub = me === tstop.q && canTimeStop(me) ? '시간 정지로 막을 수 있습니다.' : '';
+        return { cap: cap, sub: sub };
+      }
+      function renderTsPrompt() {
+        const el = $('tsPrompt');
+        const show = !!tstop && gameActive && !isScoring;
+        el.hidden = !show;
+        if (!show) { el.dataset.sig = ''; if (tsBarT) { clearInterval(tsBarT); tsBarT = 0; } return; }
+        const L = tsLine(), sig = tstop.by + ':' + tstop.q + ':' + (tstop.box || '') + ':' + L.cap + ':' + L.sub;
+        if (el.dataset.sig !== sig) {
+          el.dataset.sig = sig;
+          if (tsPickMine()) { if (!sheetOv.hidden) closeOv(sheetOv); if (!peekOv.hidden) closePeek(); } // the caster must reach the tiles: a sheet left open is closed
+          el.querySelector('.cp-cap').textContent = L.cap;
+          const sub = el.querySelector('.ts-sub');
+          sub.textContent = L.sub; sub.hidden = !L.sub;
+          const bar = el.querySelector('.ts-bar b');
+          const left = tsLeftMs();
+          clearInterval(tsBarT); tsBarT = 0;
+          bar.style.animation = 'none';
+          void bar.offsetWidth; // restart the countdown from what is left (the bar starts at its share of the longest stop)
+          bar.style.setProperty('--f', String(Math.min(1, left / TS_MAX)));
+          if (REDUCED) {
+            // no running animation: the bar steps down four times a second
+            const step = function () { bar.style.transform = 'scaleX(' + (tstop ? Math.min(1, tsLeftMs() / TS_MAX) : 0).toFixed(3) + ')'; };
+            step(); tsBarT = setInterval(function () { if (!tstop) { clearInterval(tsBarT); tsBarT = 0; return; } step(); }, 250);
+          } else {
+            bar.style.transform = ''; bar.style.animation = ''; bar.style.animationDuration = left + 'ms';
+          }
+        }
+        el.style.top = 'auto'; el.style.bottom = promptBottom() + 'px';
+      }
+      // a tap on a tile while time is stopped: the caster names the box (a guest asks the host; the box shows in STATE)
+      function onTsTile(cat) {
+        ensureAudio();
+        if (!tsPickMine() || tsLegalCats(players[tstop.q]).indexOf(cat) === -1) return;
+        if (isOnlineMatch && onlineRole === 'guest') {
+          tsSent = cat;
+          sendAction({ action: 'tsPick', cat: cat });
+          const mid = matchId, st = tstop;
+          setTimeout(function () { if (matchId === mid && tsSent === cat && tstop === st && !st.box) { tsSent = null; renderTiles(); } }, 4000); // the host dropped it: the tiles come back
+          sfxTick(); renderTiles(); renderTsPrompt();
+          return;
+        }
+        if (tsPick(tstop.by, cat)) sfxTick();
       }
       function onCockChip(face) {
         ensureAudio();
@@ -10694,10 +11251,10 @@
         const cur = players[currentPlayerIdx];
         if (!matchAug || !cur || cock) return null; // a pending pick: the dice are not final yet
         const tp = aiTiltPlan(cur);
-        const keys = ['reroll', 'flip', 'psychic', 'rewind', 'slam'].filter(function (k) { return charges(cur, k) > 0 && !(stopTurn >= 0 && (k === 'reroll' || k === 'slam')); });
+        const keys = ['reroll', 'flip', 'psychic', 'rewind', 'slam'].filter(function (k) { return charges(cur, k) > 0; });
         if (!keys.length) return tp;
         const tm = aiTurnMods(cur), sc = aiScores(cur);
-        const rl = stopTurn >= 0 ? 0 : rollsLeft; // a stopped table has throws left on paper but every die is stuck: value it as record-now
+        const rl = rollsLeft;
         const o = YachtAI.powerOptions(sc, CAT_IDS, dice, rl, held, tm);
         const scale = Math.max(0, lastRound - round) / 11;
         let best = null, gain = 0.3;
@@ -10850,35 +11407,73 @@
         done();
       }
       // A bot holding 시간 정지 reads only what the table shows: the held dice, the throws left and the roller's card, never the
-      // values in the air. What it takes away = what the roller's turn is worth with the throws they still have, minus what it
-      // is worth when this throw is the last. It presses once that clears a bar that falls as the game runs out; with 3-4
-      // players it keeps the charge for the leader. Easy bots misjudge the loss by more (the same noise as their other choices).
-      const AI_STOP_BAR = 3, AI_STOP_SLOPE = 7; // the loss is about 8-9 on a first throw and 4-5 on a second one, whatever the round
-      function aiStopLoss(roller, heldSnap, rollsAfter) {
+      // values in the air. What a forced record would cost the roller = the value of their turn as it stands (the solved table's
+      // mean over where this throw may land, with the throws they still have) minus what the worst box for them is worth on
+      // average (sampled completions of the free dice, each box valued by catValues). It presses once that clears a bar that
+      // falls as the game runs out; with 3-4 players it keeps the charge for the leader. Easy bots misjudge the cost by more.
+      const AI_STOP_BAR = 10, AI_STOP_SLOPE = 26, AI_STOP_SAMPLES = 36; // the cost is about 30 early and falls to about 3 in the last round: the bar falls with it, so a bot waits for a big swing early and takes any real one late
+      function aiStopCost(roller, heldSnap, rollsAfter) {
+        const legal = tsLegalCats(roller);
+        if (!legal.length || !YachtAI.ready()) return { cost: 0, cat: null };
         const sc = aiScores(roller), tm = aiTurnMods(roller);
         const seen = heldSnap.map(function (h, i) { return h ? dice[i] : 1; }); // the dice on the table before the throw: free ones are placeholders
-        return YachtAI.rollStats(sc, CAT_IDS, seen, heldSnap, rollsAfter, tm).mean - YachtAI.rollStats(sc, CAT_IDS, seen, heldSnap, 0, tm).mean;
+        const mean = YachtAI.rollStats(sc, CAT_IDS, seen, heldSnap, rollsAfter, tm).mean;
+        const sum = CAT_IDS.map(function () { return 0; });
+        for (let s = 0; s < AI_STOP_SAMPLES; s++) {
+          const d = seen.map(function (v, i) { return heldSnap[i] ? v : 1 + Math.floor(Math.random() * 6); });
+          YachtAI.catValues(sc, CAT_IDS, d, tm).forEach(function (x) { sum[x.ci] += x.val; });
+        }
+        let cat = null, wv = 1e9;
+        legal.forEach(function (id) { const v = sum[CAT_IDS.indexOf(id)] / AI_STOP_SAMPLES; if (v < wv) { wv = v; cat = id; } });
+        return { cost: mean - wv, cat: cat };
       }
       function aiConsiderStop() {
         const roll = liveRoll;
-        if (!matchAug || !roll || isOnlineMatch || roll.single || roll.fuse || !(roll.rollsAfter > 0) || roll.held.every(Boolean)) return;
+        if (!matchAug || !roll || isOnlineMatch || roll.single || roll.fuse || roll.held.every(Boolean)) return;
         const roller = players[roll.roller];
         if (!roller) return;
         const myMatch = matchId;
         players.forEach(function (p, idx) {
           if (!p.isAI || idx === roll.roller || charges(p, 'timeStop') <= 0) return;
           if (augHas(roller, 'speedrun') && roll.rollsAfter === rollsMax - 1) return; // a stopped first throw is recorded at once: +6 for them
+          const est = aiStopCost(roller, roll.held, roll.rollsAfter);
+          if (!est.cat) return;
           const lv = AI_LEVELS[p.level] || AI_LEVELS.hard;
-          const loss = aiStopLoss(roller, roll.held, roll.rollsAfter) + (Math.random() - 0.5) * lv.temp * 2;
+          const cost = est.cost + (Math.random() - 0.5) * lv.temp * 2;
           const scale = Math.max(0, lastRound - round) / 11;
           let bar = AI_STOP_BAR + AI_STOP_SLOPE * scale;
-          if (players.length > 2 && leaderOther(idx) !== roll.roller) bar *= 1.7;
-          if (loss < bar) return;
+          if (players.length > 2 && leaderOther(idx) !== roll.roller) bar *= 1.25;
+          if (cost < bar) return;
           setTimeout(function () {
             if (matchId !== myMatch || liveRoll !== roll || roll.stopped) return;
-            if (doTimeStop(idx)) renderAll();
+            tsAiBox = est.cat;
+            if (doTimeStop(idx)) renderAll(); else tsAiBox = null;
           }, 250 + Math.random() * 300); // a human-like beat after the throw leaves the hand
         });
+      }
+      // inside a live stop: a bot caster names its box 1.2 to 1.8 s in (always before TS_MAX); a bot roller with a charge counters
+      // 0.6 to 1.2 s in when the loss it expects is large or the game is nearly over. A bot roller without one just takes the record.
+      function aiStopPlan(st) {
+        if (isOnlineMatch) return;
+        const myMatch = matchId, by = players[st.by], q = players[st.q];
+        if (q && q.isAI && charges(q, 'timeStop') > 0) {
+          const est = aiStopCost(q, st.roll.held, st.roll.rollsAfter);
+          const lv = AI_LEVELS[q.level] || AI_LEVELS.hard;
+          const scale = Math.max(0, lastRound - round) / 11;
+          const left = lastRound - round;
+          if (est.cat && (est.cost + (Math.random() - 0.5) * lv.temp * 2 >= 8 + 14 * scale || (left <= 1 && est.cost >= 2))) {
+            setTimeout(function () { if (matchId === myMatch && tstop === st && doTimeStop(st.q)) renderAll(); }, 600 + Math.random() * 600);
+          }
+        }
+        if (by && by.isAI) {
+          setTimeout(function () {
+            if (matchId !== myMatch || tstop !== st || st.box) return;
+            const legal = tsLegalCats(players[st.q]);
+            let cat = tsAiBox;
+            if (legal.indexOf(cat) === -1) cat = legal[Math.floor(Math.random() * legal.length)]; // the plan no longer fits (a 봉인 now locks it): any legal box
+            if (cat) tsPick(st.by, cat);
+          }, 1200 + Math.random() * 600);
+        }
       }
       // AI peeks at where the dice will land and slams when that is unusually good for an opponent
       // (or unusually bad for itself)
@@ -10904,7 +11499,7 @@
 
       // ================= Scoring a category =================
       function commitScore(catId, flags) {
-        if (!gameActive || draft || !hasRolledThisTurn || isRolling || isScoring) return;
+        if (!gameActive || draft || !hasRolledThisTurn || isRolling || isScoring || tstop) return;
         if (tableHeld() && !(flags && flags.bluff)) return; // only a cup declaration may record while the table is held
         // 도화선 blast still playing: the record waits until the dice are back on the felt (the last tap wins)
         if (fuseBust && performance.now() < fuseGagUntil) {
@@ -11561,7 +12156,7 @@
             return;
           }
           const cur = players[currentPlayerIdx];
-          if (rollsLeft > 0 && stopTurn < 0) { // a stopped throw leaves no roll to use: record what landed
+          if (rollsLeft > 0) {
             const plan = YachtAI.decide(aiScores(cur), CAT_IDS, dice, rollsLeft, held, aiTemp(), aiExact(cur));
             if (plan.category) { scoreSoon(plan.category, 850); return; }
             if (!plan.hold) { scoreSoon(null, 700); return; } // no open box (앙코르's extra turn on a full card): the solver has no plan, so record now (aiFinalScore picks the best upgrade)
@@ -11788,6 +12383,7 @@
       function endGame() {
         const wait = 900 + (matchAug ? settleAugments() : 0);
         gameActive = false;
+        tsReset();
         tsEnd();
         draft = null;
         encoreTurn = false;
@@ -11986,7 +12582,7 @@
           q.law = lawIdOk(p.law) ? p.law : null; // 개헌: an own key of LAW, else nothing (Firebase drops a null)
           return q;
         });
-        // parse order (each card fills its slot): players (law, last) -> globals (lastRound, flipRound) -> held, yaw -> cup
+        // parse order (each card fills its slot): players (law, last) -> globals (lastRound, flipRound, tstop: its seats are read against players) -> held, yaw -> cup
         // -> dice (a zero only under cup.free) -> isRolling, hasRolledThisTurn -> cock -> draft (draft.law) -> bluffLog
         matchAug = !!d.augMode;
         draft = d.draft ? {
@@ -12005,8 +12601,11 @@
         riseTurn = !!d.riseTurn;
         const sv = toArr(d.stuck);
         stuck = [0, 1, 2, 3, 4].map(function (i) { return !!sv[i]; });
-        const stp = d.stopTurn;
-        stopTurn = typeof stp === 'number' && Math.floor(stp) === stp && stp >= -1 && stp <= 3 ? stp : -1; // a seat 0..3; a string, 1.5, 4 or a missing key is none
+        const tsNew = tsParse(d.tstop); // 시간 정지: a clean stop or none; the countdown restarts from `left` on this screen's clock
+        if (tsNew && tstop && tstop.by === tsNew.by && tstop.q === tsNew.q && tstop.box === tsNew.box && Math.abs(tsLeftMs() - tsNew.left) < 400) tsNew.at = tstop.at, tsNew.left = tstop.left; // the same stop: keep its clock
+        tstop = tsNew;
+        if (!tstop || tstop.box) tsSent = null;
+        if (!tstop && tsRun && !tsRun.closed && performance.now() - tsRun.t0 > 1500) tsEnd(); // the host says no stop and the effect is still up: a lost 'timeGo' never keeps the table inverted
         fuseBust = !!d.fuseBust;
         rideTurn = !!d.rideTurn;
         restTurn = !!d.restTurn;
@@ -12036,10 +12635,11 @@
         allinTurn = !!d.allinTurn; allinLock = !!d.allinLock; // an older host sends neither: off
         isRolling = !!d.isRolling;
         isScoring = !!d.isScoring;
+        if (tsMarkCat && !tstop && !isRolling && !isScoring) { tsMarkCat = null; clearTimeout(tsMarkT); } // the throw landed and nothing was recorded: the mark is stale
         gameActive = !!d.gameActive;
         // 모서리 착지: a pending cock only for the holder of the card, on landed dice; anything else is no cock (Firebase drops a null: missing = none)
         const cu = players[currentPlayerIdx];
-        cock = matchAug && gameActive && hasRolledThisTurn && !isRolling && cu && augHas(cu, 'cocked') ? cockOk(d.cock, dice, stopTurn >= 0 ? [false, false, false, false, false] : held) : null; // 시간 정지 holds every die: the die on its edge is still picked
+        cock = matchAug && gameActive && hasRolledThisTurn && !isRolling && cu && augHas(cu, 'cocked') ? cockOk(d.cock, dice, held) : null;
         if (!cock || cockSentSeq !== rollSeq) cockSentSeq = -1; // a state for another roll opens the chips again
         if (!gameActive || !(draft && draft.law)) { lawRevealed = {}; lawPendingSig = ''; } // a new match may pass the same law again
         if (!wasActive && gameActive) { resetTotalAnims(); matchId++; yfxReset(); OVERLAYS.forEach(closeOv); }
@@ -12079,7 +12679,7 @@
       function handleRemoteAction(data, from) {
         if (!gameActive || !isOnlineMatch) return;
         const who = players.findIndex(function (p) { return p.peerId === from; });
-        // block order: augPick, augReroll, (amend) -> slam, timeStop, (bluffCall, bluffPass, cupSync) -> stale check -> turn gate
+        // block order: augPick, augReroll, (amend) -> slam, timeStop, tsPick, (bluffCall, bluffPass, cupSync) -> stale check -> turn gate
         // -> roll, hold, score, power, (cockPick, bluffDecl, bluffLift)
         if (data.action === 'augPick') { if (who >= 0) draftPick(who, String(data.id)); return; }
         if (data.action === 'augReroll') { if (who >= 0) draftReroll(who); return; }
@@ -12087,7 +12687,8 @@
         // an action aimed at dice that have changed since the guest saw them is dropped
         const stale = data.seq != null && Number(data.seq) !== rollSeq;
         if (data.action === 'slam') { if (who >= 0 && !stale && doSlam(who)) renderAll(); return; }
-        if (data.action === 'timeStop') { if (who >= 0 && !stale) doTimeStop(who); return; } // any holder but the roller; canTimeStop decides
+        if (data.action === 'timeStop') { if (who >= 0 && !stale) doTimeStop(who); return; } // any holder but the roller; canTimeStop decides (during a live stop it is the roller's counter)
+        if (data.action === 'tsPick') { if (who >= 0 && typeof data.cat === 'string') tsPick(who, data.cat); return; } // the caster only, once, a legal box only (tsPick checks); no seq: the stop itself is the context
         if (stale && (data.action === 'score' || data.action === 'hold' || data.action === 'power' || data.action === 'cockPick')) return;
         const cur = players[currentPlayerIdx];
         if (!cur || cur.peerId !== from || draft) return;
@@ -12299,6 +12900,7 @@
             updateChatUi();
             if (room.state && room.state.gameActive) {
               applyRemoteState(room.state);
+              tsReset(); // 시간 정지: its timers and its throw died with the old tab, a stop read from the saved state would freeze the table for good
               cockSpent = !!cock; // one cock per turn: a pending cock was this turn's (cockSpent is not in the state)
               // the latch died with the old tab: rebuild it from the room in hand (a seated player with no member entry counts as 0)
               roomV = 99; roomSeen = {};
@@ -12514,10 +13116,11 @@
         clearTimeout(lawTimer); lawPendingSig = ''; lawRevealed = {}; lawBarSig = '';
         stageVignette(0, '', 0); // a flip's dark felt must not carry into the next match
         lastRound = 12; flipRound = -1; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
-        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; stopTurn = -1; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
+        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false; cockSentSeq = -1;
         cupDrop(); cupClear(); cupPeek = false; bluffSel = null; clearTimeout(cupTimer); closeTries = 0; bluffLog = []; bluffAI.callM = {}; bluffAI.kappa = {};
+        tsReset();
         matchId++;
         yfxReset();
         resetTotalAnims();
@@ -13705,8 +14308,7 @@
         cocoon: { color: new THREE.Color('#f6f1e6'), metal: 0, rough: 0.92, emi: null },
         wing: { color: new THREE.Color('#8fdcff'), metal: 0.45, rough: 0.25, emi: new THREE.Color('#002a3a') },
         wild: { color: new THREE.Color('#e6d2ff'), metal: 0.2, rough: 0.22, emi: new THREE.Color('#2a0c4a') },
-        glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') },
-        stop: { color: new THREE.Color('#8fc0ff'), metal: 0.45, rough: 0.24, emi: new THREE.Color('#0b2c52') } // 시간 정지: ice blue
+        glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') }
       };
       // every augment skin also has a signature edge color (shared with the 2D fallback through window.SKIN_EDGE)
       Object.keys(SKINS).forEach((k) => { SKINS[k].edge = new THREE.Color((window.SKIN_EDGE || {})[k] || '#ffffff'); });
@@ -14139,10 +14741,10 @@
         fovKick = Math.max(-4, Math.min(4, fovKick + (o.fov || 0)));
       }
       const KICK_STOP = { fov: -0.7 };
-      // ms is capped at 2500. A no-op (false) for reduced motion and a hidden tab: the caller keeps the rule, only the freeze is skipped.
+      // ms is capped at 8000; timeGo ends it at once. A no-op (false) only for a hidden tab (the freeze also holds under reduced motion: only the effect is reduced).
       function timeStop(ms) {
-        ms = Math.min(2500, Math.max(0, Number(ms) || 0));
-        if (REDUCED || document.hidden || !(ms > 0)) return false;
+        ms = Math.min(8000, Math.max(0, Number(ms) || 0));
+        if (document.hidden || !(ms > 0)) return false;
         tsUntil = performance.now() + ms;
         return true;
       }
@@ -14812,7 +15414,7 @@
 
           const hv = clamp01(d.heldVis);
           const SK = SKINS[d.skin];
-          _col.copy(SK ? SK.color : WHITE).lerp(GOLD, hv * (d.skin === 'stop' ? 0 : 0.7)).multiplyScalar(1 - d.dimVis * 0.38); // a stopped table stays steel, not gold
+          _col.copy(SK ? SK.color : WHITE).lerp(GOLD, hv * 0.7).multiplyScalar(1 - d.dimVis * 0.38);
           if (d.yGlow > 0.004 || d.yGoal > 0) {
             d.yGlow += (d.yGoal - d.yGlow) * (1 - Math.exp(-dt * (d.yGoal > d.yGlow ? 14 : 3)));
             if (d.yGoal <= 0 && d.yGlow < 0.004) d.yGlow = 0;
