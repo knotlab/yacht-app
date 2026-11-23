@@ -1592,6 +1592,49 @@
     font: 400 clamp(13px, 3.4vw, 18px) var(--f-game); color: var(--brass-hi); letter-spacing: 0.04em;
   }
   .banner-anim { animation: bannerPunch 2s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+  /* ================= YACHT sequence (landing title, record ribbon, comets, beacon) ================= */
+  .yt { position: fixed; left: var(--yl, 50%); top: 34%; z-index: 61; transform: translate(-50%, -50%); text-align: center; width: max-content; max-width: var(--yw, 100vw); pointer-events: none; }
+  .yt[hidden] { display: none; }
+  .yt-rays { position: absolute; left: 50%; top: 50%; width: min(560px, calc(var(--yw, 100vw) * 1.12), calc(var(--yh, 400px) * 1.5)); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 196, 80, 0.32) 0%, transparent 58%);
+    -webkit-mask: radial-gradient(circle, #000 12%, transparent 66%); mask: radial-gradient(circle, #000 12%, transparent 66%); animation: ytFade 0.7s ease-out 0.1s backwards; }
+  .yt-rays i { position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255, 223, 140, 0.3) 0deg 7deg, transparent 7deg 20deg); animation: spin 14s linear infinite; }
+  .yt-word { position: relative; font: 400 min(clamp(44px, 17vw, 100px), calc(var(--yh, 400px) * 0.15), calc(var(--yw, 100vw) * 0.2)) / 1 var(--f-game); white-space: nowrap; letter-spacing: 0.01em; }
+  .yt .ys { display: inline-block; width: 0.32em; }
+  .yl { position: relative; display: inline-block; isolation: isolate; animation: ylDrop 0.62s cubic-bezier(0.2, 0.9, 0.3, 1.15) calc(var(--k) * 45ms) backwards; }
+  .yl b { display: block; font-weight: 400; background: linear-gradient(180deg, #fffbe6 0%, #ffe9a6 22%, #f2bf4f 44%, #a9690f 50%, #f7cf6a 56%, #ffeeb0 78%, #d79a2a 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+  .yl::before { content: attr(data-c); position: absolute; left: 0; top: 0; z-index: -1; transform: translateY(0.07em); color: #2b1705; text-shadow: 0 0 0.32em rgba(255, 176, 60, 0.65), 0 0.03em 0 #2b1705; }
+  .yl::after { content: attr(data-c); position: absolute; left: 0; top: 0; color: #fff; text-shadow: 0 0 0.25em #fff2b8; opacity: 0; animation: ylSheen 0.5s ease-out calc(520ms + var(--k) * 70ms) backwards; }
+  .yt-sub { position: relative; display: inline-block; margin-top: 8px; padding: 6px 16px; border-radius: 999px; background: rgba(7, 8, 10, 0.88); box-shadow: inset 0 0 0 1.5px rgba(255, 215, 122, 0.7), 0 0 14px rgba(255, 190, 70, 0.35);
+    font: 400 clamp(13px, 3.6vw, 19px) var(--f-game); color: #ffe9a6; letter-spacing: 0.04em; animation: ytSub 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s backwards; }
+  .yt-sub[hidden] { display: none; }
+  .yt-land.short .yt-word { font-size: min(clamp(34px, 15vw, 100px), calc(var(--yh, 400px) * 0.13), calc(var(--yw, 100vw) * 0.2)); }
+  .yt-land.short .yt-sub { margin-top: 2px; padding: 3px 12px; font-size: 13px; }
+  .yt-rec .yt-word { font-size: min(clamp(34px, 12vw, 92px), calc(var(--yh, 400px) * 0.16), calc(var(--yw, 100vw) * 0.135)); }
+  .yt-rec .yt-sub { margin-top: 4px; padding: 3px 13px; font-size: clamp(12px, 3.3vw, 16px); animation-delay: 0.3s; }
+  .yt-rec .yt-rays { width: min(420px, var(--yw, 100vw)); }
+  .yt-rec { padding: 12px 0 13px; }
+  .yt-rec::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: min(calc(var(--yw, 100vw) * 1.04), 820px); transform: translateX(-50%); z-index: -1; animation: ytBar 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+    background: linear-gradient(180deg, rgba(255, 226, 150, 0.7) 0, rgba(255, 215, 122, 0) 20%, rgba(255, 215, 122, 0) 80%, rgba(255, 226, 150, 0.7) 100%), linear-gradient(180deg, rgba(120, 72, 12, 0.94), rgba(44, 26, 5, 0.95) 50%, rgba(120, 72, 12, 0.94));
+    -webkit-mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+  .yt.out { animation: ytOut 0.24s ease-in forwards; }
+  @keyframes ylDrop { 0% { transform: translateY(-1.1em) scale(1.55) rotate(-7deg); opacity: 0; } 50% { transform: translateY(0.06em) scale(0.94) rotate(1deg); opacity: 1; } 72% { transform: translateY(-0.03em) scale(1.03); } 100% { transform: none; opacity: 1; } }
+  @keyframes ylSheen { 0%, 100% { opacity: 0; } 40% { opacity: 0.95; } }
+  @keyframes ytSub { 0% { transform: translateY(10px) scale(0.8); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes ytFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes ytBar { 0% { transform: translateX(-50%) scaleX(0); opacity: 0; } 100% { transform: translateX(-50%) scaleX(1); opacity: 1; } }
+  @keyframes ytOut { 0% { transform: translate(-50%, -50%); opacity: 1; } 100% { transform: translate(-50%, -58%); opacity: 0; } }
+  @keyframes ytRm { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+  .yt.rm { animation: ytRm 1.8s linear both; }
+  .yt.rm .yl, .yt.rm .yl::after, .yt.rm .yt-sub, .yt.rm .yt-rays, .yt.rm .yt-rays i, .yt.rm::before { animation: none; }
+  .fx.y-comet { width: 58px; height: 8px; margin: -4px 0 0 -58px; border-radius: 8px; transform-origin: 100% 50%; background: linear-gradient(90deg, transparent, rgba(255, 215, 122, 0.85) 65%, #fff 100%); box-shadow: 0 0 12px 2px rgba(255, 200, 80, 0.75); }
+  .fx.y-flake { width: 6px; height: 9px; margin: -4px 0 0 -3px; border-radius: 1px; background: linear-gradient(135deg, #fff3c4, #e0a93b); box-shadow: 0 0 6px rgba(255, 200, 80, 0.7); }
+  .fx.y-glow { border-radius: 50%; background: radial-gradient(circle, rgba(255, 226, 150, 0.95) 0%, rgba(255, 190, 70, 0.45) 40%, transparent 70%); }
+  .y-gold { box-shadow: 0 0 0 2px #ffd77a, 0 0 18px rgba(255, 200, 80, 0.75) !important; }
+  .fx.y-beacon { border-radius: 14px; border: 2.5px solid #ffd77a; box-shadow: 0 0 16px rgba(255, 215, 122, 0.85), inset 0 0 12px rgba(255, 215, 122, 0.5); animation: yBeacon 1.2s ease-out infinite; }
+  @keyframes yBeacon { 0% { transform: scale(1); opacity: 0.95; } 100% { transform: scale(1.2); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .fx.y-beacon { animation: none; opacity: 0.8; } }
   /* the last record's banner and confetti finish under the draft that opens over them, not on its cards */
   body.drafting #comboBanner, body.drafting > canvas { z-index: 49 !important; }
   @keyframes bannerPunch {
@@ -1691,7 +1734,7 @@
   .fx-screen.fx-rewind { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 5px), rgba(30, 60, 90, 0.2); animation: scanRoll 0.95s linear both; }
   @keyframes scanRoll { 0% { opacity: 0; background-position: 0 0, 0 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; background-position: 0 -120px, 0 0; } }
   .fx-rewind .rw { position: absolute; left: 50%; top: 42%; width: 110px; height: 110px; margin: -55px 0 0 -55px; color: #cfe8ff; filter: drop-shadow(0 0 20px #7fc4ff); animation: rwSpin 0.95s cubic-bezier(0.3, 0, 0.2, 1) both; }
-  .fx-rewind .rw svg, .fx-clock .clk svg, .fx-waves .boat svg { display: block; width: 100%; height: 100%; }
+  .fx-rewind .rw svg, .fx-clock .clk svg, .fx-snitch .sn svg { display: block; width: 100%; height: 100%; }
   @keyframes rwSpin { 0% { transform: scale(0.4) rotate(0); opacity: 0; } 25% { opacity: 1; transform: scale(1.1) rotate(-120deg); } 100% { transform: scale(0.9) rotate(-540deg); opacity: 0; } }
   #app.fx-rewinding, .table.fx-rewinding { animation: rewindTint 0.95s ease-out; }
   @keyframes rewindTint { 0%, 100% { filter: none; } 30%, 70% { filter: grayscale(0.7) contrast(1.15) hue-rotate(-15deg); } }
@@ -1704,13 +1747,12 @@
   .fx-clock .clk { width: 130px; height: 130px; color: #ffd9b8; filter: drop-shadow(0 0 24px #ff9f5a); animation: clkSpin 2s cubic-bezier(0.3, 0.6, 0.2, 1) both; }
   .fx-clock .clk-t { font: 400 clamp(20px, 5vw, 30px) var(--f-game); color: #ffd9b8; text-shadow: 0 3px 0 #3a1404, 0 0 18px #ff9f5a; }
   @keyframes clkSpin { 0% { transform: scale(0.3) rotate(-90deg); } 30% { transform: scale(1.1) rotate(200deg); } 100% { transform: scale(1) rotate(720deg); } }
-  .fx-screen.fx-waves { overflow: hidden; }
-  .fx-waves .w1, .fx-waves .w2 { position: absolute; left: -50%; bottom: -34vh; width: 200%; height: 34vh; border-radius: 45% 47% 0 0; animation: waveUp 2.8s ease-in-out both; }
-  .fx-waves .w1 { background: linear-gradient(180deg, rgba(79, 209, 255, 0.55), rgba(20, 90, 160, 0.75)); }
-  .fx-waves .w2 { left: -30%; border-radius: 48% 44% 0 0; background: linear-gradient(180deg, rgba(160, 235, 255, 0.45), rgba(40, 130, 200, 0.6)); animation-delay: 0.15s; }
-  @keyframes waveUp { 0% { transform: translate(0, 0); } 35% { transform: translate(-8%, -22vh); } 65% { transform: translate(6%, -24vh); } 100% { transform: translate(-4%, 0); } }
-  .fx-waves .boat { position: absolute; left: -90px; bottom: 18vh; width: 90px; height: 90px; color: #fff; filter: drop-shadow(0 0 16px #8fe3ff); animation: sail 2.8s ease-in-out both; }
-  @keyframes sail { 0% { transform: translate(0, 40px) rotate(-6deg); opacity: 0; } 20% { opacity: 1; } 50% { transform: translate(55vw, -10px) rotate(5deg); } 80% { opacity: 1; } 100% { transform: translate(110vw, 30px) rotate(-4deg); opacity: 0; } }
+  .fx-screen.fx-snitch { overflow: hidden; }
+  .fx-snitch .sn { position: absolute; left: -70px; top: 30vh; width: 64px; height: 64px; color: #ffd77a; filter: drop-shadow(0 0 8px #ffc94d) drop-shadow(0 0 20px rgba(255, 190, 70, 0.7)); animation: snFly 2.2s cubic-bezier(0.4, 0, 0.6, 1) both; }
+  .fx-snitch .sn svg { animation: snFlap 0.11s linear infinite alternate; }
+  .fx-snitch .sn svg .a { fill: currentColor; stroke: none; }
+  @keyframes snFly { 0% { transform: translate(0, 10vh) scale(0.6); opacity: 0; } 12% { opacity: 1; } 30% { transform: translate(38vw, -12vh) scale(1); } 52% { transform: translate(58vw, 14vh) scale(1.15); } 74% { transform: translate(80vw, -8vh) scale(1); } 90% { opacity: 1; } 100% { transform: translate(120vw, -26vh) scale(0.7); opacity: 0; } }
+  @keyframes snFlap { from { transform: scaleY(1); } to { transform: scaleY(0.7); } }
   .table.fx-tremble { animation: tremble 0.9s linear; }
   @keyframes tremble { 0%, 100% { transform: none; } 10%, 30%, 50%, 70%, 90% { transform: translate(-2px, 1px) rotate(-0.3deg); } 20%, 40%, 60%, 80% { transform: translate(2px, -1px) rotate(0.3deg); } }
   .cap.fx-cap { animation: capFlash 1.6s ease-out; }
@@ -2071,6 +2113,7 @@
     .banner-anim { animation: rmFade 2s linear both !important; }
     .combo-chip.go { animation: rmFade 1.6s linear both !important; }
     .turn-sweep.go { animation: rmFade 1.1s linear both !important; }
+    .yt.rm { animation: rmFade 1.8s linear both !important; }
     .t-fx { display: none !important; } /* the hot-box shine would freeze as a static stripe */
     .aug-badge.is-hot::before { opacity: 0.85; } /* a chip that is on glows steadily instead of pulsing */
     .pk-hint { animation: rmFade 4.4s linear both !important; }
@@ -3101,7 +3144,288 @@
         buzz([10, 50, 10]);
       }
       // YACHT with the box open: banner, confetti and the hit land together at the top of a unison hop
-      function yachtPayoff() { showBanner('YACHT!', '50점 찬스', 'hot'); fireConfetti(false); impact(4); }
+      // ---------- YACHT sequence ----------
+      // landing: five of a kind on the table, box open. record: the 50 is written (applyFx 'banner' with yacht set).
+      let yfxSeq = 0, yfxState = null, yrSeq = 0, fxEra = 0;
+      const Y_GOLD = ['#ffd77a', '#e0a93b', '#fff3c4'];
+      const Y_NOTES = [0, 4, 7, 12, 16];
+      function yWord(text) {
+        let h = '', k = 0;
+        for (const ch of text) {
+          if (ch === ' ') h += '<span class="ys"></span>';
+          else h += '<span class="yl" style="--k:' + k + '" data-c="' + esc(ch) + '"><b>' + esc(ch) + '</b></span>';
+          k++;
+        }
+        return h;
+      }
+      function yEl(kind) {
+        let e = $('y' + kind);
+        if (!e) {
+          e = document.createElement('div');
+          e.id = 'y' + kind; e.hidden = true; e.setAttribute('aria-hidden', 'true');
+          e.innerHTML = '<div class="yt-rays"><i></i></div><div class="yt-word"></div><div class="yt-sub"></div>';
+          document.body.appendChild(e);
+        }
+        return e;
+      }
+      function yHide(e, fast) {
+        if (!e || e.hidden) return;
+        clearTimeout(e._t);
+        const k = ++e._k;
+        if (fast && !REDUCED) { e.classList.add('out'); e._t = setTimeout(function () { if (e._k === k) e.hidden = true; }, 240); }
+        else e.hidden = true;
+      }
+      // show the gold title ('land': above the dice row; 'rec': the compact ribbon) for ms, then fade it
+      function yShow(kind, title, sub, ms) {
+        const e = yEl(kind), st = stagePt();
+        clearTimeout(e._t);
+        e._k = (e._k || 0) + 1;
+        const k = e._k;
+        e.hidden = true;
+        const short = !!st && st.r.height < 320;
+        e.className = 'yt yt-' + kind + (REDUCED ? ' rm' : '') + (short ? ' short' : '');
+        e.querySelector('.yt-word').innerHTML = yWord(title);
+        const sb = e.querySelector('.yt-sub');
+        sb.textContent = sub || ''; sb.hidden = !sub;
+        e.style.top = st ? Math.round(st.r.top + st.r.height * (kind === 'land' ? (short ? 0.295 : 0.34) : 0.24)) + 'px' : '30%';
+        if (st) {
+          e.style.setProperty('--yh', Math.round(st.r.height) + 'px');
+          e.style.setProperty('--yw', Math.round(st.r.width) + 'px');
+          e.style.setProperty('--yl', Math.round(st.r.left + st.r.width / 2) + 'px');
+        }
+        void e.offsetWidth;
+        e.hidden = false;
+        e._t = setTimeout(function () { if (e._k === k) yHide(e, true); }, ms);
+        return e;
+      }
+      // gold flakes drifting up from a point (DOM, transform + opacity only, inside the particle budget)
+      function yDrift(pt, n, spread, st) {
+        if (!pt) return;
+        const c = fxRoom(n);
+        for (let k = 0; k < c; k++) {
+          const e = addFx('y-flake', pt.x + (Math.random() - 0.5) * spread, pt.y + Math.random() * 16);
+          if (st) st.nodes.push(e);
+          const rise = 70 + Math.random() * 110, sway = (Math.random() - 0.5) * 50, rot = (Math.random() - 0.5) * 360;
+          playFx(e, [
+            { transform: 'translate(0,0) rotate(0deg) scale(0.6)', opacity: 0 },
+            { transform: 'translate(' + sway * 0.5 + 'px,' + (-rise * 0.4) + 'px) rotate(' + rot * 0.5 + 'deg) scale(1)', opacity: 0.95, offset: 0.25 },
+            { transform: 'translate(' + sway + 'px,' + (-rise) + 'px) rotate(' + rot + 'deg) scale(0.7)', opacity: 0 }
+          ], { duration: 1700 + Math.random() * 1100, delay: Math.random() * 600, easing: 'ease-out', fill: 'backwards' }, true);
+        }
+      }
+      // the gold beacon: two soft rings pulsing round the YACHT tile
+      function yBeacon(st) {
+        const t = tileEls.yacht, r = t && t.getBoundingClientRect();
+        if (!r || !r.width) return;
+        st.beacons = [];
+        for (let k = 0; k < 2; k++) {
+          const e = addFx('y-beacon', r.left - 3, r.top - 3);
+          e.style.width = (r.width + 6) + 'px'; e.style.height = (r.height + 6) + 'px';
+          if (k) e.style.animationDelay = '-0.6s';
+          st.nodes.push(e); st.beacons.push(e);
+        }
+        // the tile can move (rotate, resize, scoreboard scroll, re-render): the rings follow it
+        const seq = yfxSeq;
+        st.beaconT = setInterval(function () {
+          if (yfxSeq !== seq || yfxState !== st) { clearInterval(st.beaconT); return; }
+          const q = t.getBoundingClientRect();
+          st.beacons.forEach(function (e) {
+            e.style.display = q.width ? '' : 'none';
+            if (!q.width) return;
+            e.style.left = (q.left - 3) + 'px'; e.style.top = (q.top - 3) + 'px';
+            e.style.width = (q.width + 6) + 'px'; e.style.height = (q.height + 6) + 'px';
+          });
+        }, 400);
+      }
+      // settle everything the landing owns: dice home, vignette off, no beacon, timers dead
+      function yfxClear(fast, soft) {
+        yfxSeq++;
+        if (use3D() && window.Dice3D.yachtEnd) window.Dice3D.yachtEnd(!soft);
+        const s = yfxState;
+        yfxState = null;
+        if (s) {
+          clearInterval(s.beaconT);
+          (s.golds || []).forEach(function (el) { el.classList.remove('y-gold'); });
+          if (s.vig) stageVignette(0, '', 300);
+          s.nodes.forEach(dropFx);
+          s.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
+          if (s.glow && hlIndices === s.hl) setHighlight(null);
+        }
+        const l = $('yland');
+        if (l) yHide(l, fast);
+      }
+      function yfxReset() { yfxClear(false); yrSeq++; const r = $('yrec'); if (r) { r._k = (r._k || 0) + 1; r.hidden = true; } }
+      function yachtLanding(all, values) {
+        yfxClear(false);
+        const seq = yfxSeq, mid = matchId;
+        const st = yfxState = { nodes: [], anims: [], vig: false, glow: false, hl: null };
+        const live = function () { return matchId === mid && yfxSeq === seq; };
+        const T = function (ms, fn) { setTimeout(function () { if (live()) fn(); }, ms); };
+        const who = players[currentPlayerIdx];
+        const chance = (who ? scoreFor(who, 'yacht', values || dice, previewOpts(false)) : 50) + '점 찬스';
+        ensureAudio();
+        let slammed = false;
+        const ignite = function (i) {
+          const r = Math.pow(2, Y_NOTES[i] / 12);
+          if (!sample('chime', { rate: r, vary: 0, vol: 0.55 })) tone(660 * r, 0.24, 'triangle', 0.07);
+        };
+        const settle = function () {
+          // afterglow: soft gold on the dice and a beacon on the box until it is recorded, rerolled or the turn ends
+          if (use3D()) { setHighlight(all, '#ffd77a'); st.glow = true; st.hl = hlIndices; }
+          else { st.golds = []; all.forEach(function (di) { const el = diceGrid.children[di]; if (el) { el.classList.add('y-gold'); st.golds.push(el); } }); }
+          yBeacon(st);
+        };
+        const slam = function (drawn) {
+          if (slammed) return;
+          slammed = true;
+          if (!sample('thud', { rate: 0.55, vol: 1, vary: 0 })) sfxThud();
+          if (!sample('yacht', { vol: 0.9 })) tone(1568, 0.3, 'triangle', 0.07);
+          sample('sparkle', { vol: 0.5, delay: 0.08 });
+          impact(4, { soft: true });
+          buzz([30, 30, 60]);
+          const cp = stagePt();
+          if (!drawn) {
+            all.forEach(function (i) { burst(diePt(i), { shape: 'spark', count: 7, angle: -Math.PI / 2, spread: Math.PI * 0.95, dist: 105, gravity: 60, color: Y_GOLD, dur: 900 }); });
+            ringFx(cp, '#ffd77a', 6);
+          }
+          if (cp) ringFx(cp, '#fff3c4', 3.2, 60);
+          const e = yShow('land', 'YACHT!', chance, 1500);
+          const tp = ptOf(e.querySelector('.yt-word'));
+          yDrift(tp, 22, tp ? tp.r.width : 200, st);
+          burst(tp, { shape: 'dust', count: 10, angle: -Math.PI / 2, spread: Math.PI, dist: 90, color: 'rgba(255,215,122,0.55)', dur: 1300 });
+          settle();
+          T(1500, function () { if (st.vig) { st.vig = false; stageVignette(0, '', 700); } });
+        };
+        if (REDUCED) {
+          if (!sample('chime', { rate: 1.2, vol: 0.5 })) tone(880, 0.3, 'triangle', 0.05);
+          yShow('land', 'YACHT!', chance, 1800);
+          settle();
+          return;
+        }
+        if (document.hidden) { slam(false); return; }
+        stageVignette(0.8, '', 160); st.vig = true;
+        if (!sample('thud', { rate: 0.5, vol: 0.8, vary: 0 })) heartbeat();
+        if (use3D() && window.Dice3D.yachtLand) {
+          const ok = window.Dice3D.yachtLand({
+            onIgnite: function (i) { if (live()) ignite(i); },
+            onSlam: function (drawn) { if (live()) slam(drawn); }
+          });
+          if (!ok) slam(false);
+          else T(3000, function () { if (slammed) return; if (window.Dice3D.yachtEnd) window.Dice3D.yachtEnd(false); slam(false); }); // a lift that never lands still pays off
+          return;
+        }
+        // 2D fallback: the DOM dice rise, glow gold one after another, freeze, slam
+        all.forEach(function (di, k) {
+          const el = diceGrid.children[di];
+          if (!el || !el.animate) return;
+          st.anims.push(el.animate([
+            { transform: 'none', offset: 0 },
+            { transform: 'translateY(-30px) scale(1.07)', offset: 0.3, easing: 'ease-out' },
+            { transform: 'translateY(-34px) scale(1.07)', offset: 0.84 },
+            { transform: 'translateY(0) scale(1)', offset: 0.97, easing: 'cubic-bezier(.6,0,1,.7)' },
+            { transform: 'none', offset: 1 }
+          ], { duration: 1000, easing: 'ease-out' }));
+          T(60 + k * 90, function () {
+            ignite(k);
+            const p = diePt(di);
+            if (!p) return;
+            const g = addFx('y-glow', p.x, p.y - 20);
+            g.style.width = g.style.height = '96px';
+            g.style.margin = '-48px 0 0 -48px';
+            st.nodes.push(g);
+            st.anims.push(g.animate([{ opacity: 0, transform: 'scale(0.5)' }, { opacity: 1, transform: 'scale(1)', offset: 0.3 }, { opacity: 0.55, transform: 'scale(1)' }], { duration: 900, fill: 'forwards' }));
+            ringFx(p, '#ffd77a', 2);
+          });
+        });
+        T(1000, function () { st.nodes.forEach(function (n) { if (n.classList.contains('y-glow')) dropFx(n); }); slam(false); });
+      }
+      // the 50 is written: comets from the dice into the YACHT tile, gold fireworks, a compact ribbon, coins to the seat
+      function yachtRecord(extra) {
+        yfxClear(true, true);
+        const k0 = ++yrSeq, mid = matchId;
+        const T = function (ms, fn) { setTimeout(function () { if (matchId === mid && yrSeq === k0) fn(); }, ms); };
+        const title = extra && extra.title ? String(extra.title) : 'YACHT!', sub = extra && extra.sub ? String(extra.sub) : '';
+        const club = title !== 'YACHT!'; // 황금 스니치: two more shells, more coins
+        ensureAudio();
+        if (REDUCED) {
+          yShow('rec', title, sub, 1700);
+          if (!sample('score_big', { vol: 0.6 })) tone(784, 0.3, 'triangle', 0.05);
+          return;
+        }
+        const tp = tilePt('yacht'), te = tileEls.yacht;
+        const pIdx = lastScored ? lastScored.pIdx : currentPlayerIdx;
+        const hit = function (k) {
+          const last = k === 4;
+          if (te && te.animate) te.animate([{ transform: 'none' }, { transform: 'scale(' + (last ? 1.24 : 1.05 + k * 0.012) + ')', offset: 0.3 }, { transform: 'none' }], { duration: last ? 420 : 220, easing: EASE.out });
+          if (tp) {
+            const g = addFx('y-glow', tp.x, tp.y), sz = last ? 150 : 90;
+            g.style.width = g.style.height = sz + 'px';
+            g.style.margin = (-sz / 2) + 'px 0 0 ' + (-sz / 2) + 'px';
+            playFx(g, [{ transform: 'scale(0.4)', opacity: 1 }, { transform: 'scale(' + (last ? 1.8 : 1.2) + ')', opacity: 0 }], { duration: last ? 520 : 320, easing: 'ease-out' }, true);
+          }
+          const r = Math.pow(2, Y_NOTES[k] / 12);
+          if (!sample('tick', { rate: 1.3 * r, vary: 0, vol: 0.6 })) tone(784 * r, 0.1, 'triangle', 0.05);
+          if (!last) return;
+          if (!sample('score_big', { vol: 1 })) sfxStamp();
+          sample('stamp', { vol: 0.6 });
+          ringFx(tp, '#ffd77a', 4.5);
+          ringFx(tp, '#fff3c4', 2.6, 80);
+          burst(tp, { shape: 'spark', count: 14, angle: -Math.PI / 2, spread: Math.PI * 1.3, dist: 95, gravity: 40, color: Y_GOLD, dur: 850 });
+          flashTo(0.3, '#fff3c4');
+          impact(4, { soft: true });
+          buzz([20, 20, 40]);
+        };
+        for (let k = 0; k < 5; k++) {
+          T(k * 60, function () {
+            const a = diePt(k);
+            if (!a || !tp) { T(380, function () { hit(k); }); return; }
+            const dx = tp.x - a.x, dy = tp.y - a.y, ang = Math.atan2(dy, dx), bow = (k - 2) * 14;
+            const e = addFx('y-comet', a.x, a.y);
+            playFx(e, [
+              { transform: 'translate(0,0) rotate(' + ang + 'rad) scaleX(0.5)', opacity: 0 },
+              { transform: 'translate(' + (dx * 0.4 + bow) + 'px,' + (dy * 0.4) + 'px) rotate(' + ang + 'rad) scaleX(1.1)', opacity: 1, offset: 0.35 },
+              { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + ang + 'rad) scaleX(1.25)', opacity: 1 }
+            ], { duration: 380, easing: 'cubic-bezier(.5,0,.8,.55)' }, true);
+            T(380, function () { hit(k); });
+          });
+        }
+        // fireworks: small shells, two golds each, a soft pop
+        const shells = club ? 6 : 4, SX = [0.3, 0.7, 0.5, 0.15, 0.85, 0.4], SY = [0.3, 0.26, 0.2, 0.38, 0.34, 0.16];
+        const PAIRS = [['#ffd77a', '#fff3c4'], ['#e0a93b', '#fbf6e8'], ['#fff3c4', '#ffd77a'], ['#ffd77a', '#fbf6e8'], ['#e0a93b', '#fff3c4'], ['#fbf6e8', '#ffd77a']];
+        for (let k = 0; k < shells; k++) {
+          T(380 + k * 220, function () {
+            const sr = stagePt(), vw = window.innerWidth || 1, vh = window.innerHeight || 1;
+            const ox = sr ? sr.r.left + sr.r.width * SX[k % 6] : vw * SX[k % 6], oy = sr ? sr.r.top + sr.r.height * SY[k % 6] : vh * SY[k % 6];
+            if (typeof confetti === 'function') {
+              // a shell: a ring of streaks opening from one bright point, then a soft inner puff
+              try {
+                const base = { gravity: 0.5, ticks: 120, scalar: 0.6, decay: 0.92, shapes: ['circle'], origin: { x: ox / vw, y: oy / vh }, colors: PAIRS[k % 6], disableForReducedMotion: true };
+                const sv = Math.min(30, Math.max(16, (sr ? sr.r.width : vw) / 14));
+                for (let j = 0; j < 12; j++) confetti(Object.assign({ particleCount: 5, angle: j * 30 + (k % 2) * 15, spread: 7, startVelocity: sv }, base));
+                confetti(Object.assign({}, base, { particleCount: 14, angle: 90, spread: 360, startVelocity: sv * 0.4, colors: ['#ffffff', '#fff3c4'] }));
+              } catch (e) {}
+            }
+            if (!REDUCED) {
+              const g = addFx('y-glow', ox, oy);
+              g.style.width = g.style.height = '70px'; g.style.margin = '-35px 0 0 -35px';
+              playFx(g, [{ transform: 'scale(0.3)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 0 }], { duration: 420, easing: 'ease-out' }, true);
+            }
+            if (!sample('sparkle', { rate: 1.3 + k * 0.05, vol: 0.28 })) tone(520 + k * 40, 0.12, 'triangle', 0.04, 140);
+          });
+        }
+        T(520, function () {
+          const e = yShow('rec', title, sub, 1050);
+          const p = ptOf(e.querySelector('.yt-word'));
+          yDrift(p, 10, p ? p.r.width : 200, null);
+        });
+        T(700, function () {
+          const sp = seatPt(pIdx);
+          if (tp && sp) {
+            sample('coins', { vol: 0.7 });
+            stream(tp, sp, { shape: 'coin', count: club ? 14 : 10, dur: 800, arc: 60, stagger: 40 });
+          }
+        });
+      }
       // the bot marks the box it is about to record: the tile lifts in its colour and the scoring dice light up
       function aimFx(cat) {
         const t = tileEls[cat];
@@ -4159,17 +4483,22 @@
         const yv = cleanYaw(extra.yaw); // absent = every die rests at 0; a guest never commits yaw from an fx, only STATE sets it
         const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv };
         const isFuse = extra.power === 'fuse';
+        const era = fxEra, gmid = matchId;
         playRoll(vals, hv, function (finalV) {
           if (liveRoll === lr) liveRoll = null;
           renderDice();
           renderPowers();
           const v = finalV && finalV.length === 5 ? finalV : vals;
+          if (era !== fxEra || gmid !== matchId) return; // the host has already moved on: no celebration over the next turn
           if (isFuse && fuseHits(v, hv).length) { lastDrama = null; revealPreviews(); } // a fuse bust: nothing to celebrate
           else postRollFx(v);
         }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv });
         renderPowers();
       }
       function applyFx(kind, extra) {
+        if (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end') fxEra++;
+        if (kind === 'roll' || kind === 'power' || kind === 'end') { yrSeq++; const yr = $('yrec'); if (yr) { yr._k = (yr._k || 0) + 1; yr.hidden = true; } }
+        if (yfxState && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end')) yfxClear(true);
         if (kind === 'roll') {
           guestRoll(extra);
         } else if (kind === 'power') {
@@ -4197,10 +4526,12 @@
           recordFx(extra.catId, extra.pIdx, extra.pts, extra.d);
         } else if (kind === 'banner') {
           afterFeed(function () {
+            if (extra.yacht) { yachtRecord(extra); return; }
             showBanner(extra.title, extra.sub, extra.tier);
             if (extra.sound) sample(extra.sound);
           });
         } else if (kind === 'confetti') {
+          if (extra.yacht) return; // the record sequence of a banner with yacht set fires its own shells
           afterFeed(function () {
             fireConfetti(extra.big);
             if (extra.big) impact(5);
@@ -4350,6 +4681,7 @@
       }
       // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
       function tossDice(next, heldSnap, extra, onComplete, notes) {
+        yfxClear(true);
         isRolling = true;
         selectedTile = null;
         aimCat = null;
@@ -4398,11 +4730,8 @@
         lastDrama = null;
         if (calcCategoryScore('yacht', values) === 50) {
           if (open('yacht')) {
-            // the payoff waits for the top of a big unison hop (a short freeze there), then everything hits at once
-            const mid = matchId;
-            const payoff = function () { if (matchId === mid) yachtPayoff(); };
-            if (use3D()) celebrate(all, { stagger: 0, amp: 1.35, land: -6, ring: 0xffd77a, apex: { stop: 0.09, cb: payoff } });
-            else payoff();
+            // the five dice rise, light up gold, freeze and slam; the title lands with the slam (yachtLanding)
+            yachtLanding(all, values);
           } else { showChip('YACHT', 'gold'); celebrate(all, { stagger: 0 }); }
           return;
         }
@@ -5260,6 +5589,7 @@
       // a turn begins (after any draft): rolls for this turn, curses, prophecy, AI kick-off
       function startTurn(announce) {
         const cur = players[currentPlayerIdx];
+        yfxClear(true);
         turnNo += 1;
         aimCat = null;
         prepIdle();
@@ -6193,6 +6523,9 @@
           ], { duration: opts.dur || 1900, delay: opts.delay || 0, easing: 'ease-out', fill: 'backwards' });
           return;
         }
+        // a pop fired from a tile at the screen edge (YACHT, SIXES) stays inside the screen, overshoot included
+        const hw = e.offsetWidth * 0.56 + 6;
+        e.style.left = Math.max(hw, Math.min(window.innerWidth - hw, pt.x)) + 'px';
         playFx(e, [
           { transform: 'translate(-50%,-100%) translateY(10px) scale(0.3)', opacity: 0 },
           { transform: 'translate(-50%,-100%) translateY(-4px) scale(1.12)', opacity: 1, offset: 0.14 },
@@ -6430,7 +6763,6 @@
       function sfxRewind() { ensureAudio(); if (sample('rewind')) return; tone(1400, 0.45, 'sawtooth', 0.03, 180); noise(3000, 2, 0.45, 0.06, 'bandpass', 0, 300); }
       function sfxLock() { ensureAudio(); if (sample('lock')) return; tone(520, 0.08, 'square', 0.05); tone(260, 0.12, 'square', 0.05, 0, 0.06); noise(4500, 3, 0.1, 0.1, 'bandpass', 0.05); }
       function sfxCurse() { ensureAudio(); if (sample('curse')) return; tone(110, 0.6, 'sawtooth', 0.05, 80); tone(116, 0.6, 'sawtooth', 0.04, 84); }
-      function sfxHorn() { ensureAudio(); if (sample('horn')) return; tone(98, 0.95, 'sawtooth', 0.07); tone(147, 0.95, 'sawtooth', 0.05); tone(196, 0.6, 'triangle', 0.04, 0, 0.5); }
       function sfxCard() { ensureAudio(); if (sample('cards')) return; noise(2600, 1.5, 0.08, 0.12, 'bandpass', 0, 5000); }
       function sfxLaugh() { ensureAudio(); if (sample('joker')) return; [660, 880, 700, 940, 740, 1000].forEach(function (f, i) { tone(f, 0.09, 'square', 0.035, 0, i * 0.08); }); }
       function sfxSad() { ensureAudio(); if (sample('fail')) return; [392, 370, 349].forEach(function (f, i) { tone(f, 0.3, 'sawtooth', 0.045, f * 0.97, i * 0.32); }); tone(330, 0.7, 'sawtooth', 0.045, 240, 0.96); }
@@ -6523,10 +6855,10 @@
             break;
           }
           case 'yachtClub': {
-            screenFx('waves', 2800, '<div class="w1"></div><div class="w2"></div><div class="boat">' + glyphSvg('yachtClub') + '</div>');
+            screenFx('snitch', 2200, '<div class="sn">' + glyphSvg('yachtClub') + '</div>');
             const yt = tilePt('yacht');
             if (yt) { const bi = addFx('fx-burstimg', yt.x, yt.y); playFx(bi, [{ transform: 'scale(0.2) rotate(0deg)', opacity: 0 }, { transform: 'scale(1.1) rotate(40deg)', opacity: 1, offset: 0.3 }, { transform: 'scale(1.4) rotate(90deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }); }
-            sfxHorn();
+            if (!sample('sparkle', { rate: 1.25, vol: 0.7 })) tone(1760, 0.25, 'triangle', 0.06);
             augPop('yachtClub', tilePt('yacht'), '+150', { dur: 2400 });
             break;
           }
@@ -8757,6 +9089,7 @@
         isScoring = true;
         selectedTile = null;
         armedReset();
+        yfxClear(true);
         setHighlight(null);
 
         broadcastState();
@@ -8778,8 +9111,8 @@
           fx('aug', { id: 'grandSlam', p: currentPlayerIdx, cat: catId, phase: pts > 0 ? 'lamp' : 'break', lit: qs.lit, delay: 450 });
         }
         if (!keepOld && catId === 'yacht' && pts >= 50) {
-          fx('banner', { title: augHas(cur, 'yachtClub') ? 'SNITCH!' : 'YACHT!', sub: '+' + pts + '점', tier: 'hot' });
-          fx('confetti', { big: true });
+          fx('banner', { title: augHas(cur, 'yachtClub') ? 'SNITCH!' : 'YACHT!', sub: '+' + pts + '점', tier: 'hot', yacht: true });
+          fx('confetti', { big: true, yacht: true });
         } else if (!keepOld && catId === 'largeStraight' && pts >= 30) {
           fx('banner', { title: 'STRAIGHT!', sub: '라지 스트레이트 +' + pts, tier: 'cool', sound: 'straight' });
           fx('confetti', { big: false });
@@ -8808,7 +9141,7 @@
           if (matchId !== myMatch) return;
           isScoring = false;
           advanceTurn();
-        }, 750 + Math.min(1400, trace.length * 300));
+        }, (!keepOld && catId === 'yacht' && pts >= 50 ? 2000 : 750) + Math.min(1400, trace.length * 300));
       }
       function twoferPairs(cur) {
         const ok = openCats(cur).filter(function (id) { return id !== sealCatFor(cur) && scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })) > 0; });
@@ -8831,19 +9164,20 @@
         isScoring = true;
         selectedTile = null;
         armedReset();
+        yfxClear(true);
         setHighlight(null);
         broadcastState();
         fx('score', { pts: pts2, catId: B, pIdx: currentPlayerIdx });
         trace.forEach(function (id, k) { fx('aug', { id: id, cat: B, pts: pts2, p: currentPlayerIdx, delay: 250 + k * 420 }); });
         fx('aug', { id: 'twofer', p: currentPlayerIdx, cat: A, cat2: B, pts: ptsA + pts2, phase: 'second', delay: 150 });
-        if (B === 'yacht' && pts2 >= 50) { fx('banner', { title: 'YACHT!', sub: '+' + pts2 + '점', tier: 'hot' }); fx('confetti', { big: true }); }
+        if (B === 'yacht' && pts2 >= 50) { fx('banner', { title: 'YACHT!', sub: '+' + pts2 + '점', tier: 'hot', yacht: true }); fx('confetti', { big: true, yacht: true }); }
         else if (!prevT.bonus && newT.bonus) { fx('banner', { title: 'BONUS!', sub: '상단 ' + newT.need + '점 달성 · +' + newT.amount, tier: 'hot', sound: 'bonus' }); fx('confetti', { big: false }); }
         if (augHas(cur, 'grandSlam') && QUEST.indexOf(B) !== -1) fx('aug', { id: 'grandSlam', p: currentPlayerIdx, cat: B, phase: 'lamp', lit: questState(cur).lit, delay: 900 });
         lastRec = { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo };
         resolveBombs(currentPlayerIdx, Math.max(ptsA, pts2));
         renderAll();
         const myMatch = matchId;
-        setTimeout(function () { if (matchId !== myMatch) return; isScoring = false; advanceTurn(); }, 1100 + Math.min(1400, trace.length * 300));
+        setTimeout(function () { if (matchId !== myMatch) return; isScoring = false; advanceTurn(); }, (B === 'yacht' && pts2 >= 50 ? 2000 : 1100) + Math.min(1400, trace.length * 300));
       }
 
       function advanceTurn() {
@@ -9750,7 +10084,7 @@
         isScoring = !!d.isScoring;
         gameActive = !!d.gameActive;
         if (!gameActive || !(draft && draft.law)) { lawRevealed = {}; lawPendingSig = ''; } // a new match may pass the same law again
-        if (!wasActive && gameActive) { resetTotalAnims(); matchId++; OVERLAYS.forEach(closeOv); }
+        if (!wasActive && gameActive) { resetTotalAnims(); matchId++; yfxReset(); OVERLAYS.forEach(closeOv); }
         renderAll();
         // our replay landed before the host's "done" state: the previews only exist now, so cascade them now
         if (wasRolling && !isRolling && !liveRoll && gameActive) revealPreviews();
@@ -10222,6 +10556,7 @@
         turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         matchId++;
+        yfxReset();
         resetTotalAnims();
         fuseResetFx();
         if (use3D()) window.Dice3D.finishNow();
@@ -11345,6 +11680,8 @@
       const FACE_V = [3, 4, 1, 6, 2, 5];
       const FACE_N = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1)];
       const UP = new THREE.Vector3(0, 1, 0);
+      const YGOLD = new THREE.Color('#ff8f00');
+      let yf = null; // YACHT landing in progress (see yachtLand)
       const faceIdx = (v) => FACE_V.indexOf(v);
       function canonQuat(v, yaw) {
         const q = new THREE.Quaternion().setFromUnitVectors(FACE_N[faceIdx(v)], UP);
@@ -11406,7 +11743,7 @@
           flash: 0, flashCol: new THREE.Color(1, 1, 1), sq: 0, sqv: 0,
           landAt: 0, landSq: -4.5, landRing: null, hopAmp: 1.15, hopSpin: true,
           _ph: false, hvv: 0, ringSpike: 0, wobT0: -9, wobAxis: new THREE.Vector3(1, 0, 0),
-          joltT0: -9, joltAmp: 0.22,
+          joltT0: -9, joltAmp: 0.22, yGlow: 0, yGoal: 0,
           // 도화선: lit (swelling, blinking) since litT0, blown off the table (flight), sooty afterwards
           flight: null, litT0: 0, swell: 0, blinkPh: 0, soot: 0, sootKeep: false
         };
@@ -11830,7 +12167,7 @@
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
       }
       // a new throw: a blast that hasn't gone off yet is dropped, and the charred felt fades
-      function cancelBlast() { boomAt = null; focusUntil = -9; clearScorch(0.4); if (vfxUntil && clock > vfxUntil - 0.9) vfxOff(); } // a new throw: no smoke lingering over it
+      function cancelBlast() { yachtEnd(true); boomAt = null; focusUntil = -9; clearScorch(0.4); if (vfxUntil && clock > vfxUntil - 0.9) vfxOff(); } // a new throw: no smoke lingering over it
 
       function roll(values, heldArr, opts) {
         opts = opts || {};
@@ -11856,6 +12193,7 @@
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           if (anim || gather) finishNow();
+          if (yf) { const yo = yf.o; yachtEnd(false); try { if (yo.onSlam) yo.onSlam(false); } catch (e) {} } // a lift that cannot land pays off at once
           if (apexAt) fireApex(); // no frames are coming: pay off now instead of over a later turn
           if (boomAt) fireBoom(); // same for a blast that was about to go off
           vfxOff(); // hidden: drop the particles instead of resuming them on return
@@ -12230,7 +12568,7 @@
       function clearScorch(sec) {
         scorch.forEach((S) => { if (S.m.visible && S.fade < 0) { S.fade = clock; S.fd = sec || 0.4; } });
         D.forEach((d) => { d.sootKeep = false; if (sec < 0.05) d.soot = 0; }); // (a new match: clean dice at once)
-        if (sec < 0.05) vfxKill();
+        if (sec < 0.05) { vfxKill(); yachtEnd(true); }
       }
       function updateScorch() {
         for (let i = 0; i < 5; i++) {
@@ -12323,6 +12661,7 @@
         if (hp > 0 && hp < 1) out.y += Math.sin(Math.PI * hp) * d.hopAmp;
         const jp = (clock - d.joltT0) / 0.32;
         if (jp > 0 && jp < 1) out.y += Math.sin(Math.PI * jp) * d.joltAmp;
+        if (yf) { const yy = yachtY(clock - yf.t0); out.y += yy; out.x *= 1 - 0.16 * Math.min(1, yy / Y_H); } // the outer dice lean in so they stay on the felt
         return out;
       }
       // psychic flip: rises fast, hangs, then drops into the squash
@@ -12369,7 +12708,8 @@
           } else if (d.swell < 0.002) d.swell = 0;
           sw = d.swell;
         }
-        const sy = (1 + d.sq) * kf * (1 + sw), sxz = (1 - 0.5 * d.sq) * kf * (1 + sw);
+        const ys = yf ? 1 + 0.03 * Math.min(1, yachtY(clock - yf.t0) / Y_H) : 1; // rising toward a top-down camera reads as growing
+        const sy = (1 + d.sq) * kf * (1 + sw) * ys, sxz = (1 - 0.5 * d.sq) * kf * (1 + sw) * ys;
         const p = d.group.position;
         _m4.makeRotationFromQuaternion(d.group.quaternion).premultiply(_ms.makeScale(sxz, sy, sxz));
         _m4.setPosition(p.x + jx, p.y + (p.y < 0.9 ? 0.5 * d.sq : 0) + 0.5 * sw, p.z); // keeps the bottom on the cloth
@@ -12413,9 +12753,10 @@
                 }
               }
             } else {
-              d.group.position.lerp(_p, 1 - Math.exp(-dt * 20));
+              if (yf) d.group.position.copy(_p); else d.group.position.lerp(_p, 1 - Math.exp(-dt * 20));
               const hp = (clock - d.hopT0) / 0.6, wt = clock - d.wobT0;
-              if (hp > 0 && hp < 1 && d.hopSpin) { _qs.setFromAxisAngle(UP, easeInOut(hp) * Math.PI * 2).multiply(d.baseQuat); d.group.quaternion.copy(_qs); }
+              if (yf) { _qs.setFromAxisAngle(UP, yachtAng(clock - yf.t0)).multiply(d.baseQuat); d.group.quaternion.copy(_qs); }
+              else if (hp > 0 && hp < 1 && d.hopSpin) { _qs.setFromAxisAngle(UP, easeInOut(hp) * Math.PI * 2).multiply(d.baseQuat); d.group.quaternion.copy(_qs); }
               else if (wt >= 0 && wt < 0.35) {
                 _qw.setFromAxisAngle(d.wobAxis, 0.12 * Math.sin(wt * 44) * Math.exp(-wt * 10));
                 _qs.copy(_qw).multiply(d.baseQuat);
@@ -12434,6 +12775,11 @@
           const hv = clamp01(d.heldVis);
           const SK = SKINS[d.skin];
           _col.copy(SK ? SK.color : WHITE).lerp(GOLD, hv * 0.7).multiplyScalar(1 - d.dimVis * 0.38);
+          if (d.yGlow > 0.004 || d.yGoal > 0) {
+            d.yGlow += (d.yGoal - d.yGlow) * (1 - Math.exp(-dt * (d.yGoal > d.yGlow ? 14 : 3)));
+            if (d.yGoal <= 0 && d.yGlow < 0.004) d.yGlow = 0;
+            _col.lerp(YGOLD, Math.min(1, d.yGlow) * 1.0);
+          }
           // 도화선 soot: wears off once the die is back on the felt (the guilty die keeps a light char until the next throw)
           if (d.soot > 0) {
             _col.lerp(SOOT, d.soot);
@@ -12445,6 +12791,7 @@
           if (SK && SK.emi) { _emi.copy(SK.emi); if (d.skin === 'curse') _emi.multiplyScalar(0.55 + 0.45 * Math.sin(clock * 3.5)); }
           else { const gl = (d.glow || 0) * (1 - d.dimVis * 0.35); _emi.setRGB(gl, gl, gl); }
           _emi.lerp(GOLD, hv * 0.1);
+          if (d.yGlow > 0.004) { const yg = d.yGlow * 0.3; _emi.r += yg; _emi.g += yg * 0.78; _emi.b += yg * 0.3; }
           if (d.hlVis > 0.01) {
             const pulse = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis;
             _emi.r += d.hlColor.r * pulse; _emi.g += d.hlColor.g * pulse; _emi.b += d.hlColor.b * pulse;
@@ -12574,6 +12921,7 @@
         if (freeze > 0) { const f = Math.min(freeze, dt); freeze -= f; sdt = dt - f; }
         clock += sdt;
         updatePlayback(sdt);
+        updateYacht();
         updateDice(sdt);
         updateFx();
         updateScorch();
@@ -12712,6 +13060,78 @@
           if (apexAt) fireApex(); // never drop an earlier payoff
           apexAt = { t: clock + delay + (REDUCED ? 0 : 0.3), stop: o.apex.stop || 0, cb: o.apex.cb };
           if (document.hidden) fireApex(); // no frames are coming: pay off now
+        }
+      }
+      // ---- YACHT landing: the five dice rise together to a hero height, light up gold left to right, hang, freeze, slam down.
+      // Driven by the sim clock like celebrate (hitstop freezes it). o: { onIgnite(i), onApex(), onSlam(vfxDrawn) }
+      const Y_H = 2.4, Y_APEX = 0.84, Y_HIT = 0.96, Y_TILT = 0.3;
+      function yachtY(t) {
+        if (t <= 0 || t >= Y_HIT) return 0;
+        if (t < 0.5) return Y_H * easeOutCubic(t / 0.5);
+        if (t < Y_APEX) return Y_H + 0.07 * Math.sin((t - 0.5) * 7);
+        const p = (t - Y_APEX) / (Y_HIT - Y_APEX), top = Y_H + 0.07 * Math.sin((Y_APEX - 0.5) * 7);
+        return top * (1 - p * p);
+      }
+      function yachtAng(t) {
+        if (t <= 0) return 0;
+        if (t < Y_APEX) return Y_TILT * easeInOut(t / Y_APEX);
+        return Y_TILT * Math.max(0, 1 - (t - Y_APEX) / (Y_HIT - Y_APEX));
+      }
+      function yachtLand(o) {
+        if (REDUCED || document.hidden || anim || gather) return false;
+        yf = { t0: clock, ig: [0, 0, 0, 0, 0], ap: 0, hit: 0, o: o || {} };
+        hitstop(0.11);
+        kick({ fov: 1.2 });
+        return true;
+      }
+      function yachtEnd(hard) { yf = null; for (let i = 0; i < D.length; i++) { D[i].yGoal = 0; if (hard) D[i].yGlow = 0; } }
+      function yachtBurst(cx, cz) {
+        if (!vfx || renderer.getContext().isContextLost()) return false;
+        try {
+          for (let i = 0; i < vfx.list.length; i++) vfx.list[i].getMesh().visible = true;
+          const k = blastFit;
+          D.forEach((d) => {
+            const p = d.group.position;
+            vfxEmit('sparks', 14, { x: p.x, y: 0.75, z: p.z }, () => ({ dir: vfxDome(0.4), speed: vfxRnd(6, 13) * k, scale: [0.3, 0.95, 0.3], life: vfxRnd(0.6, 1.1), c0: vfxPick(['#fffbe6', '#ffe9a6', '#ffd77a']), c1: '#e0a93b' }));
+          });
+          vfxEmit('flash', 1, { x: cx, y: 0.9, z: cz }, () => ({ scale: [9 * k, 9 * k, 9 * k], life: 0.26, c0: '#fff6d8', c1: '#ffd77a' }));
+          vfxEmit('star', 1, { x: cx, y: 0.9, z: cz }, () => ({ scale: [10 * k, 10 * k, 10 * k], life: 0.32, c0: '#fffbe6', c1: '#ffd77a', rot: [0, 0, 0.4] }));
+          vfxHide = 0; vfxUntil = Math.max(vfxUntil, clock + 1.3);
+          return true;
+        } catch (e) { vfxOff(); vfx = null; return false; }
+      }
+      function updateYacht() {
+        const y = yf;
+        if (!y) return;
+        const t = clock - y.t0, o = y.o;
+        const say = (fn, a) => { try { if (fn) fn(a); } catch (e) {} };
+        for (let i = 0; i < 5; i++) {
+          if (y.ig[i] || t < 0.06 + 0.09 * i) continue;
+          y.ig[i] = 1;
+          const d = D[i];
+          d.yGoal = 1;
+          flashDie(d, 1, GOLD);
+          spawnRing(d.group.position.x, d.group.position.z, 14, 0xff9a18, { size: 0.95, life: 0.6, alpha: 1 });
+          say(o.onIgnite, i);
+        }
+        if (!y.ap && t >= Y_APEX) { y.ap = 1; hitstop(0.09); say(o.onApex); }
+        if (!y.hit && t >= Y_HIT) {
+          y.hit = 1;
+          let cx = 0, cz = 0;
+          D.forEach((d) => { cx += d.group.position.x / 5; cz += d.group.position.z / 5; });
+          D.forEach((d) => {
+            if (d.rolling) return;
+            squash(d, -9);
+            flashDie(d, 1, GOLD);
+            d.yGoal = 0.5;
+            spawnRing(d.group.position.x, d.group.position.z, 14, 0xff9a18, { size: 1.0, life: 0.45, alpha: 0.9 });
+          });
+          spawnRing(cx, cz, 14, 0xffa828, { size: 3.0, life: 0.65, alpha: 0.95 });
+          hitstop(0.05);
+          kick({ y: -3.2, trauma: 0.75, fov: -2.2 });
+          const drawn = yachtBurst(cx, cz);
+          yf = null; // the lift is zero from here: the dice are on the felt
+          say(o.onSlam, drawn);
         }
       }
       function aura(i, hex, ms) {
@@ -12898,6 +13318,8 @@
         setHover: (i) => D.forEach((d) => { d.hover = d.i === i; }),
         highlight: (arr, hex) => D.forEach((d) => { d.hl = !!(arr && arr.indexOf(d.i) !== -1); if (hex) d.hlColor.set(hex); }),
         celebrate,
+        yachtLand,
+        yachtEnd,
         // juice core: ms of freeze, camera spring kick {x,y,z,trauma,fov}, emissive blink of one die
         hitstop: (ms) => hitstop((ms || 0) / 1000),
         kick,
