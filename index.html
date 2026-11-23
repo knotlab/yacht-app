@@ -689,6 +689,49 @@
   .face-pick button { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: var(--ink); background: linear-gradient(180deg, var(--ivory), var(--ivory-lo)); box-shadow: 0 3px 0 var(--ivory-edge); }
   .face-pick button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ivory-edge); }
   .face-pick button svg { width: 28px; height: 28px; }
+  /* 기울이기: four arrows over the power bar (bottom is set from the bar's height) */
+  .tilt-pick {
+    position: absolute; left: 50%; bottom: 66px; z-index: 6; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border-radius: 16px;
+    background: rgba(6, 22, 17, 0.9); box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.55), 0 10px 24px rgba(0, 0, 0, 0.5);
+    animation: chipIn2 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .tp-hint { font-size: 12px; color: var(--ivory); opacity: 0.85; white-space: nowrap; }
+  .tilt-pick.tight .tp-hint { display: none; }
+  .tilt-pick.tight { padding: 4px; border-radius: 14px; }
+  .tilt-pick.tight button { height: 38px; width: 50px; }
+  /* a felt too short for the dice, a picker and the keys: the picker takes the keys' place while it is open */
+  .powers.pick-over { visibility: hidden; }
+  .cock-pick.over .cp-cap { display: none; }
+  .tp-row { display: flex; gap: 6px; }
+  .tilt-pick button { width: 52px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--ink); background: linear-gradient(180deg, var(--ivory), var(--ivory-lo)); box-shadow: 0 3px 0 var(--ivory-edge); }
+  .tilt-pick button svg { width: 26px; height: 26px; }
+  .tilt-pick button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ivory-edge); }
+  .tilt-pick button.is-sel { background: linear-gradient(180deg, #ffe9a8, #e0a93b); box-shadow: 0 3px 0 #8a5d12, 0 0 14px rgba(255, 215, 122, 0.7); }
+  .tilt-ghost { position: absolute; left: 50%; top: -4px; transform: translate(-50%, -100%); min-width: 26px; height: 26px; border-radius: 13px; display: grid; place-items: center; font: 700 15px/1 var(--f-game); color: #2a1a04; background: #ffd77a; box-shadow: 0 2px 0 #8a5d12, 0 0 10px rgba(255, 215, 122, 0.6); pointer-events: none; z-index: 3; }
+  .die2d .tilt-ghost { top: -8px; }
+  .die2d.tipping { animation: tipDie 0.34s ease-out var(--td, 0ms) both; }
+  @keyframes tipDie { 0% { transform: none; } 45% { transform: translateY(-8px) rotate(var(--r, 8deg)); } 100% { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .die2d.tipping { animation: none; } .tilt-pick { animation: none; } }
+  @media (orientation: landscape) and (max-height: 560px) { .tp-hint { display: none; } .tilt-pick button { height: 40px; } }
+  /* 모서리 착지: the chips over the power bar, and the 2D die that stands on its edge */
+  .cock-pick { flex-direction: column; align-items: center; gap: 6px; padding: 8px 10px 10px; }
+  .cock-pick .cp-cap { font: 600 12px var(--f-body); color: var(--brass-hi); letter-spacing: 0.02em; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cock-pick .cp-row { display: flex; gap: 8px; }
+  .cock-pick button, .cock-pick .cp-chip { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; color: var(--ink); background: linear-gradient(180deg, var(--ivory), var(--ivory-lo)); box-shadow: 0 3px 0 var(--ivory-edge); }
+  .cock-pick button svg, .cock-pick .cp-chip svg { width: 34px; height: 34px; }
+  .cock-pick.ro .cp-chip { opacity: 0.85; }
+  .cock-pick button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  @media (min-width: 900px) { .cock-pick button, .cock-pick .cp-chip { width: 56px; height: 56px; } }
+  @media (orientation: landscape) and (max-height: 560px) { .cock-pick { padding: 5px 8px 7px; gap: 3px; } .cock-pick button, .cock-pick .cp-chip { width: 44px; height: 44px; } .cock-pick button svg, .cock-pick .cp-chip svg { width: 30px; height: 30px; } }
+  .cock-pick.tight { padding: 4px 8px 6px; gap: 2px; border-radius: 14px; }
+  .cock-pick.tight .cp-cap { font-size: 11px; }
+  .cock-pick.tight button, .cock-pick.tight .cp-chip { width: 42px; height: 42px; }
+  .cock-pick.tight button svg, .cock-pick.tight .cp-chip svg { width: 28px; height: 28px; }
+  .tile.is-cockpv .t-val { opacity: 0.72; }
+  .die2d.cocked { transform: rotate(-9deg) translateY(-5px); animation: cockRock 1.1s ease-in-out infinite alternate; }
+  @keyframes cockRock { from { transform: rotate(-9deg) translateY(-5px); } to { transform: rotate(7deg) translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) { .die2d.cocked { animation: none; } }
   .die2d.skin-gold { background: linear-gradient(145deg, #fff3c4, #e2b046); }
   .die2d.skin-lead { background: linear-gradient(145deg, #dfe2e7, #9aa1ad); }
   .die2d.skin-curse { background: linear-gradient(145deg, #ffd5da, #e07a8a); box-shadow: 0 0 16px rgba(224, 49, 75, 0.5), 0 9px 16px rgba(0, 0, 0, 0.45); }
@@ -2172,6 +2215,8 @@
         <div id="comboChip" class="combo-chip" hidden></div>
         <div id="powers" class="powers" hidden></div>
         <div id="facePick" class="face-pick" hidden></div>
+        <div id="tiltPick" class="tilt-pick" role="group" aria-label="기울일 방향" hidden><span class="tp-hint"></span><div class="tp-row"></div></div>
+        <div id="cockPick" class="face-pick cock-pick" role="group" hidden><span class="cp-cap" aria-live="polite"></span><div class="cp-row"></div></div>
         <div id="turnSweep" class="turn-sweep" hidden><span></span></div>
         <div id="loader" class="loader">
           <div class="loader-die"><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
@@ -2863,7 +2908,7 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 3; // 3 = 밥상 엎기 + 개헌 (later jobs use 4 and 5)
+      const NET_V = 4; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 뻥카
       function memberV(m) { return Number(m && m.v) || 0; }
       // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
       let roomV = 99, roomSeen = {};
@@ -2899,6 +2944,111 @@
         if (live && roller && twinsOn(roller)) { if (!heldSnap[1]) ny[1] = ny[0]; else if (!heldSnap[0]) ny[0] = ny[1]; } // mirrors applyTwins: the copy turns like its source
         return ny;
       }
+      // 기울이기: the holder tips the table and every free die falls over one face toward dir (0 up / far, 1 right, 2 down / near, 3 left)
+      let tiltSel = -1;      // the arrow being previewed on this screen (-1 = none)
+      let tiltTapAt = 0;     // its own tap guard (a 샷건 tap must not swallow a confirm)
+      let fbTilt = null;     // 2D fallback: the dice that are tipping right now
+      const TILT_MS = REDUCED ? 380 : 760;
+      // does die i ever tip? Only a die with plain faces 1..6 has an honest side face to fall onto
+      function tiltPlain(p, i) { const f = faceList(p, i); for (let k = 0; k < 6; k++) if (f[k] !== k + 1) return false; return true; }
+      // which dice a tilt moves right now: bool[5]. base = ignore the holds (the bot picks its holds first)
+      function tiltMoves(base) {
+        const p = players[currentPlayerIdx];
+        const m = [0, 1, 2, 3, 4].map(function (i) { return !!p && tiltPlain(p, i) && !stuck[i] && (base || !held[i]); });
+        if (p && twinsOn(p) && (!m[0] || !m[1])) { m[0] = false; m[1] = false; } // a pair that cannot move together stays
+        return m;
+      }
+      // the table after tilting toward dir (pure): values, yaw and the moved indices
+      function tiltResult(dir, moves) {
+        const mv = moves || tiltMoves();
+        const v = dice.slice(), y = yaw.slice();
+        mv.forEach(function (on, i) { if (on) { const t = tipOf(dice[i], yaw[i], dir); v[i] = t[0]; y[i] = t[1]; } });
+        return { values: v, yaw: y, moved: [0, 1, 2, 3, 4].filter(function (i) { return mv[i]; }) };
+      }
+      // the best box score for `values`, and which box: 도전장 = the duel box only, 봉인 = every box but the one the seal would lock for these dice
+      function tiltBestBox(p, values) {
+        const o = previewOpts(false);
+        if (allinOn() && !twoferPend) o.allin = true;
+        if (duel && p === players[currentPlayerIdx]) return { id: duel.cat, val: scoreFor(p, duel.cat, values, o) };
+        let ids = openCats(p), lock = null, bv = -1e9;
+        if (sealTurn && ids.length >= 2) { ids.forEach(function (id) { const v = scoreFor(p, id, values, o); if (v > bv) { bv = v; lock = id; } }); ids = ids.filter(function (id) { return id !== lock; }); }
+        let best = null;
+        ids.forEach(function (id) { const v = scoreFor(p, id, values, o); if (!best || v > best.val) best = { id: id, val: v }; });
+        return best || { id: null, val: 0 };
+      }
+      function tiltBest(p, values) { return tiltBestBox(p, values).val; }
+
+      // 모서리 착지: on a roll of its holder one free die may stand on an edge (two faces) or a corner (three); the holder picks the face that counts
+      const COCK_P = 0.15, COCK_CORNER = 0.2, COCK_LIVE = true; // chance per roll (once a turn at most), share of corners among the cocks
+      const COCK_MS = REDUCED ? 140 : 440;                      // the die tips onto the picked face
+      let cockSpent = false, cockSpentBefore = false, cockTickT = 0, cockSoundT0 = 0, cockSentSeq = -1, cockHl = false, lastKeyAt = 0;
+      // the faces the die may show: its rolled value first, then a neighbour (never the opposite face), and with COCK_CORNER a third that touches both
+      function cockFaces(faces, v, r, cornerP) {
+        const pool = faces.filter(function (f) { return f !== v && f !== 7 - v; }); // a face on the die twice keeps its double odds
+        if (!pool.length) return null;
+        const nb = pool[Math.floor(r() * pool.length)];
+        if (r() < cornerP) {
+          const rest = pool.filter(function (f) { return f !== nb && f !== 7 - nb; });
+          if (rest.length) return [v, nb, rest[Math.floor(r() * rest.length)]];
+        }
+        return [v, nb];
+      }
+      // host: after the values are rolled. Returns { i, faces, seq, t0 } or null; nothing is changed here
+      function drawCock(roller, values, heldSnap, spentBefore) {
+        if (!matchAug || !roller || !augHas(roller, 'cocked') || spentBefore || Math.random() >= COCK_P) return null;
+        const twin = twinsOn(roller);
+        const glueFace = firstThrowPending && roller.glue > 0 && !encoreTurn ? roller.glue : 0;
+        const pick = [0, 1, 2, 3, 4].filter(function (i) {
+          return !heldSnap[i] && !stuck[i] && !(twin && i < 2) && !(glueFace && values[i] === glueFace);
+        });
+        if (!pick.length) return null;
+        const i = pick[Math.floor(Math.random() * pick.length)];
+        const f = cockFaces(faceList(roller, i), values[i], Math.random, COCK_CORNER);
+        return f ? { i: i, faces: f, seq: 0, t0: 0 } : null;
+      }
+      function clearCock() { cock = null; cockSound(false); }
+      // the pending cock as the screen may show it: not while the dice are still in the air (on any screen)
+      function cockShown() { return !!cock && !isRolling && !liveRoll; }
+      // run fn with the table showing other dice and no pending cock (solver calls that read the global dice)
+      function withDice(d, fn) { const sd = dice, sc = cock; dice = d; cock = null; try { return fn(); } finally { dice = sd; cock = sc; } }
+      // a cock from the wire (state, roll fx, slam fx): five dice and their holds are the reference. null when anything is off
+      function cockOk(c, dv, hv) {
+        if (!c || typeof c !== 'object' || (typeof c.i !== 'number' && typeof c.i !== 'string')) return null;
+        const i = Number(c.i), fa = toArr(c.faces);
+        if (!(i >= 0 && i < 5 && Math.floor(i) === i) || hv[i] || fa.length < 2 || fa.length > 3) return null;
+        if (!fa.every(function (x) { return typeof x === 'number' || typeof x === 'string'; })) return null;
+        const f = fa.map(Number);
+        if (!f.every(function (x) { return x >= 1 && x <= 6 && Math.floor(x) === x; })) return null;
+        for (let a = 0; a < f.length; a++) for (let k = a + 1; k < f.length; k++) if (f[a] === f[k] || f[a] + f[k] === 7) return null;
+        if (f[0] !== dv[i]) return null; // faces[0] is the face that was rolled, which is what dice[i] shows
+        return { i: i, faces: f };
+      }
+      // the turn a die rests at after it tips from face v (turn y) onto its neighbour b
+      function cockYawAfter(v, y, b) {
+        if (b === v) return y;
+        for (let d = 0; d < 4; d++) { const t = tipOf(v, y, d); if (t[0] === b) return t[1]; }
+        return y;
+      }
+      // the tile preview while a pick is pending: the best of the faces on offer
+      function cockBest(cur, id, o) {
+        let best = -1e9;
+        cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, scoreFor(cur, id, d, o)); });
+        return best;
+      }
+      // a slow tick-tock while the die rocks. Guests start it a moment before the pending state reaches them, so it waits that long for `cock`
+      function cockSound(on) {
+        clearInterval(cockTickT); cockTickT = 0;
+        if (!on) return;
+        cockSoundT0 = performance.now();
+        const mid = matchId;
+        let k = 0;
+        sample('wobble', { vol: 0.4 });
+        cockTickT = setInterval(function () {
+          if (matchId !== mid || k >= 90 || (!cock && performance.now() - cockSoundT0 > 1600)) { clearInterval(cockTickT); cockTickT = 0; return; }
+          if (!document.hidden) sample('tick', { rate: k % 2 ? 0.8 : 0.64, vol: 0.4, vary: 0 });
+          k++;
+        }, 435);
+      }
 
       // DOM
       const $ = function (id) { return document.getElementById(id); };
@@ -2910,6 +3060,15 @@
       const tilesEl = $('tiles');
       // stage prompt strip: tilt picker, cock picker, bluff bar, face picker sit just above the power bar
       function promptBottom() { const bar = $('powers'); return ((!bar || bar.hidden) ? 12 : bar.offsetHeight + 12) + 10; }
+      // does a picker cover a die? i = one slot, -1 = any slot; k = how much of the slot's half height counts (1.3 = with the room a standing die needs)
+      function pickOnDice(el, i, k) {
+        if (!use3D()) return false;
+        const pr = el.getBoundingClientRect(), sr = $('diceStage').getBoundingClientRect();
+        return window.Dice3D.slotRects().some(function (r, n) { return (i < 0 || n === i) && pr.bottom > sr.top + r.cy - r.hw * k && pr.top < sr.top + r.cy + r.hw * k; });
+      }
+      // a picker that took the power bar's place hides the bar until it closes
+      const pickLow = { tilt: false, cock: false };
+      function pickOver(who, on) { pickLow[who] = !!on; const bar = $('powers'); if (bar) bar.classList.toggle('pick-over', pickLow.tilt || pickLow.cock); }
       const rollBtn = $('rollBtn');
       const rollMain = $('rollMain');
       const rollPips = $('rollPips');
@@ -4060,8 +4219,12 @@
       }
 
       function renderDice() {
-        const canClick = hasRolledThisTurn && !isRolling && !isScoring && isMyTurn();
+        const canClick = hasRolledThisTurn && !isRolling && !isScoring && isMyTurn() && !tableHeld();
         const marks = diceMarks();
+        const cs = cockShown() ? cock : null; // 모서리 착지: the die that stands on an edge, and the faces it may show
+        const cockTxt = function (i) { return cs && cs.i === i ? '. 모서리에 섰습니다. ' + (cs.faces.length === 3 ? cs.faces.join(', ') + ' 중 하나입니다.' : cs.faces[0] + ' 또는 ' + cs.faces[1] + '입니다.') : ''; };
+        const gh = armedPower === 'tilt' && tiltSel >= 0 && canClick ? tiltResult(tiltSel) : null; // 기울이기: where each free die would land
+        const ghostHtml = function (i) { return '<span class="tilt-ghost" aria-hidden="true">' + gh.values[i] + '</span>'; };
 
         if (use3D()) {
           const D3 = window.Dice3D;
@@ -4069,16 +4232,18 @@
           if (D3.setSkins) D3.setSkins(diceSkins());
           if (D3.setDesign) D3.setDesign(tableDesign());
           D3.setDim(gameActive && !hasRolledThisTurn && !isRolling);
+          if (D3.setCock) D3.setCock(cs ? { i: cs.i, faces: cs.faces.slice() } : null);
           if (!canClick) D3.setHover(-1);
           diceGrid.className = 'slot-layer';
           diceGrid.innerHTML = '';
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : ''));
+            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
+            if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + ' (기울이면 ' + gh.values[i] + ')'); }
             btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             btn.addEventListener('pointerenter', function (e) { if (canClick && e.pointerType === 'mouse') D3.setHover(i); });
             btn.addEventListener('pointerleave', function () { D3.setHover(-1); });
@@ -4096,8 +4261,9 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             const dzOn = dz2d && !skins2d[i];
-            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : ''));
+            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '') + (fbTilt && fbTilt.idx.indexOf(i) !== -1 ? ' tipping' : '') + (cs && cs.i === i ? ' cocked' : '');
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
+            if (fbTilt && fbTilt.idx.indexOf(i) !== -1) { btn.style.setProperty('--td', fbTilt.idx.indexOf(i) * 40 + 'ms'); btn.style.setProperty('--r', fbTilt.dir === 1 ? '10deg' : fbTilt.dir === 3 ? '-10deg' : '0deg'); }
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (dzOn) btn.style.cssText = '--dz-bg:' + dz2d.css[0] + ';--dz-pip:' + dz2d.css[1] + ';--dz-one:' + dz2d.css[2];
             if (skins2d[i] && SKIN_EDGE[skins2d[i]]) btn.style.setProperty('--mk', SKIN_EDGE[skins2d[i]]);
@@ -4105,6 +4271,7 @@
             for (let c = 0; c < 9; c++) h += '<i class="' + (PIP_MAP[v].indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
             if (held[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
             btn.innerHTML = h + marksHtml(marks[i], i);
+            if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + ' (기울이면 ' + gh.values[i] + ')'); }
             btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             diceGrid.appendChild(btn);
           }
@@ -4159,11 +4326,12 @@
         if (selectedTile && (!canSelect || !cur || !tileSelectable(selectedTile))) selectedTile = null;
         const pOpts = previewOpts(mineNow);
         pOpts.allin = allinOn() && !twoferPend; // every viewer sees the doubled numbers
-        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : scoreFor(cur, id, dice, pOpts); };
+        const cockPv = cockShown(); // 모서리 착지: while the pick is pending a tile shows its best face on offer
+        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : cockPv ? cockBest(cur, id, pOpts) : scoreFor(cur, id, dice, pOpts); };
         const duelArm = armedPower === 'gauntlet' && mineNow && !isRolling && !isScoring;
         const bombOn = !!cur && players.some(function (o) { return o.bomb === currentPlayerIdx; });
         let bestId = null, bestPts = 0;
-        if (showPreview) {
+        if (showPreview && !cockPv) {
           CATEGORIES.forEach(function (c) {
             if (cur.scores[c.id] !== null || c.id === sealId) return;
             const p = pv(c.id);
@@ -4207,7 +4375,7 @@
             const hot = !sealed && ((c.id === 'yacht' && p >= 50) || (c.id === 'largeStraight' && p >= 30) || p >= 22);
             cls += ' is-open' + (canSelect && !sealed ? ' is-live' : '') + (p <= 0 ? ' is-zero' : '') + (p < 0 ? ' is-neg' : '') + (hot ? ' is-hot' : '') +
               (c.id === bestId ? ' is-best' : '') + (selectedTile === c.id ? ' is-sel' : '') + (aimCat === c.id ? ' is-aim' : '') +
-              (sealed ? ' is-sealed' : '') + (cur.prophecy === c.id ? ' is-prophecy' : '') + (pOpts.allin ? ' is-allin' : '') +
+              (sealed ? ' is-sealed' : '') + (cockPv ? ' is-cockpv' : '') + (cur.prophecy === c.id ? ' is-prophecy' : '') + (pOpts.allin ? ' is-allin' : '') +
               (pOpts.joker && calcCategoryScore(c.id, dice) === 0 && p > 0 ? ' is-joker' : '') +
               (fuseBust ? ' is-bust' : '') + (bombOn && p >= 20 ? ' is-defuse' : '') +
               (duel ? (duel.cat === c.id ? ' is-duel' : ' is-dim') : '') +
@@ -4281,6 +4449,7 @@
         else if (twoferPend) main = 'PICK 2';
         else if (fuseBust && !isRolling) main = 'BUST';
         else if (isRolling) main = 'ROLLING';
+        else if (cockShown()) main = 'PICK FACE';
         else if (isScoring) main = 'NICE';
         else if (rollsLeft === 1 && hasRolledThisTurn) main = 'LAST ROLL';
         else if (rollsLeft > 0 && hasRolledThisTurn) main = 'REROLL';
@@ -4440,6 +4609,7 @@
         renderAction();
         renderCaps();
         renderPowers();
+        renderCockPick();
         renderSheet();
         updateChatUi();
         syncDraftUi();
@@ -4463,7 +4633,7 @@
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
           stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
-          dice: dice, held: held, yaw: yawLive() ? yaw : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
+          dice: dice, held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
         };
       }
@@ -4491,18 +4661,20 @@
         while (hv.length < 5) hv.push(false);
         hv.length = 5;
         const yv = cleanYaw(extra.yaw); // absent = every die rests at 0; a guest never commits yaw from an fx, only STATE sets it
-        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv };
+        const ck = extra.power ? null : cockOk(extra.cock, vals, hv); // 모서리 착지: the die that leans when this roll lands
+        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck };
         const isFuse = extra.power === 'fuse';
         const era = fxEra, gmid = matchId;
         playRoll(vals, hv, function (finalV) {
           if (liveRoll === lr) liveRoll = null;
           renderDice();
           renderPowers();
+          renderCockPick();
           const v = finalV && finalV.length === 5 ? finalV : vals;
           if (era !== fxEra || gmid !== matchId) return; // the host has already moved on: no celebration over the next turn
           if (isFuse && fuseHits(v, hv).length) { lastDrama = null; revealPreviews(); } // a fuse bust: nothing to celebrate
-          else postRollFx(v);
-        }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv });
+          else if (!lr.cock) postRollFx(v); // a die on its edge: the payoff waits for the pick
+        }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv, cock: ck });
         renderPowers();
       }
       function applyFx(kind, extra) {
@@ -4512,6 +4684,7 @@
         if (kind === 'roll') {
           guestRoll(extra);
         } else if (kind === 'power') {
+          if (extra.power === 'tilt') { tiltFx(extra); return; }
           if (extra.flip) { animateFlip(extra, function () { renderDice(); }); return; }
           powerFx(extra);
           if (!extra.still) guestRoll(extra);
@@ -4519,12 +4692,14 @@
           slamFx(extra.pIdx);
           const vals = toArr(extra.values).map(Number);
           if (diceOk(vals)) {
-            if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; }
+            const hv0 = liveRoll ? liveRoll.held : held;
+            const ck = cockOk(extra.cock, vals, hv0); // 모서리 착지: the slam may have drawn a new cock for the roll in the air
+            if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; liveRoll.cock = ck; }
             if (use3D()) {
-              if (window.Dice3D.canSlam()) window.Dice3D.slam(vals);
+              if (window.Dice3D.canSlam()) window.Dice3D.slam(vals, ck);
               else {
                 const hv = liveRoll ? liveRoll.held : held;
-                window.Dice3D.knock(vals, hv.map(function (h) { return !h; }), { onImpact: diceImpact, onLand: sfxLand, onDone: function () { renderDice(); }, yaw: liveRoll && liveRoll.yaw ? liveRoll.yaw : [0, 0, 0, 0, 0] });
+                window.Dice3D.knock(vals, hv.map(function (h) { return !h; }), { onImpact: diceImpact, onLand: sfxLand, onDone: function () { renderDice(); }, yaw: liveRoll && liveRoll.yaw ? liveRoll.yaw : [0, 0, 0, 0, 0], cock: ck });
               }
             }
             else if (fbRoll) { fbRoll.values = vals.slice(); fbRoll.ticks = 0; }
@@ -4574,7 +4749,7 @@
       function handleHoldInput(idx) {
         ensureAudio();
         if (!isMyTurn() || draft || !hasRolledThisTurn || isRolling || isScoring || tableHeld()) return;
-        if (armedPower) {
+        if (armedPower && armedPower !== 'tilt') { // the tilt picker leaves the dice free to hold: hold first, then tilt
           const k = armedPower;
           if (k === 'psychic') { psychicDie = psychicDie === idx ? -1 : idx; sfxTick(); renderDice(); renderPowers(); return; }
           armedPower = null;
@@ -4601,6 +4776,7 @@
         buzz(6);
         broadcastState();
         renderDice();
+        renderPowers(); // the holds decide which dice fall: the arrows and the 기울이기 key follow
       }
 
       // ================= Rolling =================
@@ -4636,7 +4812,7 @@
         fuseAir(false); // a new throw: the slot tags a blast put away are back (a guest's blast can still be playing)
         const done2 = function (v) { lastDrama = tag; if (fuse && !use3D()) fuseLitFx(fuseHits(v, heldSnap)); done(v); };
         if (use3D()) {
-          const opts = { drama: willYacht || near || fuse, onDrama: fuse ? fuseDramaFx : dramaFx, onImpact: diceImpact, onLand: sfxLand, onDone: done2, fuse: fuse, onFuse: fuse ? fuseLitFx : null, yaw: mode && mode.yaw ? mode.yaw : [0, 0, 0, 0, 0] };
+          const opts = { drama: willYacht || near || fuse, onDrama: fuse ? fuseDramaFx : dramaFx, onImpact: diceImpact, onLand: sfxLand, onDone: done2, fuse: fuse, onFuse: fuse ? fuseLitFx : null, yaw: mode && mode.yaw ? mode.yaw : [0, 0, 0, 0, 0], cock: mode && mode.cock ? mode.cock : null };
           // one: a single die is picked up and thrown again · knock: the dice pop up from where they rest
           if (mode && mode.one >= 0 && window.Dice3D.reroll) window.Dice3D.reroll(values, mode.one, opts);
           else if (mode && mode.knock && window.Dice3D.knock) window.Dice3D.knock(values, heldSnap.map(function (h) { return !h; }), opts);
@@ -4687,6 +4863,11 @@
             fx('aug', { id: 'pressure', p: currentPlayerIdx, from: j, delay: 300 });
           });
         }
+        // 모서리 착지: the values are rolled, then the cock is drawn (뻥카, later: a roll thrown under the cup draws none, decided before this line)
+        const spentBefore = cockSpent;
+        cock = drawCock(roller, next, heldSnap, spentBefore);
+        if (cock) { cockSpent = true; cock.seq = rollSeq + 1; cock.t0 = Date.now(); } // tossDice bumps rollSeq once
+        cockSpentBefore = spentBefore;
         tossDice(next, heldSnap, null, onComplete, notes);
       }
       // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
@@ -4705,9 +4886,10 @@
         // the new turns are only local until the dice land: the global yaw changes with `dice`, so no STATE carries new yaw beside old dice
         const liveY = yawLive(), newYaw = drawYaw(heldSnap);
         const yawExtra = liveY ? { yaw: newYaw.slice() } : null; // never an undefined key; an old client ignores it
-        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice() };
+        const cockSpec = !extra && cock ? { i: cock.i, faces: cock.faces.slice() } : null; // only a normal roll can stand a die on its edge
+        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore };
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra, yawExtra)); powerFx(extra); }
-        else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra));
+        else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra, cockSpec ? { cock: cockSpec } : null));
         broadcastState();
         renderAll();
 
@@ -4723,11 +4905,12 @@
           broadcastState();
           renderAll();
           // a fuse roll that shows a 1 is a zero: no combo is celebrated over it
-          if (isFuse && fuseHits(v, heldSnap).length) { lastDrama = null; revealPreviews(); }
+          if (cock) cockLanded(); // a die stands on its edge: the payoff waits for the pick
+          else if (isFuse && fuseHits(v, heldSnap).length) { lastDrama = null; revealPreviews(); }
           else postRollFx(v);
           augRollFx(roll.notes);
           if (typeof onComplete === 'function') onComplete();
-        }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null, fuse: isFuse, yaw: newYaw.slice() });
+        }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null, fuse: isFuse, yaw: newYaw.slice(), cock: cockSpec });
         renderPowers(); // the slam window opens once the dice are actually moving
       }
 
@@ -4843,6 +5026,7 @@
       const AUG_LIST = [
         { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다.', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
         { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 4번까지 굴립니다.', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
+        { id: 'cocked', tier: 1, cat: 'dice', name: '모서리 착지', desc: '가끔 주사위 하나가 모서리로 섭니다. 걸친 눈 중 하나를 고릅니다.', ev: 10, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 3, y: 0.18, ry: 0.4, tx: 0.78 }] } },
         { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈을 2배로 더합니다.', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
         { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
         { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
@@ -4850,6 +5034,7 @@
         { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, show: true, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
+        { id: 'tilt', tier: 2, cat: 'hand', name: '기울이기', desc: '책상을 기울입니다. 고정하지 않은 주사위가 한 면씩 넘어갑니다.', ch: { tilt: 1 }, ev: 14, show: true, art: { zoom: 0.9, glyph: 1, dice: [{ v: 3, x: -0.75, ry: 0.35 }, { v: 5, x: 0.75, y: 0.3, ry: 0.9, tz: -0.65 }] } },
         { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다. 연속으로는 못 씁니다.', ch: { rewind: 2 }, ev: 12 },
         { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꿉니다.', ch: { psychic: 2 }, ev: 24, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
         { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람이 기록한 주사위를 첫 굴림으로 씁니다.', ch: { ride: 2 }, ev: 22 },
@@ -4899,6 +5084,8 @@
         slam: '<path d="M24 4l3.5 10.5L38 9l-4.5 10.5L44 24l-10.5 4.5L38 39l-10.5-5.5L24 44l-3.5-10.5L10 39l4.5-10.5L4 24l10.5-4.5L10 9l10.5 5.5z"/><circle class="a" cx="24" cy="24" r="5"/>',
         flip: '<path d="M10 18a15 15 0 0 1 26-6l3 3"/><path d="M40 7v8h-8"/><path d="M38 30a15 15 0 0 1-26 6l-3-3"/><path d="M8 41v-8h8"/>',
         reroll: '<rect x="6" y="16" width="22" height="22" rx="5"/><circle class="a" cx="17" cy="27" r="3"/><path d="M26 7a14 14 0 0 1 15 15"/><path d="M43 14v8h-8"/>',
+        cocked: '<path d="M24 6l15 8.5v17L24 40 9 31.5v-17z"/><path d="M24 23v17M24 23L9 14.5M24 23l15-8.5"/><circle class="a" cx="24" cy="14.5" r="2.4"/><path d="M13 44h22"/>',
+        tilt: '<path d="M5 38L43 30"/><rect class="a" x="13" y="9" width="17" height="17" rx="4" transform="rotate(-14 21.5 17.5)"/><path d="M34 14l6 3-3 6"/>',
         rewind: '<path d="M9 24A15 15 0 1 0 14 13"/><path d="M8 6v8h8"/><path d="M24 15v10l7 4"/>',
         psychic: '<path d="M4 25s7-12 20-12 20 12 20 12-7 12-20 12S4 25 4 25z"/><circle class="a" cx="24" cy="25" r="5.5"/><path d="M24 4v4M12 7l2 4M36 7l-2 4"/>',
         aceRebel: '<path d="M12 42L24 8l12 34"/><path d="M16.5 30h15"/><path class="a" d="M37 5l1.8 3.7 4 .6-2.9 2.8.7 4L37 14.2l-3.6 1.9.7-4-2.9-2.8 4-.6z"/>',
@@ -5106,6 +5293,9 @@
             if (gameActive && !draft && flipRound === round) st.tip += '. 이번 라운드에는 이미 엎었습니다.';
             else if (mine && !hasRolledThisTurn && !flipList().some(function (e) { return e.p !== idx; })) st.tip += '. 지울 상대 기록이 없습니다.';
           }
+        } else if (id === 'cocked') {
+          if (mine && cockShown()) { st.cls = 'is-hot'; st.tip = '지금 눈을 고르는 중입니다.'; }
+          else st.tip = '굴림마다 ' + b(Math.round(COCK_P * 100) + '%') + ' 확률입니다. 턴당 한 번까지입니다.';
         } else if (id === 'amend') {
           if (p.law && LAW[p.law]) { st.cls = 'is-done'; st.n = '✓'; st.tip = '통과시킨 규칙은 ' + b(esc(LAW[p.law].name)) + '입니다.'; }
           else if (lawDue(p)) {
@@ -5354,6 +5544,7 @@
         if (cursedBy(p)) m[4].push('curse');
         stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
+        if (cockShown()) m[cock.i].push('cocked');
         return m;
       }
       // whose augment a die mark is (for its tooltip): the roller's own, or the opponent's who put it there
@@ -5389,6 +5580,8 @@
       }
       function augAllowed(a, roundNo) {
         if (a.id === 'tableFlip' && (players.length < 2 || roundNo >= 9 || !newCardsOk(3))) return false;
+        if (a.id === 'tilt' && !newCardsOk(4)) return false; // protocol 4: an older client has no tilt picker and no cock chips
+        if (a.id === 'cocked' && (!COCK_LIVE || !newCardsOk(4))) return false;
         if (a.id === 'amend') {
           // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
           if (roundNo < 5 || players.length < 2 || lastRound - roundNo < 3) return false;
@@ -5438,6 +5631,7 @@
         }
       }
       function startDraft(roundNo) {
+        clearCock();
         draft = { round: roundNo, offers: players.map(function (p) { return makeOffer(p, roundNo); }) };
         broadcastState();
         renderAll();
@@ -5606,6 +5800,7 @@
         stuck = [false, false, false, false, false]; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
         twoferPend = null; restTurn = false;
         clearTimeout(gagT);
+        clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false;
       }
       // a turn begins (after any draft): rolls for this turn, curses, prophecy, AI kick-off
       function startTurn(announce) {
@@ -6527,7 +6722,7 @@
         if (!a || !pt) return;
         opts = opts || {};
         const y = pt.r ? pt.r.top : pt.y;
-        const e = addFx('fx-pop t' + a.tier, pt.x, y - 4, badgeHtml(id) + '<span>' + esc(opts.label || a.name) + '</span>' + (text ? '<b>' + esc(text) + '</b>' : ''));
+        const e = addFx('fx-pop t' + a.tier, pt.x, y - 4, badgeHtml(id) + (opts.label === '' ? '' : '<span>' + esc(opts.label || a.name) + '</span>') + (text ? '<b>' + esc(text) + '</b>' : ''));
         e.style.setProperty('--cat', AUG_CATS[a.cat].color);
         // fired from a seat card: the tag hangs under the rail, in line with that card and inside the screen,
         // instead of rising over the cards above it (or out of the top of the screen)
@@ -7333,6 +7528,49 @@
             if (e.phase === 'flip') tableFlipFx(e);
             break;
           }
+          case 'cocked': {
+            // the wire values are checked first: a slot that is not a die, a face outside 1..6 and a turn outside 0..3 are dropped
+            const ci = typeof e.i === 'number' ? Math.floor(e.i) : -1;
+            if (!(ci >= 0 && ci < 5)) break;
+            let cf = null, cy = null;
+            if (e.face != null) { cf = typeof e.face === 'number' ? Math.floor(e.face) : -1; if (!(cf >= 1 && cf <= 6)) break; }
+            if (e.y != null) { cy = typeof e.y === 'number' ? Math.floor(e.y) : -1; if (!(cy >= 0 && cy <= 3)) cy = null; }
+            const pt = diePt(ci);
+            if (e.phase === 'lean') {
+              if (use3D() && window.Dice3D.kick) window.Dice3D.kick({ fov: -1.2 });
+              ringFx(pt, '#ffd77a', 2.2);
+              showChip(e.p === powerOwnerIdx() ? '주사위 ' + (ci + 1) + '번이 모서리에 섰습니다.' : (who ? who.name : '') + ' 님의 주사위가 모서리에 섰습니다.', 'gold');
+              cockSound(true);
+            } else if (e.phase === 'pick' && cf !== null) {
+              cockSound(false);
+              // not while this screen's own roll is still landing (the state then repairs the pose)
+              if (use3D() && window.Dice3D.uncock && !window.Dice3D.isAnimating()) window.Dice3D.uncock(ci, cf, cy);
+              sample('pick', { vol: 0.6 });
+              const mid = matchId;
+              setTimeout(function () {
+                if (matchId !== mid) return;
+                sfxThud(); ringFx(pt, '#ffd77a', 2.6);
+                burst(pt, { shape: 'dust', count: 7, dist: 38, color: 'rgba(235,222,196,0.7)', dur: 600 });
+                augPop('cocked', pt, String(cf), { label: '' });
+              }, REDUCED ? 0 : 330);
+              // a guest has no pick callback: it plays the payoff itself, on the dice the pick makes (the host does it in doCockPick)
+              if (isOnlineMatch && onlineRole === 'guest') {
+                const era = fxEra, nv = dice.slice(); nv[ci] = cf;
+                let tries = 0;
+                const payoff = function () { // wait while this screen's own dice are still landing
+                  if (matchId !== mid || era !== fxEra || !diceOk(nv)) return;
+                  if (use3D() && window.Dice3D.isAnimating() && tries++ < 8) { setTimeout(payoff, 200); return; }
+                  postRollFx(nv);
+                };
+                setTimeout(payoff, COCK_MS);
+              }
+            } else if (e.phase === 'lost') {
+              cockSound(false);
+              sample('fail', { vol: 0.5 });
+              showChip((who ? who.name : '') + ' 님의 선택이 날아갔습니다.', 'gold');
+            }
+            break;
+          }
           case 'earlyEnd': {
             screenFx('clock', 2000, '<div class="clk">' + glyphSvg('earlyEnd') + '</div><div class="clk-t">ROUND ' + e.last + '에서 끝</div>');
             restartAnim(roundCap, 'fx-cap');
@@ -7526,6 +7764,7 @@
         slam: { label: '샷건', chip: '샷건', kind: 'live' },
         flip: { label: '뒤집기', chip: 'FLIP', kind: 'target' },
         reroll: { label: '다시', chip: 'REROLL', kind: 'target' },
+        tilt: { label: '기울이기', chip: '기울이기', kind: 'dir' },
         psychic: { label: '염력', chip: '염력', kind: 'target' },
         rewind: { label: '되감기', chip: 'REWIND', kind: 'instant' },
         seal: { label: '봉인', chip: '봉인', kind: 'instant' },
@@ -7542,7 +7781,7 @@
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' },
         twins: { label: '쌍둥이', chip: '쌍둥이', kind: 'switch' } // 켜짐 / 꺼짐: never spent
       };
-      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
+      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
@@ -7564,7 +7803,7 @@
       }
       // during a 봉인 turn: the open box with the highest score for the dice on the table
       function sealCatFor(p) {
-        if (!sealTurn || !p || p !== players[currentPlayerIdx] || !hasRolledThisTurn) return null;
+        if (!sealTurn || !p || p !== players[currentPlayerIdx] || !hasRolledThisTurn || cock) return null; // a pending pick: the lock is set once the face is chosen
         const open = openCats(p);
         if (open.length < 2) return null;
         let best = null, bv = -1e9;
@@ -7598,6 +7837,7 @@
         if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
         if (kind === 'tableFlip') return flipUsable();
         if (!hasRolledThisTurn) return false;
+        if (kind === 'tilt') return !tiltBlocked() && tiltMoves().some(Boolean); // a roll has landed and at least one free die can fall
         if (kind === 'rewind') return rollsLeft < rollsMax || (!!rewindSnap && !!rewindSnap.fuse);
         if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
         if (kind === 'twofer') return !encoreTurn && !duel && twoferPairs(cur);
@@ -7634,16 +7874,20 @@
           // the moving dice get knocked and land on fresh values
           const roller = players[liveRoll.roller];
           const forced = rollValues(roller, liveRoll.values, liveRoll.held, false);
+          // 모서리 착지: a slam in the air replaces a normal roll, so its cock is drawn again (power throws never touch the cock)
+          const redraw = !!liveRoll.cockOk;
+          const nc = redraw ? drawCock(roller, forced, liveRoll.held, liveRoll.spentBefore) : null;
           let vals = null;
-          if (use3D()) vals = window.Dice3D.slam(forced);
+          if (use3D()) vals = window.Dice3D.slam(forced, nc && { i: nc.i, faces: nc.faces.slice() });
           else if (fbRoll) { fbRoll.values = forced.slice(); fbRoll.ticks = 0; vals = forced.slice(); }
           if (!vals) return false;
           p.ch.slam -= 1;
           liveRoll.slammed = true;
           liveRoll.values = vals.slice();
           liveRoll.notes = lastRollNotes;
+          if (redraw) { cock = nc; if (nc) { nc.seq = rollSeq; nc.t0 = Date.now(); } cockSpent = !!liveRoll.spentBefore || !!nc; }
           slamFx(pIdx);
-          broadcastFx('slam', { values: vals, pIdx: pIdx });
+          broadcastFx('slam', Object.assign({ values: vals, pIdx: pIdx }, nc ? { cock: { i: nc.i, faces: nc.faces.slice() } } : null));
           broadcastState();
           renderPowers();
           return true;
@@ -7651,6 +7895,11 @@
         // resting dice: the free ones jump off the felt and land again - no roll spent
         p.ch.slam -= 1;
         const cur = players[currentPlayerIdx];
+        if (cock) { // 모서리 착지: the choice is knocked away and the re-toss draws no new cock
+          const lost = cock;
+          clearCock(); setHighlight(null); cockHl = false;
+          fx('aug', { id: 'cocked', phase: 'lost', p: currentPlayerIdx, by: pIdx, i: lost.i });
+        }
         let done = onComplete;
         // someone knocked the bot's dice: drop whatever it had planned and re-plan once they land
         if (cur && cur.isAI && (pIdx !== currentPlayerIdx || typeof onComplete !== 'function')) { clearTimeout(aiTimer); done = aiResume; }
@@ -7735,6 +7984,7 @@
         const cur = players[currentPlayerIdx];
         if (kind === 'allin') return toggleAllin();
         if (kind === 'twins') return doTwins();
+        if (kind === 'tilt') return doTilt(idx, onComplete);
         if (POWER_DEFS[kind].kind === 'toggle') return false; // toggles (joker / overwrite / twofer) apply when recording
         if (kind === 'rewind') return doRewind(onComplete);
         if (kind === 'seal') return doSeal(onComplete);
@@ -7822,6 +8072,90 @@
         if (typeof onComplete === 'function') setTimeout(onComplete, 450);
         return true;
       }
+      // 모서리 착지: the dice have landed with a die on its edge (host / local). The table waits for the pick; the payoff comes after it.
+      function cockLanded() {
+        fx('aug', { id: 'cocked', phase: 'lean', p: currentPlayerIdx, i: cock.i, n: cock.faces.length });
+        if (!isOnlineMatch) aiConsiderCockSlam();
+      }
+      // the pick (host / local): the die tips onto the chosen face; nothing is spent. Like a tilt, it holds the table while it plays.
+      function doCockPick(face, onComplete) {
+        if (!cock || !gameActive || draft || isRolling || isScoring) return false;
+        face = Number(face);
+        if (cock.faces.indexOf(face) === -1) return false;
+        const c = cock, from = dice[c.i], myMatch = matchId;
+        const y = yawLive() ? cockYawAfter(from, yaw[c.i], face) : null; // the die keeps the turn it really rests at
+        clearCock();
+        dice[c.i] = face;
+        if (y !== null) yaw[c.i] = y;
+        isRolling = true; rollSeq++; lastDrama = null;
+        setHighlight(null); cockHl = false;
+        fx('aug', Object.assign({ id: 'cocked', phase: 'pick', p: currentPlayerIdx, i: c.i, face: face, from: from }, y !== null ? { y: y } : null));
+        broadcastState();
+        renderAll();
+        setTimeout(function () {
+          if (matchId !== myMatch) return;
+          isRolling = false;
+          broadcastState(); renderAll();
+          postRollFx(dice); // a pick into a yacht or a straight pays off like a roll
+          if (typeof onComplete === 'function') onComplete();
+        }, COCK_MS);
+        return true;
+      }
+      // 기울이기: no roll is spent; every free die tips one face toward dir. The host computes the result, a guest only sends dir.
+      function doTilt(dir, onComplete) {
+        const cur = players[currentPlayerIdx];
+        if (!cur || !(dir >= 0 && dir <= 3) || dir !== Math.floor(dir) || charges(cur, 'tilt') <= 0 || !canUsePower('tilt')) return false;
+        const prev = dice.slice(), r = tiltResult(dir), myMatch = matchId;
+        cur.ch.tilt -= 1;
+        dice = r.values; yaw = r.yaw;
+        isRolling = true; selectedTile = null; armedPower = null; tiltSel = -1; psychicDie = -1;
+        if (hlIndices) setHighlight(null);
+        rollSeq++; lastRollNotes = null; lastDrama = null;
+        // fx first, state second: a state that wins the race only sets the faces, the fx then tips onto them
+        fx('power', { power: 'tilt', pIdx: currentPlayerIdx, dir: dir, moved: r.moved, prev: prev, values: dice.slice(), yaw: yaw.slice(), held: held.slice(), still: true });
+        broadcastState();
+        renderAll();
+        setTimeout(function () {
+          if (matchId !== myMatch) return;
+          isRolling = false;
+          broadcastState(); renderAll();
+          postRollFx(dice); // a tilt into a yacht or a straight pays off like a roll
+          if (typeof onComplete === 'function') onComplete();
+        }, TILT_MS);
+        return true;
+      }
+      // every screen (host, guests, bots' tables) plays the tip from the fx alone; a broken message never reaches the table
+      function tiltFx(e) {
+        const vals = toArr(e.values).map(Number), dir = Math.floor(Number(e.dir));
+        if (!diceOk(vals) || !(dir >= 0 && dir <= 3)) return;
+        const yw = cleanYaw(e.yaw), seen = {};
+        const moved = toArr(e.moved).map(Number).filter(function (i) { if (!(i >= 0 && i < 5) || Math.floor(i) !== i || seen[i]) return false; seen[i] = 1; return true; });
+        const hv = toArr(e.held).map(Boolean);
+        ensureAudio();
+        if (use3D() && window.Dice3D.tip) window.Dice3D.tip(moved.map(function (i) { return { i: i, v: vals[i], y: yw[i] }; }), dir, { held: hv, onLand: function (k) { sfxTiltClack(k); } });
+        else {
+          fbTilt = { idx: moved, dir: dir };
+          renderDice();
+          const tmid = matchId;
+          setTimeout(function () { if (matchId !== tmid) return; fbTilt = null; renderDice(); }, 700);
+          moved.forEach(function (i, k) { sfxTiltClack(k, k * 40); });
+        }
+        sfxTiltStart();
+        const pi = seatIdx(e.pIdx), p = players[pi], pt = stagePt();
+        if (pt) augPop('tilt', pt, '', { label: p && pi !== powerOwnerIdx() ? p.name + ' 님의 ' + AUG.tilt.name : AUG.tilt.name });
+        pingChip(e.pIdx, 'tilt');
+        const mid = matchId, era = fxEra, guestSide = isOnlineMatch && onlineRole === 'guest';
+        const prev = toArr(e.prev).map(Number);
+        setTimeout(function () {
+          if (matchId !== mid) return;
+          sfxThud(); buzz(12);
+          if (use3D() && p && p === players[currentPlayerIdx] && diceOk(prev) && tiltBest(p, vals) > tiltBest(p, prev)) moved.forEach(function (i) { window.Dice3D.pulse(i, '#ffd77a', 0.5); });
+          if (guestSide && era === fxEra) postRollFx(vals); // the host plays the payoff in doTilt; a guest has no roll callback
+        }, Math.max(0, TILT_MS - 120));
+        buzz(10);
+      }
+      function sfxTiltStart() { if (!sample('wobble', { rate: 0.7, vol: 0.9 })) tone(150, 0.3, 'sawtooth', 0.04, 90); }
+      function sfxTiltClack(k, ms) { if (!sample('clack', { rate: 0.9 + 0.07 * k, delay: (ms || 0) / 1000 })) sfxClack(5 + k, 'die'); }
       // 쌍둥이: flips how the NEXT roll is made; the dice on the table stay as they are
       function doTwins() {
         const cur = players[currentPlayerIdx];
@@ -8347,6 +8681,7 @@
         if (!mine) { armedPower = null; armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
         if (armed.twofer && (charges(owner, 'twofer') <= 0 || twoferPend)) armed.twofer = false;
         if (armedPower && !canUsePower(armedPower)) { armedPower = null; psychicDie = -1; }
+        if (armedPower !== 'tilt') tiltSel = -1;
         if (armed.joker && charges(owner, 'joker') <= 0) armed.joker = false;
         if (armed.overwrite && charges(owner, 'overwrite') <= 0) armed.overwrite = false;
         bar.hidden = !keys.length;
@@ -8402,6 +8737,7 @@
           b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || (k === 'allin' ? allinTurn && me === currentPlayerIdx : !!armed[k]));
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
+          if (POWER_DEFS[k].kind === 'dir') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           if (k === 'tableFlip') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           if (k === 'allin') b.setAttribute('aria-pressed', allinTurn && me === currentPlayerIdx ? 'true' : 'false');
           const cnt = b.querySelector('.pw-n');
@@ -8411,6 +8747,7 @@
         updateSeatSlams();
         markFlipPreview();
         renderFacePick();
+        renderTiltPick();
         if (tipFor && (!tipFor.isConnected || tipFor.closest('#powers'))) refreshTip(); // a tooltip open on a key follows its count
       }
       // Five keys or more show as icon + count (.many). So do fewer on a short felt (a phone under the two-row cards
@@ -8539,6 +8876,13 @@
           renderTiles(); renderPowers();
           return;
         }
+        if (def.kind === 'dir') { // 기울이기: the arrows open above the bar
+          armedPower = armedPower === kind ? null : kind;
+          tiltSel = -1; psychicDie = -1;
+          sfxTick();
+          renderDice(); renderPowers();
+          return;
+        }
         if (def.kind === 'target' || def.kind === 'tile' || def.kind === 'face') {
           armedPower = armedPower === kind ? null : kind;
           psychicDie = -1;
@@ -8589,6 +8933,122 @@
         if (isOnlineMatch && onlineRole === 'guest') sendAction({ action: 'power', kind: 'psychic', idx: idx, face: v });
         else usePower('psychic', idx, v);
         renderDice(); renderPowers();
+      }
+      // 기울이기: four arrows above the power bar. Touch: the first tap previews (ghost numbers on the dice), the same arrow again tips.
+      // Mouse: hover previews, a click tips. The score each arrow leads to is read out for screen readers only.
+      const tiltPick = $('tiltPick'), tiltHint = tiltPick.querySelector('.tp-hint'), tiltRow = tiltPick.querySelector('.tp-row');
+      const TILT_DIR_KO = ['위쪽', '오른쪽', '아래쪽', '왼쪽'], tiltBtns = [];
+      let tiltPtr = 'mouse';
+      [3, 0, 2, 1].forEach(function (dir) { // left, up, down, right: the row reads like the screen
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.dataset.dir = String(dir);
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + dir * 90 + 'deg)"><path d="M5 15l7-7 7 7"/></svg>';
+        b.addEventListener('pointerdown', function (e) { tiltPtr = e.pointerType || 'mouse'; });
+        b.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse' && armedPower === 'tilt' && tiltSel !== dir) { tiltSel = dir; renderDice(); syncTiltPick(); } });
+        b.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && armedPower === 'tilt' && tiltSel === dir) { tiltSel = -1; renderDice(); syncTiltPick(); } });
+        b.addEventListener('click', function (e) { tiltTap(dir, e.detail === 0 ? 'mouse' : tiltPtr); });
+        tiltRow.appendChild(b);
+        tiltBtns.push(b);
+      });
+      function syncTiltPick() {
+        tiltBtns.forEach(function (b) { b.classList.toggle('is-sel', Number(b.dataset.dir) === tiltSel); });
+        const t = tiltSel >= 0 && tiltPtr !== 'mouse' ? '같은 방향을 한 번 더 누르면 기울입니다.' : '기울일 방향을 누릅니다. 굴림은 쓰지 않습니다.';
+        if (tiltHint.textContent !== t) tiltHint.textContent = t;
+      }
+      function renderTiltPick() {
+        const open = armedPower === 'tilt' && isMyTurn() && !isRolling && !isScoring && canUsePower('tilt');
+        tiltPick.hidden = !open;
+        if (!open) { pickOver('tilt', false); return; }
+        const tight = $('diceStage').clientHeight < 300; // a short felt: the hint line goes and the pill shrinks so it stays off the dice
+        tiltPick.classList.toggle('tight', tight);
+        tiltPick.style.bottom = (promptBottom() - (tight ? 6 : 0)) + 'px';
+        const low = tight && pickOnDice(tiltPick, -1, 0.95); // still on the dice (3-4 players): down into the keys' place
+        if (low) tiltPick.style.bottom = '14px';
+        pickOver('tilt', low);
+        const cur = players[currentPlayerIdx];
+        tiltBtns.forEach(function (b) {
+          const dir = Number(b.dataset.dir), r = tiltResult(dir), best = tiltBestBox(cur, r.values);
+          const label = TILT_DIR_KO[dir] + '으로 기울이기. 주사위 ' + r.values.join(' ') + '. 최고 ' + (best.id ? catKo(best.id) + ' ' : '') + best.val + '점.';
+          if (b.getAttribute('aria-label') !== label) b.setAttribute('aria-label', label);
+        });
+        syncTiltPick();
+      }
+      function tiltTap(dir, ptype) {
+        ensureAudio();
+        if (armedPower !== 'tilt' || !isMyTurn() || !canUsePower('tilt') || !(dir >= 0 && dir <= 3)) return;
+        const now = performance.now(), touch = ptype === 'touch' || ptype === 'pen';
+        if (touch && tiltSel !== dir) { tiltSel = dir; tiltTapAt = now; sfxTick(); renderDice(); syncTiltPick(); return; } // the first tap only previews
+        if (touch && now - tiltTapAt < 280) return; // a double tap never skips the preview
+        tiltTapAt = now;
+        armedPower = null; tiltSel = -1;
+        if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: 'tilt', idx: dir }); renderDice(); renderPowers(); return; }
+        usePower('tilt', dir);
+      }
+
+      // 모서리 착지: the faces the standing die may show, as chips above the power bar. Only the roller gets buttons; everyone else sees the same chips as pictures.
+      const cockPick = $('cockPick'), cockCap = cockPick.querySelector('.cp-cap'), cockRow = cockPick.querySelector('.cp-row');
+      function renderCockPick() {
+        const show = cockShown() && gameActive && !isScoring && cockSentSeq !== rollSeq;
+        cockPick.hidden = !show;
+        if (!show) {
+          pickOver('cock', false);
+          cockPick.dataset.sig = '';
+          if (cockHl) { cockHl = false; setHighlight(null); }
+          return;
+        }
+        const mine = isMyTurn(), cur = players[currentPlayerIdx];
+        const sig = cock.i + ':' + cock.faces.join(',') + ':' + (mine ? 1 : 0) + ':' + currentPlayerIdx;
+        if (cockPick.dataset.sig !== sig) {
+          cockPick.dataset.sig = sig;
+          cockRow.innerHTML = '';
+          cock.faces.forEach(function (f, k) {
+            if (!mine) { const s = document.createElement('span'); s.className = 'cp-chip'; s.setAttribute('aria-hidden', 'true'); s.innerHTML = dieIcon(f); cockRow.appendChild(s); return; }
+            const bt = document.createElement('button');
+            bt.type = 'button';
+            bt.setAttribute('aria-label', f + ' 고르기');
+            bt.innerHTML = dieIcon(f);
+            bt.addEventListener('click', function () { onCockChip(f); });
+            bt.addEventListener('keydown', function (e) {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = cockRow.children[(k + (e.key === 'ArrowRight' ? 1 : cockRow.children.length - 1)) % cockRow.children.length]; if (n) n.focus(); e.preventDefault(); }
+            });
+            cockRow.appendChild(bt);
+          });
+          cockPick.setAttribute('aria-label', '모서리에 선 주사위 ' + (cock.i + 1) + '번.' + (mine ? ' 눈을 고릅니다.' : ''));
+          cockCap.textContent = mine ? '눈을 고릅니다' : (cur ? cur.name : '') + ' 님이 고르는 중입니다.';
+          // the first chip takes focus only for a player who is using the keyboard (a phone never gets focus pulled)
+          if (mine && !anyOverlay() && performance.now() - lastKeyAt < 8000 && cockRow.firstElementChild) cockRow.firstElementChild.focus({ preventScroll: true });
+          setHighlight([cock.i], '#ffd77a'); cockHl = true;
+        }
+        cockPick.classList.toggle('ro', !mine);
+        cockPick.classList.toggle('tight', $('diceStage').clientHeight < 300); // a short felt: smaller chips, so the strip fits under the dice
+        placeCockPick();
+        syncSeatChips();
+      }
+      function onCockChip(face) {
+        ensureAudio();
+        if (!cockShown() || !isMyTurn()) return;
+        if (isOnlineMatch && onlineRole === 'guest') {
+          if (cockSentSeq === rollSeq) return;
+          cockSentSeq = rollSeq; sendAction({ action: 'cockPick', face: face }); renderCockPick();
+          // the host may drop a pick that raced a 샷건: the chips come back if no state has answered
+          const mid = matchId, sq = rollSeq;
+          setTimeout(function () { if (matchId === mid && cockSentSeq === sq) { cockSentSeq = -1; renderCockPick(); } }, 4000);
+          return;
+        }
+        doCockPick(face);
+      }
+      // above the power bar; if that would sit on the standing die, along the top of the stage
+      function placeCockPick() {
+        cockPick.classList.remove('over');
+        cockPick.style.top = 'auto'; cockPick.style.bottom = (promptBottom() - (cockPick.classList.contains('tight') ? 6 : 0)) + 'px';
+        let low = false;
+        if (use3D() && cock && pickOnDice(cockPick, cock.i, 1.3)) {
+          // the roller's own keys are dead while the pick is pending: the chips go down into their place (a viewer keeps the keys: 샷건 may be live)
+          if (isMyTurn()) { cockPick.classList.add('over'); cockPick.style.bottom = '14px'; low = !pickOnDice(cockPick, cock.i, 1.05); }
+          if (!low) { cockPick.classList.remove('over'); cockPick.style.bottom = 'auto'; cockPick.style.top = '8px'; }
+        }
+        pickOver('cock', low);
       }
 
       // ---------- AI with augments ----------
@@ -8784,6 +9244,7 @@
           v = best;
         }
         if (id === 'twofer') v = a.ev * Math.min(1, left * 1.5);
+        if (id === 'tilt') v = a.ev * Math.min(1, left * 1.5); // a charge that cannot be used before the game ends is worth nothing
         if (id === 'tableFlip') v = players.length < 2 ? 0 : a.ev * Math.max(0, Math.min(1, (lastRound - round) / 11));
         if (id === 'fuse') { v = a.ev * left; if (augHas(p, 'loaded')) v += 3; if (players.some(function (q) { return q !== p && augHas(q, 'curse'); })) v -= 3; }
         if (id === 'ride') v = a.ev * (lastRound - round + 1 < 3 ? 0.6 : 1);
@@ -8905,7 +9366,7 @@
         }
         return { cat: cat, flags: {} };
       }
-      const PW_COST = { reroll: 8, flip: 6, psychic: 14, rewind: 8, slam: 10 };
+      const PW_COST = { reroll: 8, flip: 6, psychic: 14, rewind: 8, slam: 10, tilt: 12 };
       // 도화선: value of one more throw (any re-rolled 1 = a zero in the cheapest box) vs. recording now
       function aiFuseOption(cur) {
         const sc = aiScores(cur), tm = aiTurnMods(cur);
@@ -8944,11 +9405,86 @@
         });
         return best && best.ev > stop + 0.5 ? best : null;
       }
+      // 기울이기: which free dice to leave alone and which way to tip the rest. It tries every group of movable dice in all four directions.
+      function aiTiltPlan(cur) {
+        if (charges(cur, 'tilt') <= 0 || !canUsePower('tilt')) return null;
+        const sc = aiScores(cur), tm = aiTurnMods(cur), base = tiltMoves(true); // base: the dice that could fall if the bot leaves them free
+        const idx = [0, 1, 2, 3, 4].filter(function (i) { return base[i]; });
+        const cands = [];
+        for (let m = 1; m < (1 << idx.length); m++) {
+          const mv = [false, false, false, false, false];
+          idx.forEach(function (i, b) { if (m & (1 << b)) mv[i] = true; });
+          if (twinsOn(cur) && mv[0] !== mv[1]) continue;
+          for (let d = 0; d < 4; d++) cands.push({ mv: mv, dir: d, dice: tiltResult(d, mv).values });
+        }
+        if (!cands.length) return null;
+        let none, vals;
+        if (rollsLeft > 0) {
+          const list = [dice].concat(cands.map(function (c) { return c.dice; }));
+          const E = YachtAI.evalDice ? YachtAI.evalDice(sc, CAT_IDS, list, rollsLeft, tm) : list.map(function (d) { return YachtAI.valueAt(sc, CAT_IDS, d, rollsLeft, tm, false); });
+          none = E[0]; vals = cands.map(function (c, k) { return E[k + 1]; });
+        } else { // the last roll: what the best record is worth with the exact scores, for THESE dice
+          const flags = allinOn() ? { allin: true } : {};
+          const best = function (d) {
+            const ex = CAT_IDS.map(function (id) { return scoreFor(cur, id, d, Object.assign(previewOpts(false), flags)); });
+            const m = Object.assign({}, tm || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: ex });
+            const adj = aiRecordAdj(cur, ex); if (adj) m.adj = adj;
+            if (sealTurn) { let lk = -1, lv = -1e9; CAT_IDS.forEach(function (id, ci) { if (cur.scores[id] === null && ex[ci] > lv) { lv = ex[ci]; lk = ci; } }); if (lk >= 0 && openCats(cur).length >= 2) m.block = 1 << lk; }
+            if (duel) m.block = 4095 & ~(1 << CAT_IDS.indexOf(duel.cat));
+            let b = -1e9; YachtAI.catValues(sc, CAT_IDS, d, m).forEach(function (x) { if (x.val > b) b = x.val; }); return b;
+          };
+          none = best(dice); vals = cands.map(function (c) { return best(c.dice); });
+        }
+        let bi = -1, bv = -1e9;
+        vals.forEach(function (v, k) { const n = cands[k].mv.filter(Boolean).length; const w = v - n * 1e-6; if (w > bv) { bv = w; bi = k; } }); // a tie moves fewer dice
+        if (bi < 0) return null;
+        const scale = Math.max(0, lastRound - round) / 11, gain = bv - none;
+        if (!(gain > PW_COST.tilt * scale + 0.3 || (lastRound - round < 1 && rollsLeft === 0 && gain > 0.01))) return null;
+        const c = cands[bi];
+        return { kind: 'tilt', idx: c.dir, hold: c.mv.map(function (m) { return !m; }), gain: gain - PW_COST.tilt * scale };
+      }
+      // value for player p of standing on dice d with rollsLeft rolls still to come (call it inside withDice)
+      function aiCockValue(p, d) {
+        const sc = aiScores(p), tm = aiTurnMods(p);
+        if (rollsLeft > 0) return YachtAI.valueAt(sc, CAT_IDS, d, rollsLeft, tm);
+        // the last roll is a record: the box values with the exact scores (a 봉인 lock, a 도전장 duel, 올인 ...)
+        let best = -1e9;
+        YachtAI.catValues(sc, CAT_IDS, d, withExact(tm, p)).forEach(function (x) { if (x.val > best) best = x.val; });
+        return best;
+      }
+      function aiCockChoice(p) {
+        if (!YachtAI.ready()) return cock.faces[0];
+        const vals = cock.faces.map(function (f) { const d = dice.slice(); d[cock.i] = f; return withDice(d, function () { return aiCockValue(p, d); }); });
+        let best = 0;
+        vals.forEach(function (v, k) { if (v > vals[best] + 1e-9) best = k; }); // a tie keeps the rolled face
+        const temp = (AI_LEVELS[p.level || 'hard'] || {}).temp || 0;
+        if (temp > 0 && Math.random() < Math.min(0.5, temp * 0.18)) return cock.faces[Math.floor(Math.random() * cock.faces.length)]; // a weaker bot sometimes misreads
+        return cock.faces[best];
+      }
+      // a bot with 샷건 knocks a good cock off the table: the pick is worth more to the roller than a fresh toss by the usual margin
+      function aiConsiderCockSlam() {
+        if (!matchAug || !cock || isOnlineMatch || !YachtAI.ready()) return;
+        const roller = players[currentPlayerIdx], sq = cock.seq, myMatch = matchId;
+        if (!roller) return;
+        players.forEach(function (p, idx) {
+          if (!p.isAI || idx === currentPlayerIdx || charges(p, 'slam') <= 0) return;
+          let best = -1e9;
+          cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, YachtAI.valueAt(aiScores(roller), CAT_IDS, d, rollsLeft, aiTurnMods(roller))); });
+          const mean = YachtAI.rollStats(aiScores(roller), CAT_IDS, dice, held, rollsLeft, aiTurnMods(roller)).mean;
+          const scale = Math.max(0, lastRound - round) / 11;
+          if (best - mean < 3 + 6 * scale) return;
+          setTimeout(function () {
+            if (matchId !== myMatch || !cock || cock.seq !== sq) return;
+            if (doSlam(idx)) renderAll();
+          }, roller.isAI ? 500 + Math.random() * 450 : 1700 + Math.random() * 700); // before a bot's own pick; a person gets time to read the faces and pick first
+        });
+      }
       function aiPowerPlan() {
         const cur = players[currentPlayerIdx];
-        if (!matchAug || !cur) return null;
+        if (!matchAug || !cur || cock) return null; // a pending pick: the dice are not final yet
+        const tp = aiTiltPlan(cur);
         const keys = ['reroll', 'flip', 'psychic', 'rewind', 'slam'].filter(function (k) { return charges(cur, k) > 0; });
-        if (!keys.length) return null;
+        if (!keys.length) return tp;
         const tm = aiTurnMods(cur), sc = aiScores(cur);
         const o = YachtAI.powerOptions(sc, CAT_IDS, dice, rollsLeft, held, tm);
         const scale = Math.max(0, lastRound - round) / 11;
@@ -8965,6 +9501,7 @@
           const g = v - o.none - PW_COST[k] * scale;
           if (g > gain) { gain = g; best = k; }
         });
+        if (tp && (!best || tp.gain > gain)) return tp;
         if (!best) return null;
         if (best === 'rewind') return { kind: 'rewind' };
         if (best === 'slam') return { kind: 'slam', hold: o.slam.hold };
@@ -9741,6 +10278,14 @@
         const afterRoll = function (skipPower) {
           if (!alive()) return;
           if (!hasRolledThisTurn) { aiTimer = setTimeout(step, 700); return; }
+          if (cock) { // a die stands on its edge: it picks a face first, after a beat the table can see
+            const sq = cock.seq;
+            aiTimer = setTimeout(function () {
+              if (!alive() || !cock || cock.seq !== sq) return; // a 샷건 took it: aiResume re-plans
+              if (!doCockPick(aiCockChoice(cur0), afterRoll)) afterRoll();
+            }, 1100);
+            return;
+          }
           const pw = skipPower === true ? null : aiPowerPlan();
           if (pw) {
             aiTimer = setTimeout(function () {
@@ -9752,6 +10297,14 @@
                 if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
                 renderDice();
                 aiTimer = setTimeout(function () { if (alive() && !doSlam(currentPlayerIdx, next)) afterRoll(true); }, 550);
+                return;
+              }
+              if (pw.kind === 'tilt') { // the dice it does not want to move are held first
+                const before = held.slice();
+                held = pw.hold.map(function (h, i) { return h || stuck[i]; });
+                if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
+                renderDice();
+                aiTimer = setTimeout(function () { if (alive() && !usePower('tilt', pw.idx, 0, next)) afterRoll(true); }, 550);
                 return;
               }
               if (!usePower(pw.kind, pw.idx, pw.face, next)) afterRoll(true);
@@ -9960,6 +10513,7 @@
         gameActive = false;
         draft = null;
         encoreTurn = false;
+        clearCock();
         broadcastState();
         broadcastFx('end', { delay: wait });
         renderAll();
@@ -10200,6 +10754,10 @@
         isRolling = !!d.isRolling;
         isScoring = !!d.isScoring;
         gameActive = !!d.gameActive;
+        // 모서리 착지: a pending cock only for the holder of the card, on landed dice; anything else is no cock (Firebase drops a null: missing = none)
+        const cu = players[currentPlayerIdx];
+        cock = matchAug && gameActive && hasRolledThisTurn && !isRolling && cu && augHas(cu, 'cocked') ? cockOk(d.cock, dice, held) : null;
+        if (!cock || cockSentSeq !== rollSeq) cockSentSeq = -1; // a state for another roll opens the chips again
         if (!gameActive || !(draft && draft.law)) { lawRevealed = {}; lawPendingSig = ''; } // a new match may pass the same law again
         if (!wasActive && gameActive) { resetTotalAnims(); matchId++; yfxReset(); OVERLAYS.forEach(closeOv); }
         renderAll();
@@ -10246,13 +10804,14 @@
         // an action aimed at dice that have changed since the guest saw them is dropped
         const stale = data.seq != null && Number(data.seq) !== rollSeq;
         if (data.action === 'slam') { if (who >= 0 && !stale && doSlam(who)) renderAll(); return; }
-        if (stale && (data.action === 'score' || data.action === 'hold' || data.action === 'power')) return;
+        if (stale && (data.action === 'score' || data.action === 'hold' || data.action === 'power' || data.action === 'cockPick')) return;
         const cur = players[currentPlayerIdx];
         if (!cur || cur.peerId !== from || draft) return;
         if (data.action === 'roll') rollDice();
         else if (data.action === 'hold' && data.idx >= 0 && data.idx < 5) toggleHold(data.idx);
         else if (data.action === 'score' && CATEGORIES.some(function (c) { return c.id === data.catId; })) commitScore(data.catId, { joker: !!data.joker, allin: !!data.allin, overwrite: !!data.overwrite, twofer: !!data.twofer });
-        else if (data.action === 'power' && POWER_KEYS.indexOf(data.kind) !== -1) usePower(data.kind, Number(data.idx), Number(data.face), null, data.cat ? String(data.cat) : undefined);
+        else if (data.action === 'power' && POWER_KEYS.indexOf(data.kind) !== -1 && (data.kind !== 'tilt' || typeof data.idx === 'number')) usePower(data.kind, Number(data.idx), Number(data.face), null, data.cat ? String(data.cat) : undefined);
+        else if (data.action === 'cockPick') doCockPick(typeof data.face === 'number' ? data.face : NaN); // the roller only (the check above); an offered face only (doCockPick checks)
       }
 
       function sendAction(msg) {
@@ -10456,6 +11015,7 @@
             updateChatUi();
             if (room.state && room.state.gameActive) {
               applyRemoteState(room.state);
+              cockSpent = !!cock; // one cock per turn: a pending cock was this turn's (cockSpent is not in the state)
               // the latch died with the old tab: rebuild it from the room in hand (a seated player with no member entry counts as 0)
               roomV = 99; roomSeen = {};
               const rm = room.members || {};
@@ -10662,7 +11222,7 @@
       function freshScores() { const s = {}; CATEGORIES.forEach(function (c) { s[c.id] = null; }); return s; }
       function resetTurnState() {
         currentPlayerIdx = 0; round = 1;
-        held = [false, false, false, false, false]; yaw = [0, 0, 0, 0, 0];
+        held = [false, false, false, false, false]; yaw = [0, 0, 0, 0, 0]; tiltSel = -1; fbTilt = null;
         rollsLeft = 3; rollsMax = 3; prevRollsLeft = 3;
         hasRolledThisTurn = false; allinTurn = false; allinLock = false; isRolling = false; isScoring = false; gameActive = true;
         lastScored = null; selectedTile = null; armedPower = null; armedReset();
@@ -10672,6 +11232,7 @@
         lastRound = 12; flipRound = -1; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
         turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
+        clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false; cockSentSeq = -1;
         matchId++;
         yfxReset();
         resetTotalAnims();
@@ -11327,6 +11888,7 @@
 
       window.addEventListener('keydown', function (e) {
         lastPointer = '';
+        lastKeyAt = performance.now();
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (e.key === 'Escape') {
           if (!peekOv.hidden) { closePeek(true); return; } // the peek sheet sits above everything else
@@ -11334,12 +11896,19 @@
           if (!profileOv.hidden) { profAfterSave = null; profEditing = null; closeOv(profileOv); return; }
           if (!rulesOv.hidden) { closeOv(rulesOv); return; }
           if (pickEl) { closePick(); return; }
+          const ovOpen = anyOverlay(); // a sheet or menu on top takes the Esc first
           [sheetOv, menuOv].forEach(closeOv);
           if (!modeOv.hidden) closeMode();
+          if (armedPower === 'tilt' && !ovOpen) { armedPower = null; tiltSel = -1; renderPowers(); renderDice(); }
           return;
         }
         if (!peekOv.hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); peekStep(e.key === 'ArrowLeft' ? -1 : 1); return; }
         if (anyOverlay() || !gameActive) return;
+        if (armedPower === 'tilt' && isMyTurn()) { // the arrows pick a direction, Enter tips
+          const ad = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'].indexOf(e.key);
+          if (ad >= 0) { e.preventDefault(); tiltSel = ad; renderDice(); syncTiltPick(); return; }
+          if (e.key === 'Enter' && tiltSel >= 0 && !(e.target && e.target.closest && e.target.closest('#tiltPick'))) { e.preventDefault(); tiltTap(tiltSel, 'mouse'); return; }
+        }
         if (e.key === ' ' || e.key === 'r' || e.key === 'R') {
           if (e.target && e.target.tagName === 'BUTTON' && e.key === ' ') return;
           e.preventDefault();
@@ -11808,6 +12377,32 @@
       const jitter = () => (Math.random() - 0.5) * 0.14;
       const yawRad = (y) => ((y | 0) & 3) * Math.PI / 2; // a die's resting turn (0..3 quarter turns) as an angle
 
+      // 모서리 착지: a die propped on an edge (two candidate faces look up from it) or on a corner (three)
+      let cockWant = null; // the lean the table should show (set by setCock); a lean that had to wait for a tween is applied when it ends
+      const wnormal = (q, v) => FACE_N[faceIdx(v)].clone().applyQuaternion(q);
+      function leanQuat(base, faces) {
+        const avg = new THREE.Vector3();
+        faces.forEach((v) => avg.add(wnormal(base, v)));
+        return new THREE.Quaternion().setFromUnitVectors(avg.normalize(), UP).multiply(base);
+      }
+      function tipQuat(cur, v) { return new THREE.Quaternion().setFromUnitVectors(wnormal(cur, v), UP).multiply(cur); } // the shortest turn from the lean onto face v
+      function applyLean(d, faces) {
+        if (!faces || faces[0] !== d.value) return;
+        const three = faces.length === 3;
+        d.cockFaces = faces.slice(); d.cockKey = faces.join(','); d.cockT0 = clock;
+        d.cockLift = three ? 0.256 : 0.145; d.cockDz = three ? 0.5 : 0; d.cockDx = d.i % 4 === 0 ? (three ? 0.4 : 0.2) : 0; // a corner stands half a die toward the camera, clear of its neighbours (an end die also steps in, off the edge of the felt)
+        d.baseQuat = leanQuat(d.baseQuat, faces);
+        if (!three) d.cockAxis.copy(wnormal(d.baseQuat, faces[1]).cross(wnormal(d.baseQuat, faces[0])).normalize()); // horizontal: along the edge it stands on
+      }
+      // lean die d into cockWant if it is at rest and not already there
+      function applyWanted(d) {
+        if (!cockWant || cockWant.i !== d.i || d.rolling || d.tween || d.flight || d.cockKey === cockWant.faces.join(',')) return;
+        d.value = cockWant.faces[0];
+        d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
+        applyLean(d, cockWant.faces);
+        d.group.quaternion.copy(d.baseQuat);
+      }
+
       const dieGeo = new RoundedBoxGeometry(1, 1, 1, 5, 0.15);
       const ringGeo = new THREE.PlaneGeometry(2.1, 2.1);
       const WHITE = new THREE.Color(1, 1, 1);
@@ -11861,6 +12456,8 @@
           landAt: 0, landSq: -4.5, landRing: null, hopAmp: 1.15, hopSpin: true,
           _ph: false, hvv: 0, ringSpike: 0, wobT0: -9, wobAxis: new THREE.Vector3(1, 0, 0),
           joltT0: -9, joltAmp: 0.22, yGlow: 0, yGoal: 0,
+          // 모서리 착지: the faces the die stands between (null = flat), its lift and step toward the camera, and the edge it rocks about
+          cockFaces: null, cockKey: '', cockVis: 0, cockLift: 0, cockDz: 0, cockDx: 0, cockT0: -9, cockAxis: new THREE.Vector3(1, 0, 0),
           // 도화선: lit (swelling, blinking) since litT0, blown off the table (flight), sooty afterwards
           flight: null, litT0: 0, swell: 0, blinkPh: 0, soot: 0, sootKeep: false
         };
@@ -12282,6 +12879,8 @@
       function startRolling(d) {
         d.rolling = true; d.tween = null; d.hopT0 = -9; d.landAt = 0; d.hover = false;
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
+        d.cockFaces = null; d.cockKey = ''; d.cockVis = 0; // any throw ends a lean: the die tumbles out of its pose
+        if (cockWant && cockWant.i === d.i) cockWant = null;
       }
       // a new throw: a blast that hasn't gone off yet is dropped, and the charred felt fades
       function cancelBlast() { yachtEnd(true); boomAt = null; focusUntil = -9; clearScorch(0.4); if (vfxUntil && clock > vfxUntil - 0.9) vfxOff(); } // a new throw: no smoke lingering over it
@@ -12322,9 +12921,10 @@
 
       // table slam while the dice are moving: every rolling die is knocked up from where it is now and
       // re-simulated. forced = values to land on (online guests mirror the host); otherwise physics decides.
-      function slam(forced) {
+      function slam(forced, cockSpec) {
         const a = anim;
         if (!a || a.playhead >= a.steps - 3) return null;
+        a.opts = Object.assign({}, a.opts, { cock: cockSpec || null }); // the knocked roll may stand a die on its edge when it lands
         const ph = Math.max(0, Math.min(a.playhead, a.steps - 1));
         const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, a.steps - 1);
         const init = a.rolling.map((i, k) => {
@@ -12742,6 +13342,7 @@
           const ys = a.opts && a.opts.yaw; // the host's draw for this roll; a missing entry lands at 0
           d.yaw = ys && ys[i] != null ? ((ys[i] | 0) & 3) : 0;
           d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
+          if (a.opts && a.opts.cock && a.opts.cock.i === i) applyLean(d, a.opts.cock.faces); // the die lands INTO the lean
           const delay = k * 0.05, dur = a.homeDur || 0.4;
           d.tween = {
             fromP: d.group.position.clone(), fromQ: worldQ, toQ: d.baseQuat.clone(), t0: clock + delay, dur, hop: a.homeHop || 0.6, sq: -3.2,
@@ -12778,6 +13379,7 @@
         if (hp > 0 && hp < 1) out.y += Math.sin(Math.PI * hp) * d.hopAmp;
         const jp = (clock - d.joltT0) / 0.32;
         if (jp > 0 && jp < 1) out.y += Math.sin(Math.PI * jp) * d.joltAmp;
+        out.y += d.cockVis * d.cockLift; out.z += d.cockVis * d.cockDz; out.x -= Math.sign(out.x) * d.cockVis * d.cockDx; // standing on an edge or a corner
         if (yf) { const yy = yachtY(clock - yf.t0); out.y += yy; out.x *= 1 - 0.16 * Math.min(1, yy / Y_H); } // the outer dice lean in so they stay on the felt
         return out;
       }
@@ -12851,7 +13453,9 @@
           d.hoverVis += ((d.hover ? 1 : 0) - d.hoverVis) * k;
           d.dimVis += ((d.dim ? 1 : 0) - d.dimVis) * k;
           d.hlVis += ((d.hl ? 1 : 0) - d.hlVis) * k;
+          d.cockVis += ((d.cockFaces ? 1 : 0) - d.cockVis) * k;
           if (!d.rolling) {
+            if (cockWant && cockWant.i === d.i) applyWanted(d); // a lean that had to wait for a tween
             targetPos(d, _p);
             if (d.flight) flyDie(d, _p);
             else if (d.tween) {
@@ -12878,6 +13482,19 @@
                 _qw.setFromAxisAngle(d.wobAxis, 0.12 * Math.sin(wt * 44) * Math.exp(-wt * 10));
                 _qs.copy(_qw).multiply(d.baseQuat);
                 d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 40));
+              }
+              else if (d.cockFaces) {
+                const ct = clock - d.cockT0;
+                if (REDUCED) d.group.quaternion.slerp(d.baseQuat, 1 - Math.exp(-dt * 16));
+                else if (d.cockFaces.length === 2) { // an edge: rocks about the edge it stands on and never settles
+                  _qw.setFromAxisAngle(d.cockAxis, (0.10 + 0.12 * Math.exp(-ct * 3.5)) * Math.sin(ct * 7.2));
+                  _qs.copy(_qw).multiply(d.baseQuat);
+                  d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 30));
+                } else { // a corner: precesses and slowly spins like a top
+                  _qw.setFromAxisAngle(_v3.set(Math.cos(ct * 4.4), 0, Math.sin(ct * 4.4)), 0.13);
+                  _qs.setFromAxisAngle(UP, ct * 0.9).multiply(_qw).multiply(d.baseQuat);
+                  d.group.quaternion.slerp(_qs, 1 - Math.exp(-dt * 30));
+                }
               }
               else d.group.quaternion.slerp(d.baseQuat, 1 - Math.exp(-dt * 16));
             }
@@ -12910,7 +13527,7 @@
           _emi.lerp(GOLD, hv * 0.1);
           if (d.yGlow > 0.004) { const yg = d.yGlow * 0.3; _emi.r += yg; _emi.g += yg * 0.78; _emi.b += yg * 0.3; }
           if (d.hlVis > 0.01) {
-            const pulse = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis;
+            const pulse = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis * (d.cockFaces ? 0.3 : 1); // a die on its edge keeps its pips dark: its faces have to be read (the ring on the felt carries the glow)
             _emi.r += d.hlColor.r * pulse; _emi.g += d.hlColor.g * pulse; _emi.b += d.hlColor.b * pulse;
           }
           const am = d.active || d.mats;
@@ -13057,6 +13674,7 @@
           if ((v >= 1 && v <= 6 && d.value !== v) || y !== d.yaw) {
             if (v >= 1 && v <= 6) d.value = v;
             d.yaw = y;
+            d.cockFaces = null; d.cockKey = ''; // a value or turn from the state always ends a lean (a pick that arrived by state first)
             const fromQ = d.group.quaternion.clone();
             d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
             d.tween = { fromP: d.group.position.clone(), fromQ, toQ: d.baseQuat.clone(), t0: clock + i * 0.03, dur: 0.35, hop: 0.8, sq: -2.2, onEnd: null };
@@ -13278,6 +13896,37 @@
         if (psy) aura(i, '#b98cff', 1300);
       }
 
+      // 기울이기: each moving die falls over one edge toward dir (0 far, 1 right, 2 near, 3 left); held dice only jolt.
+      // moves = [{ i, v, y }]: the face and turn each die ends on. o = { held: bool[5], onLand(k, i) }
+      const TIP_KICK = [{ z: -0.9 }, { x: 0.9, roll: -1.6 }, { z: 0.9 }, { x: -0.9, roll: 1.6 }];
+      const TIP_V = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+      const TIP_PUFF = { a: 0.22, s0: 0.2, s1: 0.7, vy: 0.2 };
+      function tip(moves, dir, o) {
+        o = o || {};
+        if (anim || gather) finishNow();
+        apexAt = null; cancelBlast(); // a yacht pose on the table ends first
+        const order = moves.slice().sort((a, b) => dir === 1 ? D[a.i].group.position.x - D[b.i].group.position.x : dir === 3 ? D[b.i].group.position.x - D[a.i].group.position.x : a.i - b.i);
+        const gap = REDUCED ? 0 : 0.04, dur = REDUCED ? 0.18 : 0.34;
+        order.forEach((m, k) => {
+          const d = D[m.i];
+          if (!d || d.rolling) return;
+          d.value = m.v; d.yaw = m.y & 3; // set at once: a state that arrives mid-tip finds nothing to fix
+          const fromQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
+          d.mesh.quaternion.identity(); d.group.quaternion.copy(fromQ);
+          d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
+          d.tween = { fromP: d.group.position.clone(), fromQ, toQ: d.baseQuat.clone(), t0: clock + k * gap, dur, hop: REDUCED ? 0 : 0.42, sq: -2.6,
+            onEnd: () => {
+              const p = d.group.position;
+              spawnRing(p.x, p.z, 5, null, STEEP);
+              if (!REDUCED) spawnPuff(p.x, p.z + 0.1, TIP_V[dir][0] * 0.8, TIP_V[dir][1] * 0.8, TIP_PUFF);
+              if (o.onLand) o.onLand(k, m.i);
+            } };
+        });
+        D.forEach((d, i) => { if (o.held && o.held[i]) joltDie(d, 0.12, -1.5, 0xffd77a); });
+        kick(Object.assign({ trauma: 0.1 }, TIP_KICK[dir]));
+        setTimeout(() => kick({ y: -0.9, trauma: 0.12 }), Math.round(((order.length - 1) * gap + dur) * 1000)); // the table settles
+      }
+
       function setSkins(arr) {
         D.forEach((d, i) => {
           const sk = (arr && arr[i]) || null;
@@ -13419,10 +14068,40 @@
         ring,
         aura,
         flipTo,
+        tip,
         roll,
         slam,
         canSlam: () => !!anim && anim.playhead < anim.steps - 3,
         setState,
+        // 모서리 착지: setCock = the table's state (idempotent, never animates); uncock = the pick, tipping the die onto face v (turn y, or null = the shortest way)
+        setCock: (spec) => {
+          cockWant = spec && spec.faces && spec.faces.length >= 2 ? { i: spec.i, faces: spec.faces.slice() } : null;
+          D.forEach((d) => {
+            const on = !!cockWant && cockWant.i === d.i;
+            if (on) applyWanted(d);
+            else if (d.cockKey && !d.rolling && !anim && !gather) { // back to a flat pose, or the die would keep its lean with no lift
+              d.cockFaces = null; d.cockKey = '';
+              const fq = d.group.quaternion.clone();
+              d.baseQuat = canonQuat(d.value, yawRad(d.yaw) + jitter());
+              d.tween = { fromP: d.group.position.clone(), fromQ: fq, toQ: d.baseQuat.clone(), t0: clock, dur: 0.35, hop: 0.8, sq: -2.2, onEnd: null };
+            } // not while the die is still landing into its lean
+            if (cockWant) d.dim = !on; // the other dice step back while a pick is pending
+          });
+        },
+        uncock: (i, v, y) => {
+          const d = D[i];
+          if (!d || !d.cockKey || !(v >= 1 && v <= 6)) return false;
+          cockWant = null; apexAt = null; cancelBlast();
+          const cur = d.group.quaternion.clone().multiply(d.mesh.quaternion);
+          d.mesh.quaternion.identity(); d.group.quaternion.copy(cur);
+          const hasY = y != null && y >= 0 && y <= 3;
+          const to = hasY ? canonQuat(v, yawRad(y) + jitter()) : tipQuat(cur, v);
+          d.cockFaces = null; d.cockKey = ''; d.value = v; if (hasY) d.yaw = y | 0;
+          d.baseQuat = to.clone();
+          d.tween = { fromP: d.group.position.clone(), fromQ: cur, toQ: to, t0: clock + 0.02, dur: REDUCED ? 0.01 : 0.34, hop: REDUCED ? 0 : 0.14, sq: -5.5,
+            onEnd: () => { flashDie(d, 0.5, GOLD); spawnRing(d.group.position.x, d.group.position.z, 12, 0xffd77a); puffCircle(d.group.position.x, d.group.position.z, 8, 0.7, 1.4, KNOCK_PUFF); hitstop(0.04); } };
+          return true;
+        },
         finishNow,
         // 도화선: blast({ hot, pre, onBoom, onLand, onDone }) and the charred felt it leaves behind
         blast,
