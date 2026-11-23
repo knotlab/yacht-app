@@ -1114,7 +1114,7 @@
   .combo-chip {
     position: absolute; top: 48px; left: 50%; z-index: 5; pointer-events: none;
     transform: translateX(-50%);
-    padding: 7px 16px; border-radius: 999px; white-space: nowrap;
+    padding: 7px 16px; border-radius: 999px; width: max-content; max-width: calc(100% - 16px); text-align: center; line-height: 1.3;
     font: 400 14px var(--f-game); letter-spacing: 0.06em;
     color: #072a20; background: linear-gradient(180deg, #b6ffe4, var(--mint));
     box-shadow: 0 3px 0 #1c8a63, 0 0 24px rgba(63, 224, 169, 0.6);
@@ -1625,14 +1625,20 @@
 
   .toast {
     position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 80;
-    transform: translateX(-50%); max-width: calc(100vw - 32px);
+    transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px); pointer-events: none;
     padding: 11px 18px; border-radius: 14px;
     background: #22252c; box-shadow: inset 0 0 0 1px rgba(224, 169, 59, 0.35), 0 12px 30px rgba(0, 0, 0, 0.6);
     font: 600 13px var(--f-ui); color: var(--text); text-align: center;
-    animation: panelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
+  @keyframes toastIn { 0% { transform: translateX(-50%) translateY(22px) scale(0.92); opacity: 0; } 100% { transform: translateX(-50%); opacity: 1; } }
 
   /* ================= Augment effects ================= */
+  .tile.is-flipmark .t-val { text-decoration: line-through; color: #ff6b81; }
+  .seat.flip-mark .seat-coin { box-shadow: 0 0 0 3px #e0314b; }
+  .pk-cell.is-last { box-shadow: inset 0 0 0 2px #ff9f5a; }
+  @keyframes padUndo { 0% { background: rgba(224, 49, 75, 0.55); } 100% { background: transparent; } }
+  .pad-table td.pad-undo { animation: padUndo 1.4s ease-out; }
   #fxLayer { position: fixed; inset: 0; z-index: 62; pointer-events: none; overflow: hidden; }
   .fx { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
   .fx-p { width: 14px; height: 14px; margin: -7px 0 0 -7px; }
@@ -1995,7 +2001,75 @@
   .pp-av.pp-sym { font: 400 14px var(--f-game); color: var(--text-dim); }
   .pp-name { flex: 1; min-width: 0; font: 600 14px var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pp-at { flex: none; font: 400 11px var(--f-game); color: var(--text-dim); }
+
+  /* ================= 개헌: laws ================= */
+  .cap-law { right: 12px; top: 44px; pointer-events: auto; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 7px 10px 7px 7px; min-height: 30px; z-index: 6; color: #bfe9ff; max-width: min(60%, 220px); }
+  @media (orientation: landscape) and (max-height: 560px) { .cap-law { top: 12px; right: 118px; } }
+  .cap-law[hidden] { display: none; }
+  .cap-law svg { flex: none; width: 14px; height: 14px; color: #4fd1ff; }
+  .cap-law span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .tile.is-amended .t-ico b { color: #d8404f; }
+  .tile.is-amended .t-ico { position: relative; }
+  .tile.is-amended .t-ico::after { content: ""; position: absolute; left: 4px; top: 0; width: 5px; height: 5px; border-radius: 50%; background: #d8404f; }
+  .tile.is-open.is-neg .t-val { color: #c4313f; }
+  .pad-table tbody th small.law-n { display: block; margin-top: 1px; font: 400 9px/1 var(--f-game); color: #c4313f; }
+  /* the pick screen: title and countdown first, so the cards can scroll under a short phone */
+  .draft-wrap.law-mode .draft-head { order: -2; }
+  .draft-wrap.law-mode .draft-wait { order: -1; }
+  .law-hint { margin: 0; text-align: center; font: 600 13px/1.45 var(--f-ui); color: #d4cdbd; word-break: keep-all; }
+  .draft-wait .law-hint { margin-bottom: 4px; }
+  .law-timer { width: 100%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .law-timer i { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #4fd1ff, #bff0ff); transform-origin: left center; }
+  .law-card {
+    --cat: #4fd1ff; position: relative; flex: none; display: flex; flex-direction: column; justify-content: center; gap: 3px;
+    width: min(440px, 100%); min-height: 96px; padding: 9px 16px 10px; border-radius: 16px; text-align: left; color: var(--text); cursor: pointer;
+    background: linear-gradient(180deg, #2a2e36 0%, #15181d 100%);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cat) 62%, transparent), 0 10px 22px rgba(0, 0, 0, 0.5);
+    animation: lawDeal 0.4s cubic-bezier(0.2, 0.9, 0.25, 1.06) var(--d, 0s) backwards;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes lawDeal { 0% { opacity: 0; transform: translateX(60vw) rotate(6deg) scale(0.85); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+  .law-card:hover { transform: translateY(-3px); }
+  .law-card.picked { transform: scale(1.04); z-index: 2; box-shadow: inset 0 0 0 2.5px var(--cat), 0 0 26px color-mix(in srgb, var(--cat) 55%, transparent), 0 10px 22px rgba(0, 0, 0, 0.5); }
+  .law-card.dropped { animation: augDrop 0.45s ease-in forwards; pointer-events: none; }
+  .law-name { font: 400 20px/1.15 var(--f-display); }
+  .law-desc { font: 600 12.5px/1.4 var(--f-ui); color: #d4cdbd; word-break: keep-all; }
+  .law-chg { display: flex; flex-wrap: wrap; gap: 1px 10px; font: 400 10.5px/1.35 var(--f-game); color: var(--text-dim); }
+  .law-chg i { font-style: normal; color: var(--brass-hi); }
+  .law-chg .to { color: #bff0ff; font-weight: 400; }
+  .law-gain { font: 700 11.5px/1.3 var(--f-ui); color: var(--text-dim); }
+  .law-gain b { font-weight: 700; color: #d4cdbd; }
+  .law-gain b.up { color: #7cf29c; }
+  .law-gain b.down { color: #ff8d9a; }
+  @media (min-width: 720px) {
+    .law-card { width: 220px; min-height: 0; padding: 16px 16px 14px; gap: 7px; justify-content: flex-start; }
+    .law-name { font-size: 22px; }
+  }
+  @media (max-width: 719px) and (max-height: 700px) {
+    .law-card { min-height: 0; padding: 7px 14px 8px; gap: 2px; }
+    .law-name { font-size: 18px; }
+    .law-desc { font-size: 12px; line-height: 1.32; }
+  }
+  @media (orientation: landscape) and (max-height: 560px) {
+    .law-card { width: 200px; min-height: 0; padding: 8px 12px 9px; gap: 3px; }
+    .law-name { font-size: 17px; }
+    .law-desc { font-size: 11.5px; }
+  }
+  /* the bill the gavel passes: a small line, the law, its text */
+  .fx-screen.fx-bill { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 46%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.62)); animation: billIn 1.5s ease both; }
+  .fx-bill .bill-in {
+    width: min(320px, 82vw); padding: 14px 18px 16px; border-radius: 6px 6px 14px 14px; text-align: center; color: #3a2a12;
+    background: linear-gradient(180deg, #f7ecd0, #e5d19e); box-shadow: inset 0 0 0 3px #b98a3a, 0 18px 40px rgba(0, 0, 0, 0.6);
+    transform-origin: 50% 0; animation: billUnroll 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  }
+  .bill-in small { display: block; font: 400 11px var(--f-game); letter-spacing: 0.3em; padding-left: 0.3em; color: #8a5a12; }
+  .bill-in b { display: block; margin: 4px 0 6px; font: 400 clamp(24px, 7vw, 32px)/1.15 var(--f-display); }
+  .bill-in span { display: block; font: 600 13px/1.45 var(--f-ui); word-break: keep-all; }
+  @keyframes billIn { 0% { opacity: 0; } 14%, 78% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes billUnroll { from { transform: scaleY(0.05); } to { transform: none; } }
   @media (prefers-reduced-motion: reduce) {
+    .fx-screen.fx-bill { animation: rmFade 1.2s linear both !important; }
+    .fx-bill .bill-in { animation: none !important; }
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     /* these play forwards to opacity 0, so a jump to their end would hide them: fade them in place instead */
     .banner-anim { animation: rmFade 2s linear both !important; }
@@ -2046,6 +2120,7 @@
         <div id="diceGrid" class="slot-layer"></div>
         <div id="turnCap" class="cap cap-l"><b></b><em></em></div>
         <div id="roundCap" class="cap cap-r">ROUND 1/12</div>
+        <button id="lawCap" class="cap cap-law" type="button" hidden></button>
         <div id="comboChip" class="combo-chip" hidden></div>
         <div id="powers" class="powers" hidden></div>
         <div id="facePick" class="face-pick" hidden></div>
@@ -2264,6 +2339,7 @@
         <button class="x-btn" type="button" data-close="rulesOv" aria-label="닫기">✕</button>
       </div>
       <p class="rules-intro">주사위 5개를 한 턴에 3번까지 굴립니다. 남길 주사위는 탭해서 고정합니다. 매 턴 칸 하나를 채웁니다. 12라운드 뒤 총점 1등이 승리합니다. 상단 6칸 합이 63점 이상이면 보너스 35점입니다.</p>
+      <div id="rulesLaws"></div>
       <div id="rulesList" class="rules-list"></div>
       <h3 class="dex-title">증강 도감</h3>
       <p class="dex-intro">증강 모드에선 1·5·9라운드 시작에 같은 등급 증강 3장 중 1장을 고릅니다.</p>
@@ -2739,11 +2815,24 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 2;
+      const NET_V = 3; // 3 = 밥상 엎기 + 개헌 (later jobs use 4 and 5)
       function memberV(m) { return Number(m && m.v) || 0; }
-      function newCardsOk() { return !isOnlineMatch || onlineRole === 'guest' || lobbyMembers.every(function (m) { return m.isHost || memberV(m) >= NET_V; }); }
+      // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
+      let roomV = 99, roomSeen = {};
+      // does every client in this room know the card that needs protocol `need`? (the host entry counts as current)
+      function newCardsOk(need) {
+        if (!isOnlineMatch || onlineRole !== 'host') return true;
+        lobbyMembers.forEach(function (m) { if (m && !m.isHost) { roomV = Math.min(roomV, memberV(m)); roomSeen[m.peerId] = 1; } });
+        // a seated player this match has never seen in the member list (a link that was down at the start) is unknown: the oldest version
+        if (lobbyMembers.length) players.forEach(function (p) {
+          if (p && p.peerId && p.peerId !== myPeerId && !roomSeen[p.peerId]) roomV = 0;
+        });
+        return roomV >= need;
+      }
       // the table is held by a pending pick (cock) or a live cup (bluff): nothing else may move the dice
       let cock = null, cup = null, bluffLog = [];
+      // 개헌: the host's pass timer, a guest's "I sent my pick" mark, the laws whose gavel beat has reached the tile flip
+      let lawTimer = 0, lawPendingSig = '', lawRevealed = {}, lawBarSig = '', lawBarT0 = 0;
       function cupLive() { return !!cup && cup.phase !== 'spent'; }
       function tableHeld() { return !!cock || cupLive(); }
       function tiltBlocked() { return tableHeld(); }
@@ -2778,6 +2867,7 @@
       const rollPips = $('rollPips');
       const turnCap = $('turnCap');
       const roundCap = $('roundCap');
+      const lawCap = $('lawCap');
       const comboBanner = $('comboBanner');
       const comboChip = $('comboChip');
       const turnSweep = $('turnSweep');
@@ -3375,7 +3465,8 @@
           const s = seatsEl.children[idx], gap = s && s.querySelector('.seat-gap');
           if (!gap) return;
           const o = on ? draft.offers[idx] : null;
-          const want = !o ? '' : o.chosen ? 'done' : (!isOnlineMatch && !p.isAI && idx !== picker ? 'queue' : 'wait');
+          const lawBy = on && draft.law && !draft.law.show ? draft.law.by : -1; // 개헌: only the holder is still choosing
+          const want = !o ? '' : lawBy >= 0 ? (idx === lawBy ? 'wait' : 'done') : o.chosen ? 'done' : (!isOnlineMatch && !p.isAI && idx !== picker ? 'queue' : 'wait');
           const was = gap.dataset.d || '';
           if (was === want) return;
           gap.dataset.d = want;
@@ -3603,6 +3694,7 @@
         });
       }
       // what a screen reader hears for a card: name, total, rank (the one the card shows), me, turn, augments
+      function flipNote(i) { const e = flipMarkOf(i); return e ? '. 밥상 엎기로 ' + catKo(e.cat) + ' ' + e.val + '점이 지워집니다.' : ''; }
       function labelSeats() {
         const tappable = gameActive, me = viewerIdx();
         players.forEach(function (p, idx) {
@@ -3613,7 +3705,8 @@
           const label = p.name + ', ' + (r ? r.total : getPlayerTotals(p).total) + '점' + (r && r.on ? ', ' + r.rank + '위' : '') + (idx === me ? ', 나' : '') +
             (idx === currentPlayerIdx && gameActive ? ', 차례' : '') + (matchAug && p.aug && p.aug.length ? ', 증강 ' + p.aug.length + '개' : '') +
             (offer ? (offer.chosen ? ', 증강 선택 완료' : ', 증강 고르는 중') : '') +
-            (hexes.length ? ', 걸린 효과 ' + hexes.join(' ') : '');
+            (gameActive && draft && draft.law && !draft.law.show && draft.law.by === idx ? '. 새 규칙을 고르는 중입니다.' : '') +
+            (hexes.length ? ', 걸린 효과 ' + hexes.join(' ') : '') + flipNote(idx);
           if (s.getAttribute('aria-label') !== label) s.setAttribute('aria-label', label);
           const role = tappable ? 'button' : 'group';
           if (s.getAttribute('role') !== role) s.setAttribute('role', role);
@@ -3691,6 +3784,41 @@
         prevMarks = marks.map(function (ids) { return ids.join(','); });
       }
 
+      // ---------- 개헌: what a tile and the pinned chip show ----------
+      // a law's new numbers stay hidden while its gavel beat is still on the way to the reveal
+      function lawVisible(id) { const L = draft && draft.law; return !(L && L.show === id && !lawRevealed[id]); }
+      function lawShown(id) { return lawOn(id) && lawVisible(id); }
+      function lawGlyph(c) {
+        if (!matchAug) return '';
+        if (c.id === 'fullHouse' && lawShown('house')) return '25';
+        if (c.id === 'smallStraight' && lawShown('straight')) return '20';
+        if (c.id === 'largeStraight' && lawShown('straight')) return '35';
+        if (c.id === 'fourKind' && lawShown('quad')) return '4×2';
+        if (c.id === 'choice' && lawShown('cap')) return '≤18';
+        if (c.id === 'yacht' && lawShown('tax')) return '-10';
+        return '';
+      }
+      function catDescNow(c) {
+        if (!matchAug) return c.desc;
+        if (c.id === 'fullHouse' && lawShown('house')) return '같은 눈 3개 + 2개면 25점';
+        if (c.id === 'smallStraight' && lawShown('straight')) return '연속된 숫자 4개면 20점';
+        if (c.id === 'largeStraight' && lawShown('straight')) return '연속된 숫자 5개면 35점';
+        if (c.id === 'fourKind' && lawShown('quad')) return '같은 눈 4개면 그 합의 2배';
+        if (c.id === 'choice' && lawShown('cap')) return '주사위 5개의 합 (최대 18점)';
+        if (c.id === 'yacht' && lawShown('tax')) return '5개 모두 같은 눈이면 50점 (0점은 -10점)';
+        return c.desc;
+      }
+      // the passed laws as rows (the scorepad, the peek sheet, the rules and the pick screen share it): badge, name, text, who passed it
+      function lawListHtml(title, peek) {
+        const ls = lawList().filter(lawVisible);
+        if (!ls.length) return '';
+        return (peek ? '<div class="pk-sec" data-laws="1">' + esc(title) + '</div>' : '<h3 class="dex-title" data-laws="1">' + esc(title) + '</h3>') + '<div class="pk-augs">' + ls.map(function (id) {
+          const by = players.findIndex(function (p) { return p && p.law === id; });
+          return '<div class="ai-row" data-row="law:' + id + '"><span class="aug-badge t1" style="--cat:' + AUG_CATS.meta.color + ';color:' + AUG_CATS.meta.fg + '" role="img" aria-label="' + esc(LAW[id].name) + '">' + glyphSvg('amend') + '</span>' +
+            '<div class="ai-txt"><b>' + esc(LAW[id].name) + '</b><span>' + esc(LAW[id].desc) + '</span></div>' +
+            (by >= 0 ? '<span class="pk-by"><small>통과</small><b style="color:' + PLAYER_COLORS[by % 4] + '">' + esc(players[by].name) + '</b></span>' : '') + '</div>';
+        }).join('') + '</div>';
+      }
       function renderTiles() {
         const cur = players[currentPlayerIdx];
         const canSelect = canScoreNow();
@@ -3701,7 +3829,7 @@
         const sealId = showPreview ? sealCatFor(cur) : null;
         if (selectedTile && (!canSelect || !cur || !tileSelectable(selectedTile))) selectedTile = null;
         const pOpts = previewOpts(mineNow);
-        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : 0) : scoreFor(cur, id, dice, pOpts); };
+        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : scoreFor(cur, id, dice, pOpts); };
         const duelArm = armedPower === 'gauntlet' && mineNow && !isRolling && !isScoring;
         const bombOn = !!cur && players.some(function (o) { return o.bomb === currentPlayerIdx; });
         let bestId = null, bestPts = 0;
@@ -3720,7 +3848,7 @@
           const val = cur ? cur.scores[c.id] : null;
           const filled = val !== null && val !== undefined;
           let cls = 'tile';
-          let label = c.ko + ' (' + c.desc + ')';
+          let label = c.ko + ' (' + catDescNow(c).replace(' (', '. ').replace(')', '') + ')'; // no second bracket pair inside the label
           let enabled = canSelect && tileSelectable(c.id);
           if (duelArm) {
             const gi = gauntletInfo(currentPlayerIdx, c.id);
@@ -3735,7 +3863,7 @@
             if (sw) label += ', 맞바꾸면 ' + signed(sw.gain) + '점';
             enabled = !!sw;
           } else if (filled) {
-            cls += ' is-filled' + (val <= 0 ? ' is-zero' : '');
+            cls += ' is-filled' + (val <= 0 ? ' is-zero' : '') + (armedPower === 'tableFlip' && mineNow && lastOk(cur) && cur.last.cat === c.id ? ' is-flipmark' : '');
             vEl.textContent = String(val);
             if (owMode) {
               const nv = pv(c.id);
@@ -3747,7 +3875,7 @@
             const p = pv(c.id);
             const sealed = c.id === sealId;
             const hot = !sealed && ((c.id === 'yacht' && p >= 50) || (c.id === 'largeStraight' && p >= 30) || p >= 22);
-            cls += ' is-open' + (canSelect && !sealed ? ' is-live' : '') + (p <= 0 ? ' is-zero' : '') + (hot ? ' is-hot' : '') +
+            cls += ' is-open' + (canSelect && !sealed ? ' is-live' : '') + (p <= 0 ? ' is-zero' : '') + (p < 0 ? ' is-neg' : '') + (hot ? ' is-hot' : '') +
               (c.id === bestId ? ' is-best' : '') + (selectedTile === c.id ? ' is-sel' : '') + (aimCat === c.id ? ' is-aim' : '') +
               (sealed ? ' is-sealed' : '') + (cur.prophecy === c.id ? ' is-prophecy' : '') + (pOpts.allin ? ' is-allin' : '') +
               (pOpts.joker && calcCategoryScore(c.id, dice) === 0 && p > 0 ? ' is-joker' : '') +
@@ -3766,6 +3894,11 @@
             vEl.textContent = duel && duel.cat === c.id ? 'VS ' + duel.val : '';
           }
           if (flipRecent && lastScored.catId === c.id) cls += ' is-flip';
+          const gl = lawGlyph(c); // '' while the box is unchanged (or its law has not been revealed yet)
+          const ib = t.querySelector('.t-ico b');
+          const want = gl || c.glyph;
+          if (ib && ib.textContent !== want) ib.textContent = want;
+          if (gl) cls += ' is-amended';
           if (t.className !== cls) t.className = cls;
           t.disabled = !enabled;
           t.setAttribute('aria-label', label);
@@ -3896,6 +4029,17 @@
         if ((tailEl.textContent !== '') !== who) tailEl.textContent = who ? ' 차례' : '';
         turnCap.classList.toggle('who', who);
         if (who) turnCap.style.setProperty('--pc', PLAYER_COLORS[currentPlayerIdx % PLAYER_COLORS.length]);
+        // 개헌: the laws in force, pinned under the round counter (a tap opens the scorepad)
+        const ls = gameActive && matchAug ? lawList().filter(lawVisible) : [];
+        lawCap.hidden = !ls.length;
+        if (ls.length) {
+          const txt = ls.length === 1 ? LAW[ls[0]].name : '새 규칙 ' + ls.length + '개';
+          if (lawCap.dataset.sig !== txt) {
+            lawCap.dataset.sig = txt;
+            lawCap.innerHTML = glyphSvg('amend') + '<span>' + esc(txt) + '</span>';
+            lawCap.setAttribute('aria-label', '새 규칙 ' + ls.length + '개입니다. 점수표에서 봅니다.');
+          }
+        } else lawCap.dataset.sig = '';
       }
 
       let lastSheetHtml = '', lastSheetAugHtml = '';
@@ -3904,8 +4048,8 @@
         const me = viewerIdx(), info = rankInfo(), totals = players.map(getPlayerTotals);
         const dash = '<span class="dash">·</span>';
         // a row of cells, one per player: the column of whoever is rolling is tinted (.cur), mine is framed (.me)
-        const row = function (cls, label, cell) {
-          return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><th scope="row">' + label + '</th>' + players.map(function (p, i) {
+        const row = function (cls, label, cell, cat) {
+          return '<tr' + (cls ? ' class="' + cls + '"' : '') + (cat ? ' data-cat="' + cat + '"' : '') + '><th scope="row">' + label + '</th>' + players.map(function (p, i) {
             const c = cell(p, i);
             const k = [i === currentPlayerIdx && gameActive ? 'cur' : '', i === me ? 'me' : '', c[1] || ''].filter(Boolean).join(' ');
             return '<td' + (k ? ' class="' + k + '"' : '') + '>' + c[0] + '</td>';
@@ -3920,10 +4064,11 @@
             '<span class="ph-name" title="' + esc(p.name) + '">' + esc(p.name) + '</span>' + (i === me ? '<b class="ph-me">나</b>' : '') + '</div>' + augs + '</th>';
         }).join('') + '</tr></thead><tbody>';
         CATEGORIES.forEach(function (c, ci) {
-          html += row('', c.name, function (p) {
+          const lg = lawGlyph(c);
+          html += row('', c.name + (lg ? '<small class="law-n">' + esc(lg) + '</small>' : ''), function (p) {
             const v = p.scores[c.id];
             return v === null || v === undefined ? [dash] : [esc(v), v > 0 ? '' : 'zero'];
-          });
+          }, c.id);
           // under the six upper boxes: their sum against the 63 that pays the bonus, then the bonus itself
           if (ci === 5) html += row('sub', 'UPPER', function (p, i) {
             const t = totals[i];
@@ -3946,7 +4091,7 @@
           if (players[i]) syncChips(box, players[i], i);
         });
         const sa = $('sheetAugs');
-        const ahtml = matchAug ? '<h3 class="dex-title">증강</h3>' + augListHtml() : '';
+        const ahtml = matchAug ? lawListHtml('새 규칙') + '<h3 class="dex-title">증강</h3>' + augListHtml() : '';
         sa.hidden = !matchAug;
         if (ahtml !== lastSheetAugHtml) { lastSheetAugHtml = ahtml; sa.innerHTML = ahtml; }
       }
@@ -3981,11 +4126,12 @@
               name: p.name, peerId: p.peerId, av: p.av || null, dice: p.dice || 'classic', scores: p.scores, aug: p.aug || [], ch: p.ch || {}, extra: p.extra || 0, shake: p.shake || 0, boxUp: p.boxUp || 0,
               sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null,
               hatch: p.hatch || 0, hatched: p.hatched || 0, rise: p.rise || 0, wake: p.wake || 0,
-              glue: p.glue || 0, glueBy: p.glueBy != null ? p.glueBy : -1, bomb: p.bomb != null ? p.bomb : -1, bombT: p.bombT != null ? p.bombT : -1, mim: p.mim || null
+              glue: p.glue || 0, glueBy: p.glueBy != null ? p.glueBy : -1, bomb: p.bomb != null ? p.bomb : -1, bombT: p.bombT != null ? p.bombT : -1, mim: p.mim || null,
+              last: p.last || null, law: p.law || null
             };
           }),
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
-          stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: dice, held: held, yaw: yawLive() ? yaw : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
@@ -4075,6 +4221,8 @@
           augPickFx(extra);
         } else if (kind === 'aug') {
           augFx(extra);
+        } else if (kind === 'amend') {
+          amendFx(extra);
         }
       }
 
@@ -4399,6 +4547,8 @@
         { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
         { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
+        { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17 },
+        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
         { id: 'rerollMaster', tier: 1, cat: 'meta', name: '리롤 장인', desc: '증강 선택마다 다시 뽑기가 2번 늘어납니다.', ev: 4 },
         { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
@@ -4450,6 +4600,8 @@
         ride: '<rect x="4" y="15" width="18" height="18" rx="4" stroke-dasharray="4 3"/><rect x="26" y="17" width="18" height="18" rx="4"/><path d="M12 12c3-7 15-9 21-3"/><path d="M34 4l-1 6-6-1"/><circle class="a" cx="35" cy="26" r="3.2"/>',
         gauntlet: '<rect x="4" y="14" width="22" height="17" rx="5"/><path d="M10 14v6M15 14v6M20 14v6"/><path d="M6 31h18v10H6z"/><rect x="33" y="20" width="11" height="11" rx="2"/><path class="a" d="M27 9l4 5-6 1zM28 33l6 2-4 4z"/>',
         twofer: '<rect x="4" y="17" width="14" height="14" rx="3"/><circle class="a" cx="11" cy="24" r="2"/><path d="M18 24h7c4 0 6-4 8-9M25 24c4 0 6 4 8 9"/><rect class="a" x="34" y="7" width="10" height="10" rx="2"/><rect class="a" x="34" y="31" width="10" height="10" rx="2"/>',
+        tableFlip: '<path d="M5 31l27-13 5 10L10 41z"/><path d="M13 38l-3 6M30 26l5 14"/><path class="a" d="M30 6h14c0 5-3 8-7 8s-7-3-7-8z"/><path class="a" d="M17 6l-5 9M21 5l-4 10"/>',
+        amend: '<rect x="6" y="9" width="22" height="12" rx="3" transform="rotate(35 17 15)"/><path d="M26 22l15 15"/><path class="a" d="M4 43h24"/><circle class="a" cx="38" cy="38" r="3"/>',
         mimic: '<circle cx="27" cy="19" r="13"/><path d="M18 28L7 42"/><path d="M21 13a8 8 0 0 1 8-3"/><path class="a" d="M40.0 2.5L41.4 6.6L45.5 8.0L41.4 9.4L40.0 13.5L38.6 9.4L34.5 8.0L38.6 6.6z"/>',
         boxUp: '<rect x="8" y="20" width="32" height="21" rx="3"/><path d="M6 14h36v6H6z"/><path d="M24 14v27"/><path class="a" d="M24 14c-3-5-10-6-10-2 0 3 6 2 10 2zM24 14c3-5 10-6 10-2 0 3-6 2-10 2z"/>'
       };
@@ -4465,6 +4617,7 @@
       let rollsMax = 3;        // rolls this turn (4th roll / shaky hands change it)
       let rewindSnap = null;   // the table before the last roll of this turn (local / host only)
       let lastRound = 12;      // 조기 종료 pulls it in
+      let flipRound = -1;      // 밥상 엎기: the round a flip happened in (one per round, whole table)
       let encoreTurn = false;  // the extra end-of-game turn of an 앙코르 holder
       let encoreQueue = null;
       let sealTurn = false;    // this turn's best box is locked (봉인)
@@ -4500,7 +4653,28 @@
       }
       function augHas(p, id) { return !!(matchAug && p && p.aug && p.aug.indexOf(id) !== -1); }
       function augCount(p, id) { return matchAug && p && p.aug ? p.aug.filter(function (x) { return x === id; }).length : 0; }
-      function bonusRule(p) { return { need: 63, amount: augHas(p, 'deepWell') ? 0 : augHas(p, 'bonusHunter') ? 70 : 35 }; }
+      // ---------- 개헌: laws ----------
+      // a law lives on the passer's p.law and never in a score cell; it applies to every record made after it passes
+      const LAW_IDS = ['house', 'straight', 'bonus', 'quad', 'tax', 'cap'];
+      const LAW = {
+        house: { name: '풀하우스 25점', desc: '풀하우스는 합계와 상관없이 25점입니다.', chg: [['F.HOUSE 합계', '25']] },
+        straight: { name: '스트레이트 +5', desc: '스몰 스트레이트는 20점입니다. 라지 스트레이트는 35점입니다.', chg: [['S.STR 15', '20'], ['L.STR 30', '35']] },
+        bonus: { name: '보너스 기준 58', desc: '상단 58점부터 보너스를 받습니다. 이미 넘긴 사람은 바로 받습니다.', chg: [['BONUS 63', '58']] },
+        quad: { name: '포카인드 ×2', desc: '같은 눈 4개의 합을 2배로 셉니다. 남는 주사위는 세지 않습니다.', chg: [['4 KIND 5개 합', '4개 합 ×2']] },
+        tax: { name: '야트 벌금', desc: '야트 칸에 0점을 쓰면 -10점입니다.', chg: [['YACHT 0', '-10']] },
+        cap: { name: '초이스 상한', desc: '초이스는 최대 18점입니다.', chg: [['CHOICE 합계', '최대 18']] }
+      };
+      const LAW_BONUS_NEED = 58, LAW_TAX = 10, LAW_CAP = 18, LAW_MS = 15000;
+      // expected extra (points over the rest of the game) of a still-open box under each law, from the exact solves
+      const LAW_BOOST = { house: { fullHouse: 4.3 }, straight: { smallStraight: 5.05, largeStraight: 3.15 }, quad: { fourKind: 8.7 }, tax: { yacht: -8.2 }, cap: { choice: -3.9 } };
+      function lawIdOk(x) { return typeof x === 'string' && Object.prototype.hasOwnProperty.call(LAW, x); }
+      function lawOn(id) { return matchAug && players.some(function (p) { return !!p && p.law === id; }); }
+      function lawList() { return LAW_IDS.filter(lawOn); }
+      function lawKey() { return lawList().join('+'); }
+      function lawBust(catId) { return catId === 'yacht' && lawOn('tax') ? -LAW_TAX : 0; } // a 도화선 bust writes a zero: the tax still applies
+      // BASE_EV plus half of what the laws add to the box (box means move less than game values): only tunes how eager a bot is to overwrite
+      function baseEv(id) { let v = BASE_EV[id]; lawList().forEach(function (L) { if (LAW_BOOST[L] && LAW_BOOST[L][id]) v += LAW_BOOST[L][id] * 0.5; }); return v; }
+      function bonusRule(p) { return { need: lawOn('bonus') ? LAW_BONUS_NEED : 63, amount: augHas(p, 'deepWell') ? 0 : augHas(p, 'bonusHunter') ? 70 : 35 }; }
       // 만능 1: does the hand meet a pattern when every 1 may stand for any face?
       function wildMet(catId, counts) {
         const w = counts[1];
@@ -4521,7 +4695,8 @@
       }
       // some cards don't make sense together or any more
       function augFits(p, id) {
-        if (id === 'deepWell') return getPlayerTotals(p).upper < 63 && !augHas(p, 'bonusHunter') && !augHas(p, 'debt');
+        if (id === 'deepWell') { const t = getPlayerTotals(p); return t.upper < t.need && !augHas(p, 'bonusHunter') && !augHas(p, 'debt'); }
+        if (id === 'amend') return LAW_IDS.some(function (L) { return !lawOn(L); });
         if ((id === 'bonusHunter' || id === 'debt') && augHas(p, 'deepWell')) return false;
         if (id === 'grandSlam') return questState(p).alive;
         return true;
@@ -4529,7 +4704,7 @@
       function cursedBy(p) { return matchAug && players.some(function (q) { return q !== p && augHas(q, 'curse'); }); }
       function freshAugState(p) {
         p.aug = []; p.ch = {}; p.extra = 0; p.shake = 0; p.boxUp = 0; p.sealed = 0; p.skip = 0; p.prophecy = null;
-        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null;
+        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null; p.last = null; p.law = null;
       }
       function charges(p, k) { return matchAug && p && p.ch ? (p.ch[k] || 0) : 0; }
       function signed(n) { return (n > 0 ? '+' : '') + n; }
@@ -4584,6 +4759,20 @@
           else st.tip = '매 턴 ' + b(a.ch.fuse) + '번';
         } else if (id === 'bomb' && p.bomb >= 0) {
           st.cls = 'is-hot'; st.tip = '폭탄 든 사람 ' + who(p.bomb);
+        } else if (id === 'tableFlip') {
+          const n = charges(p, 'tableFlip');
+          if (n <= 0) { st.cls = 'is-spent'; st.tip = '사용 완료'; }
+          else {
+            st.n = String(n); st.tip = '남은 횟수 ' + b(n);
+            if (gameActive && !draft && flipRound === round) st.tip += '. 이번 라운드에는 이미 엎었습니다.';
+            else if (mine && !hasRolledThisTurn && !flipList().some(function (e) { return e.p !== idx; })) st.tip += '. 지울 상대 기록이 없습니다.';
+          }
+        } else if (id === 'amend') {
+          if (p.law && LAW[p.law]) { st.cls = 'is-done'; st.n = '✓'; st.tip = '통과시킨 규칙은 ' + b(esc(LAW[p.law].name)) + '입니다.'; }
+          else if (lawDue(p)) {
+            if (draft && draft.law && draft.law.by === idx && !draft.law.show) { st.cls = 'is-hot'; st.n = '!'; st.tip = '새 규칙을 고르는 중입니다.'; }
+            else st.tip = '새 규칙을 곧 고릅니다.';
+          }
         } else if (key) {
           const n = charges(p, key);
           if (n > 0) { st.n = String(n); st.tip = '남은 횟수 ' + b(n); }
@@ -4726,7 +4915,7 @@
       }
 
       // what a record is worth for player p, augments included
-      // opts: { roundNo, firstRoll, joker, allin, noGolden, noProphecy, own (just the box's own score), trace: [] (receives the augments that applied) }
+      // opts: { roundNo, firstRoll, joker, allin, noGolden, noProphecy, noLaw, own (just the box's own score), trace: [] (receives the augments that applied) }
       function scoreFor(p, catId, d, opts) {
         opts = opts || {};
         const base = calcCategoryScore(catId, d);
@@ -4750,14 +4939,19 @@
           const wm = base === 0 && catId !== 'choice' && has('wildOne') && !!p.wake && wildMet(catId, counts);
           const jok = !!opts.joker && !opts.second && base === 0 && !wm && catId !== 'choice';
           const met = base > 0 || wm || jok;
+          const L = function (id) { return !opts.noLaw && lawOn(id); }; // noLaw: what the box would be without the laws
           if (wm) note('wildOne');
           if (jok) note('joker');
           const sumG = sum + g;
-          if (catId === 'choice') { v = sumG; if (g) note('golden'); }
+          let q = 0; // the face of a real four-of-a-kind (0 = none)
+          for (let f = 6; f >= 1; f--) if (counts[f] >= 4) { q = f; break; }
+          if (catId === 'choice') { v = sumG; if (g) note('golden'); if (L('cap')) v = Math.min(LAW_CAP, v); }
+          else if (catId === 'fullHouse' && L('house') && met) v = 25; // the golden die does not count here
+          else if (catId === 'fourKind' && L('quad') && met && q) { v = 2 * (4 * q + (g === q ? q : 0)); if (g === q) note('golden'); } // real quads only: a joker or wild quad keeps the plain sum
           else if (catId === 'fourKind' || catId === 'fullHouse') { v = met ? sumG : 0; if (met && g) note('golden'); }
-          else if (catId === 'smallStraight') v = met ? 15 : 0;
-          else if (catId === 'largeStraight') v = met ? 30 : 0;
-          else { v = met ? 50 : 0; if (met && has('yachtClub')) { v = 100; note('yachtClub'); } }
+          else if (catId === 'smallStraight') v = met ? 15 + (L('straight') ? 5 : 0) : 0;
+          else if (catId === 'largeStraight') v = met ? 30 + (L('straight') ? 5 : 0) : 0;
+          else { v = met ? 50 : (L('tax') ? -LAW_TAX : 0); if (met && has('yachtClub')) { v = 100; note('yachtClub'); } }
         }
         const own = v; // the box's own score, before flat extras
         if (opts.own) return own;
@@ -4853,6 +5047,13 @@
         return r < o[0] ? 1 : r < o[0] + o[1] ? 2 : 3;
       }
       function augAllowed(a, roundNo) {
+        if (a.id === 'tableFlip' && (players.length < 2 || roundNo >= 9 || !newCardsOk(3))) return false;
+        if (a.id === 'amend') {
+          // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
+          if (roundNo < 5 || players.length < 2 || lastRound - roundNo < 3) return false;
+          if (!LAW_IDS.some(function (id) { return !lawOn(id); })) return false;
+          return newCardsOk(3);
+        }
         if (a.cat === 'meta' && a.id !== 'mimic' && roundNo >= DRAFT_ROUNDS[DRAFT_ROUNDS.length - 1]) return false;
         if ((a.cat === 'hex' || ['timeThief', 'comeback', 'ride', 'gauntlet', 'mimic'].indexOf(a.id) !== -1) && players.length < 2) return false;
         if (a.id === 'lateBloom' && lastRound < 10) return false;
@@ -4962,8 +5163,93 @@
         return true;
       }
       function finishDraft() {
+        if (draft && draft.law) return; // a repeated call (a late timer) must not deal a holder's cards again
+        if (draft && openLawPhase()) return; // 개헌 holders pass a law before the first turn
         draft = null;
         startTurn(true);
+      }
+
+      // ---------- 개헌: the law phase (host / local only; a guest only renders draft.law) ----------
+      function shuffled(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+      function lawDue(p) { return augHas(p, 'amend') && !p.law; } // derived: no extra field to keep in sync
+      function nextLawHolder() { for (let i = 0; i < players.length; i++) if (lawDue(players[i])) return i; return -1; }
+      function lawMs() { return !isOnlineMatch && humanCount() > 1 ? 20000 : LAW_MS; } // a shared phone has to be handed over
+      // everyone has picked: the next holder is dealt up to 3 of the laws nobody has passed. true = a law is being chosen (the draft stays open)
+      function openLawPhase() {
+        const by = matchAug && draft ? nextLawHolder() : -1;
+        if (by < 0) return false;
+        const pool = shuffled(LAW_IDS.filter(function (id) { return !lawOn(id); }));
+        if (!pool.length) return false; // cannot happen (one 개헌 per player, six laws); kept as a guard
+        draft.law = { by: by, offer: pool.slice(0, 3), show: null };
+        armLawTimer();
+        broadcastState();
+        renderAll();
+        return true;
+      }
+      function armLawTimer() {
+        clearTimeout(lawTimer);
+        const L = draft && draft.law;
+        if (!L || L.show || !players[L.by]) return;
+        const p = players[L.by], mid = matchId, d0 = draft;
+        const ms = p.isAI ? 1400 + Math.random() * 900 : lawMs() + 400; // the host's clock is the real one; a guest's bar starts on receipt
+        lawTimer = setTimeout(function tick() {
+          if (matchId !== mid || draft !== d0 || d0.law !== L || L.show) return;
+          if (draftBusy && !p.isAI) { lawTimer = setTimeout(tick, 400); return; } // a tap is on its way (320 ms): let it land first
+          if (passLaw(L.by, bestLaw(L.by, L.offer, p.isAI)) && !p.isAI) fx('chip', { text: '시간이 지나 자동으로 정해졌습니다.', tone: 'cool' });
+        }, ms);
+      }
+      // authoritative. false = refused (not the holder, not offered, already passed, too late)
+      function passLaw(pIdx, id) {
+        const L = draft && draft.law;
+        if (!L || L.show || L.by !== pIdx || typeof id !== 'string' || L.offer.indexOf(id) === -1 || !lawIdOk(id) || lawOn(id)) return false;
+        clearTimeout(lawTimer);
+        players[pIdx].law = id;
+        L.show = id; L.offer = [];
+        broadcastState();
+        fx('amend', { by: pIdx, law: id }); // the gavel beat; the new numbers hold back until it reveals them
+        renderAll();
+        const mid = matchId, d0 = draft;
+        setTimeout(function () {
+          if (matchId !== mid || draft !== d0 || d0.law !== L) return;
+          draft.law = null;
+          if (!openLawPhase()) { draft = null; startTurn(true); }
+        }, REDUCED ? 1500 : 2700);
+        return true;
+      }
+      // points a law adds to player q over the rest of the game: additive per open box (exact solves, rms 0.3-1.9); the bonus law is priced on the table
+      function lawGain(id, q) {
+        if (id === 'bonus') {
+          const t = getPlayerTotals(q);
+          if (!(t.amount > 0) || t.bonus || t.need <= LAW_BONUS_NEED) return 0;
+          let mask = 0;
+          CATEGORIES.forEach(function (c, ci) { if (q.scores[c.id] !== null && q.scores[c.id] !== undefined) mask |= 1 << ci; });
+          const sh = t.need - LAW_BONUS_NEED, u = Math.max(0, Math.min(63, t.upper)), u2 = Math.min(63, u + sh);
+          const cross = u < 63 && u + sh >= 63 ? 35 : 0;
+          return ((cross + YachtAI.fut(mask, u2) - YachtAI.fut(mask, u)) * (t.amount + (augHas(q, 'debt') ? 50 : 0))) / 35;
+        }
+        const b = LAW_BOOST[id];
+        let sum = 0;
+        openCats(q).forEach(function (cid) { if (b && b[cid]) sum += b[cid]; });
+        return sum;
+      }
+      // what each side gains from a law: the holder, and the best of the others (the pick screen shows both)
+      function lawEdge(id, by) {
+        const mine = lawGain(id, players[by]);
+        const opp = players.filter(function (q, j) { return j !== by; }).map(function (q) { return lawGain(id, q); });
+        return { mine: mine, opp: opp };
+      }
+      // the law that helps the holder most against the table (bots, and the host's auto-pick when time runs out)
+      function bestLaw(by, offer, noisy) {
+        let best = offer[0], bv = -1e9;
+        offer.forEach(function (id) {
+          const e = lawEdge(id, by);
+          if (!e.opp.length) return; // a one-player table: keep offer[0]
+          const worst = Math.max.apply(null, e.opp), mean = e.opp.reduce(function (a, x) { return a + x; }, 0) / e.opp.length;
+          let v = e.mine - (e.opp.length === 1 ? worst : 0.5 * worst + 0.5 * mean);
+          if (noisy) { const lv = AI_LEVELS[players[by].level || 'hard']; v += (Math.random() - 0.5) * (lv ? lv.temp : 0) * 2; }
+          if (v > bv) { bv = v; best = id; }
+        });
+        return best;
       }
 
       // ---------- turns ----------
@@ -5016,7 +5302,7 @@
           const myMatch = matchId;
           setTimeout(function () {
             if (matchId !== myMatch) return;
-            if (cat) cur.scores[cat] = 0;
+            if (cat) { cur.scores[cat] = 0; setLast(cur, cat, null, 0); } // the stolen zero is a record a flip can erase
             fx('aug', { id: 'timeThief', q: currentPlayerIdx, cat: cat, phase: 'steal' });
             if (cat) resolveBombs(currentPlayerIdx, 0); // a full card (rest turn) has nothing to steal: the bomb waits
             broadcastState();
@@ -5127,12 +5413,94 @@
         for (let i = 0; i < players.length; i++) if (!players[i].isAI && draft.offers[i] && !draft.offers[i].chosen) return i;
         return -1;
       }
+      // 개헌: the draft overlay is reused for choosing a law (title, who is choosing, three law cards or a wait text)
+      function setLawTitle(on) {
+        const t = document.querySelector('.draft-title'), w = on ? '새 규칙' : '증강 선택';
+        if (t && t.textContent !== w) t.textContent = w;
+        const wrap = draftOv.querySelector('.draft-wrap');
+        if (wrap) wrap.classList.toggle('law-mode', !!on);
+      }
+      function lawMine(by) {
+        if (!players[by]) return false;
+        return isOnlineMatch ? players[by].peerId === myPeerId : !players[by].isAI;
+      }
+      function signedGain(x) { const n = Math.round(x); return n > 0 ? '+' + n : String(n); }
+      function lawCardEl(id, k, by) {
+        const l = LAW[id], el = document.createElement('button');
+        const e = lawEdge(id, by), mine = e.mine, opp = e.opp.length ? Math.max.apply(null, e.opp) : 0; // the best any other seat gets
+        el.type = 'button';
+        el.className = 'law-card';
+        el.style.setProperty('--d', (k * 0.08) + 's');
+        el.setAttribute('aria-label', l.name + ': ' + l.desc + ' 예상 이득, 나 ' + Math.round(mine) + '점, 상대 ' + Math.round(opp) + '점');
+        el.innerHTML = '<span class="law-name">' + esc(l.name) + '</span><span class="law-desc">' + esc(l.desc) + '</span>' +
+          '<span class="law-chg" aria-hidden="true">' + l.chg.map(function (c) { return '<span><b>' + esc(c[0]) + '</b> <i>→</i> <b class="to">' + esc(c[1]) + '</b></span>'; }).join('') + '</span>' +
+          '<span class="law-gain" aria-hidden="true">예상 이득 <b class="' + (mine > 0.5 ? 'up' : mine < -0.5 ? 'down' : '') + '">나 ' + signedGain(mine) + '</b> <b class="' + (opp > 0.5 ? 'down' : '') + '">상대 ' + signedGain(opp) + '</b></span>';
+        return el;
+      }
+      function onLawPick(el, id, sig) {
+        if (draftBusy || !draft || !draft.law || draft.law.show) return;
+        draftBusy = true;
+        sfxPick(); buzz(20);
+        el.classList.add('picked');
+        Array.prototype.forEach.call(draftCardsEl.children, function (c) { if (c !== el) c.classList.add('dropped'); });
+        const by = draft.law.by, mid = matchId, d0 = draft;
+        setTimeout(function () {
+          draftBusy = false;
+          if (matchId !== mid || draft !== d0) { syncDraftUi(); return; }
+          if (isOnlineMatch && onlineRole === 'guest') { lawPendingSig = sig; sendAction({ action: 'amend', law: id }); draftSig = ''; }
+          else passLaw(by, id);
+          syncDraftUi();
+        }, 320);
+      }
+      function renderLawPick(L) {
+        setLawTitle(true);
+        $('draftRound').textContent = 'ROUND ' + draft.round;
+        $('draftReroll').hidden = true;
+        const who = $('draftWho');
+        who.textContent = humanCount() > 1 || isOnlineMatch ? players[L.by].name : '';
+        who.style.color = PLAYER_COLORS[L.by % 4];
+        const base0 = 'law:' + draft.round + ':' + L.by + ':' + L.offer.join(',');
+        const mine = lawMine(L.by), sent = mine && lawPendingSig === 'law:' + draft.round + ':' + L.by + ':' + L.offer.join(',');
+        const sig = 'law:' + draft.round + ':' + L.by + ':' + L.offer.join(',') + (sent ? ':sent' : '');
+        if (sig === draftSig) return;
+        draftSig = sig;
+        const w = $('draftWait');
+        w.hidden = false;
+        draftCardsEl.innerHTML = '';
+        if (mine && !sent) {
+          const ms = lawMs();
+          w.innerHTML = '<p class="law-hint" role="status">하나를 고릅니다. ' + (ms / 1000) + '초 안에 고르지 않으면 자동으로 정해집니다.</p><div class="law-timer" aria-hidden="true"><i></i></div>';
+          const bar = w.querySelector('.law-timer i');
+          // the deadline is fixed when the pick opens: a re-render (menu closed, reconnect) resumes the bar where it is
+          const bsig = matchId + base0;
+          if (lawBarSig !== bsig) { lawBarSig = bsig; lawBarT0 = performance.now(); }
+          const el0 = Math.max(0, Math.min(ms, performance.now() - lawBarT0));
+          if (bar && bar.animate) bar.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: ms, delay: -el0, easing: 'linear', fill: 'forwards' }); // WAAPI: the countdown is information, so reduced motion keeps it
+          draftCardsEl.dataset.tier = '1';
+          draftCardsEl.classList.add('lit');
+          const base = 'law:' + draft.round + ':' + L.by + ':' + L.offer.join(',');
+          L.offer.forEach(function (id, k) {
+            const el = lawCardEl(id, k, L.by);
+            el.addEventListener('click', function () { onLawPick(el, id, base); });
+            draftCardsEl.appendChild(el);
+            setTimeout(sfxDeal, k * 110);
+          });
+          const first = draftCardsEl.firstElementChild;
+          if (first && window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches) first.focus({ preventScroll: true });
+        } else {
+          draftCardsEl.classList.remove('lit');
+          w.innerHTML = '<p class="law-hint" role="status">' + (sent ? '선택을 보냈습니다.' : esc(players[L.by].name) + ' 님이 새 규칙을 고르는 중입니다.') + '</p>' + lawListHtml('지금 규칙');
+        }
+      }
       function syncDraftUi() {
-        const show = !!draft && gameActive && titleOv.hidden;
+        const L = draft && draft.law;
+        const show = !!draft && gameActive && titleOv.hidden && !(L && L.show); // the gavel beat plays on the open table
         document.body.classList.toggle('drafting', show);
-        if (!show) { draftOv.hidden = true; draftSig = ''; draftPending = 0; return; }
+        if (!show) { draftOv.hidden = true; draftSig = ''; draftPending = 0; lawPendingSig = ''; return; }
         if (draftOv.hidden) { draftOv.hidden = false; stillApp(); sfxWhoosh(); }
         if (draftBusy) return;
+        if (L) { renderLawPick(L); return; }
+        setLawTitle(false);
         $('draftRound').textContent = 'ROUND ' + draft.round;
         const i = myDraftIdx();
         const o = i >= 0 ? draft.offers[i] : null;
@@ -5407,13 +5775,15 @@
         // 3. the twelve boxes, then the upper bonus and the points augments added outside the boxes
         h += '<div class="pk-board">' + CATEGORIES.map(function (c) {
           const v = p.scores[c.id], filled = v !== null && v !== undefined;
-          return '<div class="pk-cell' + (filled ? ' is-filled' + (v <= 0 ? ' is-zero' : '') : '') + '" role="img" aria-label="' + c.ko + ' ' + (filled ? esc(v) + '점' : '빈칸') + '"><b>' + (filled ? esc(v) : '·') + '</b><span>' + c.name + '</span></div>';
+          const isLast = matchAug && filled && lastOk(p) && p.last.cat === c.id && players.some(function (q) { return charges(q, 'tableFlip') > 0; }); // 밥상 엎기 could take it
+          return '<div class="pk-cell' + (filled ? ' is-filled' + (v <= 0 ? ' is-zero' : '') : '') + (isLast ? ' is-last' : '') + '" role="img" aria-label="' + c.ko + ' ' + (filled ? esc(v) + '점' : '빈칸') + (isLast ? '. 마지막 기록입니다.' : '') + '"><b>' + (filled ? esc(v) : '·') + '</b><span>' + c.name + '</span></div>';
         }).join('') + '</div>';
         const t = getPlayerTotals(p);
         h += '<div class="pk-bonus' + (t.bonus > 0 ? ' done' : '') + '"><span>BONUS</span><div class="bonus-bar"><i style="width:' + Math.round(Math.max(0, Math.min(100, (t.upper / (t.need || 63)) * 100))) + '%"></i></div>' +
           (t.amount === 0 ? '<span class="pk-bn ko">한 우물</span>' : '<span class="pk-bn">' + (t.bonus ? '+' + esc(t.amount) + '<i class="pk-tick"></i>' : esc(t.upper + '/' + t.need)) + '</span>') +
           (matchAug && t.extra ? '<span class="pk-extra">AUG <b' + (t.extra < 0 ? ' class="neg"' : '') + '>' + esc(signed(t.extra)) + '</b></span>' : '') + '</div>';
         if (matchAug) {
+          h += lawListHtml('새 규칙', true); // the laws are the same for every seat
           // 4. what the others did to them
           const sts = seatStatus(p, idx);
           if (sts.length) {
@@ -5532,7 +5902,11 @@
       // from renderAll: the sheet follows the game, and gets out of the way when this screen has to act
       function syncPeek() {
         let need = '';
-        if (gameActive && draft) { const di = myDraftIdx(); need = di >= 0 && draft.offers[di] && !draft.offers[di].chosen ? 'draft' : ''; }
+        if (gameActive && draft) {
+          const di = myDraftIdx();
+          need = di >= 0 && draft.offers[di] && !draft.offers[di].chosen ? 'draft' : '';
+          if (draft.law && !draft.law.show && lawMine(draft.law.by)) need = 'law';
+        }
         else if (isMyTurn()) need = 'turn:' + turnNo; // every turn this screen plays (on a shared device: each player's)
         if (need && need !== peekNeed) closePeek(); // a turn of mine (or my draft pick) has just started: ROLL is never left covered
         peekNeed = need;
@@ -6610,6 +6984,10 @@
             augPop('compound', s, '+' + e.pts);
             break;
           }
+          case 'tableFlip': {
+            if (e.phase === 'flip') tableFlipFx(e);
+            break;
+          }
           case 'earlyEnd': {
             screenFx('clock', 2000, '<div class="clk">' + glyphSvg('earlyEnd') + '</div><div class="clk-t">ROUND ' + e.last + '에서 끝</div>');
             restartAnim(roundCap, 'fx-cap');
@@ -6639,6 +7017,155 @@
           }
         }
       }
+      // ---------- 개헌: the gavel falls three times, the bill unrolls, the changed boxes flip ----------
+      // a bad payload does nothing; the cell values never come from here, only the show
+      function amendFx(e) {
+        const by = seatIdx(e && e.by), id = e ? e.law : null;
+        if (by < 0 || !lawIdOk(id)) return;
+        const l = LAW[id], who = players[by], st = stagePt(), mid = matchId;
+        const T = function (ms, fn) { setTimeout(function () { if (matchId === mid) fn(); }, ms); };
+        // a bonus law moves the totals at once: the coins wait for the reveal
+        totalDelayUntil = Math.max(totalDelayUntil, performance.now() + (REDUCED ? 500 : 1700));
+        players.forEach(function (q, i) { holdTotal(i); });
+        const strike = function (k) {
+          const rate = [1.15, 1.0, 0.85][k];
+          if (use3D()) {
+            window.Dice3D.hitstop(60 - k * 12);
+            window.Dice3D.kick({ y: -1.4 + k * 0.3, trauma: 0.3 - k * 0.05 });
+            if (window.Dice3D.jolt) window.Dice3D.jolt(0.5 - k * 0.1);
+            shakeApp(3);
+          } else { shakeApp(5 - k); flashTo(0.15); }
+          if (st) burst({ x: st.x, y: st.y + 10 }, { shape: 'dust', count: 8 - k * 2, angle: -Math.PI / 2, spread: Math.PI * 1.1, dist: 55 - k * 8, color: 'rgba(190,196,206,0.8)', dur: 900 });
+          if (!sample('thud', { rate: rate })) sfxThud();
+          if (k === 2) ringFx(st, '#ffd77a', 5);
+        };
+        let beat = REDUCED ? 0 : 950;
+        if (!REDUCED) {
+          if (st) {
+            const g = addFx('fx-glyph', st.x, st.y - 40, glyphSvg('amend'));
+            g.style.setProperty('--c', '#e6b455');
+            g.style.width = g.style.height = '120px';
+            const pose = function (r, y, o) { return { transform: 'translate(-50%,-50%) translateY(' + y + 'px) rotate(' + r + 'deg)', opacity: o }; };
+            playFx(g, [
+              Object.assign(pose(-55, -16, 0), { offset: 0 }), Object.assign(pose(-55, -16, 1), { offset: 0.02 }),
+              Object.assign(pose(10, 4, 1), { offset: 0.077 }), Object.assign(pose(-50, -12, 1), { offset: 0.12 }),
+              Object.assign(pose(10, 4, 1), { offset: 0.4 }), Object.assign(pose(-50, -12, 1), { offset: 0.45 }),
+              Object.assign(pose(12, 4, 1), { offset: 0.723 }), Object.assign(pose(-10, -8, 1), { offset: 0.78 }),
+              Object.assign(pose(-10, -8, 0), { offset: 1 })
+            ], { duration: 1300, easing: 'ease-in-out' });
+          }
+          T(100, function () { strike(0); });
+          T(520, function () { strike(1); });
+          T(940, function () { strike(2); });
+          beat = 1050;
+        }
+        // the bill (reduced motion: it only fades)
+        T(beat, function () {
+          screenFx('bill', REDUCED ? 1250 : 1500, '<div class="bill-in"><small>새 규칙</small><b>' + esc(l.name) + '</b><span>' + esc(l.desc) + '</span></div>');
+          if (!sample('cards')) sfxCard();
+          sample('scribble', { delay: 0.25, vol: 0.6 });
+        });
+        // the boxes the law changes show their new number, then the stamp
+        const hit = { house: ['fullHouse'], straight: ['smallStraight', 'largeStraight'], quad: ['fourKind'], tax: ['yacht'], cap: ['choice'], bonus: [] }[id] || [];
+        T(beat + 550, function () {
+          lawRevealed[id] = true;
+          renderAll();
+          const marks = hit.map(function (cid) { return { el: tileEls[cid], pt: tilePt(cid) }; });
+          if (id === 'bonus') marks.push({ el: bonusEl, pt: ptOf(bonusEl) });
+          marks.forEach(function (m, k) {
+            if (!m.el) return;
+            if (m.el.animate) {
+              if (REDUCED) m.el.animate([{ outline: '2px solid #ff5b6e', outlineOffset: '2px' }, { outline: '2px solid rgba(255,91,110,0)', outlineOffset: '2px' }], { duration: 600 });
+              else m.el.animate([{ transform: 'perspective(400px) rotateY(-90deg)' }, { transform: 'perspective(400px) rotateY(0deg)' }], { duration: 450, easing: 'cubic-bezier(0.2, 0.9, 0.3, 1.2)' });
+            }
+            if (k === 0) stampFx(m.pt, '개정', '#ff5b6e'); // one stamp per law: two beside each other read as a smear
+          });
+          if (!REDUCED) sample('flip', { vol: 0.6 });
+          restartAnim(lawCap, 'fx-cap');
+        });
+        T(beat + 1200, function () { showChip((who ? who.name : '플레이어') + ' 님이 새 규칙을 통과시켰습니다.', 'gold'); });
+      }
+      // ---------- 밥상 엎기: the table goes over, every newest record is wiped ----------
+      const TABLEWARE = [
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18c0 5-4 9-9 9s-9-4-9-9z"/><path d="M9 4c1 1 0 2 1 3M14 4c1 1 0 2 1 3"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20L18 4M8 21L21 6"/></svg>',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="14" rx="9" ry="5"/><path d="M7 13c2-3 8-3 10 0"/></svg>'
+      ];
+      // the reverse of stampFx: the ink lifts off and fades
+      function unstampFx(pt, text, color, dy) {
+        if (!pt) return;
+        const e = addFx('fx-stamp', pt.x, pt.y, esc(text));
+        e.style.setProperty('--c', color || '#e0314b');
+        // a seat coin sits near the screen edge at 360 px: keep the whole stamp on screen (it is centred on the point)
+        const hw = e.offsetWidth / 2 + 8;
+        e.style.left = Math.max(hw, Math.min(window.innerWidth - hw, pt.x)) + 'px';
+        // a seat stamp hangs under the rail (like the tags) so the name and score stay readable
+        const hud = pt.seat ? hudEl.getBoundingClientRect() : null;
+        if (hud && hud.bottom + 70 < window.innerHeight) e.style.top = (hud.bottom + e.offsetHeight / 2 + 6 + (dy || 0)) + 'px';
+        playFx(e, [
+          { transform: 'translate(-50%,-50%) rotate(-10deg) scale(1)', opacity: 1 },
+          { transform: 'translate(-50%,-50%) rotate(-10deg) scale(1.08)', opacity: 1, offset: 0.25 },
+          { transform: 'translate(-50%,-62%) rotate(-16deg) scale(2.4)', opacity: 0 }
+        ], { duration: 900, easing: 'ease-in' });
+      }
+      function tableFlipFx(e) {
+        const pi = seatIdx(e.p), who = players[pi], st = stagePt();
+        // a guest gets this over the wire: at most four entries, each one typed and ranged, anything else is skipped
+        const list = toArr(e.erased).slice(0, 4).map(function (x) {
+          const p = seatIdx(x && x.p), cat = String(x && x.cat);
+          const val = typeof (x && x.val) === 'number' ? x.val : NaN, prev = x && typeof x.prev === 'number' ? x.prev : null;
+          return p >= 0 && CAT_IDS.indexOf(cat) !== -1 && isFinite(val) ? { p: p, cat: cat, val: Math.max(-100, Math.min(1000, Math.floor(val))), prev: prev !== null && isFinite(prev) ? Math.max(-100, Math.min(1000, Math.floor(prev))) : null } : null;
+        }).filter(Boolean);
+        totalDelayUntil = Math.max(totalDelayUntil, performance.now() + (REDUCED ? 400 : 1000)); // coins count down with the ghosts
+        const rcPt = ptOf(roundCap); // read now: the stage is rotating when the pop fires, and the round cap lives inside it
+        const T = function (ms, fn) { const mid = matchId; setTimeout(function () { if (matchId === mid) fn(); }, ms); };
+        // beat 0 (0 ms): the hit
+        sfxSlam(); sample('shatter', { delay: 0.05, vol: 0.8 }); sample('thud', { delay: 0.12, rate: 0.8 });
+        for (let k = 0; k < 4; k++) sample('clack', { delay: 0.2 + k * 0.07, rate: 0.9 + k * 0.08, vol: 0.6 });
+        impact(5, { soft: true });
+        if (use3D()) { window.Dice3D.hitstop(120); window.Dice3D.kick({ y: 4, z: -3, trauma: 1, fov: -3 }); }
+        wordFx(st, '밥상 엎기');
+        stageVignette(0.55, '', 150); T(1100, function () { stageVignette(0, '', 400); });
+        // beat 1 (0-1000 ms): the felt hinges up from the near edge and drops back
+        const stage = $('diceStage');
+        if (!REDUCED && stage.animate) {
+          // hinge on the NEAR (bottom) edge so the far edge lifts and leans away; the origin is set per keyframe so no inline style is left behind
+          const O = '50% 100%';
+          stage.animate([
+            { transformOrigin: O, transform: 'perspective(900px) rotateX(0deg)' },
+            { transformOrigin: O, transform: 'perspective(900px) rotateX(58deg)', offset: 0.28, easing: EASE.out },
+            { transformOrigin: O, transform: 'perspective(900px) rotateX(58deg)', offset: 0.5 },
+            { transformOrigin: O, transform: 'perspective(900px) rotateX(-3deg)', offset: 0.86, easing: EASE.in },
+            { transformOrigin: O, transform: 'perspective(900px) rotateX(0deg)' }
+          ], { duration: 1000 });
+        }
+        // beat 2 (60 ms): the dice leap and land again (cosmetic: the values are the ones already on the table)
+        if (use3D() && window.Dice3D.knock && !REDUCED && !window.Dice3D.isAnimating() && !cup && dice.every(function (v) { return v >= 1; })) T(60, function () {
+          if (window.Dice3D.isAnimating() || cup || !dice.every(function (v) { return v >= 1; })) return;
+          window.Dice3D.knock(dice.slice(), [true, true, true, true, true], { onImpact: diceImpact, onLand: sfxLand, onDone: function () { renderDice(); }, yaw: yawLive() ? yaw.slice() : [0, 0, 0, 0, 0] });
+        });
+        // beat 3 (80-700 ms): tableware and coins fly with gravity
+        burst(st, { shape: 'glyph', html: function (k) { return TABLEWARE[k % 3]; }, count: 9, angle: -Math.PI / 2, spread: Math.PI * 1.1, dist: 150, gravity: 220, color: ['#f4ead2', '#c9a45a', '#e0314b'], size: 1.3, dur: 1300, spin: 600 });
+        burst(st, { shape: 'coin', count: 8, angle: -Math.PI / 2, spread: Math.PI * 1.2, dist: 120, gravity: 200, dur: 1100 });
+        // beat 4 (500-1100 ms): every erased record un-stamps, 160 ms apart; the owner's seat blinks
+        list.forEach(function (x, k) {
+          T(500 + k * 160, function () {
+            const pt = x.p === currentPlayerIdx ? tilePt(x.cat) : seatPt(x.p);
+            unstampFx(pt, catKo(x.cat) + ' ' + x.val + (x.prev !== null ? '→' + x.prev : ''), null, k * 30);
+            if (pt) ringFx(pt, '#e0314b', 2.4);
+            sample('scribble', { vol: 0.5 }); if (k === 0) sfxRewind();
+            seatHit(x.p);
+            const sh = $('sheetBody').querySelector('tr[data-cat="' + x.cat + '"] td:nth-child(' + (x.p + 2) + ')');
+            if (sh) restartAnim(sh, 'pad-undo');
+          });
+        });
+        // beat 5 (700 ms): the round counter
+        T(700, function () { restartAnim(roundCap, 'fx-cap'); augPop('tableFlip', rcPt ? { x: Math.max(100, Math.min(window.innerWidth - 100, rcPt.x)), y: rcPt.r.bottom + 46 } : null, '+1 라운드'); });
+        // beat 6 (1000 ms): the table lands
+        T(1000, function () { sfxThud(); impact(2, { soft: true }); });
+        // beat 7 (1300 ms): the line for screen readers and the log
+        T(1300, function () { showToast((who ? who.name : '플레이어') + ' 님이 밥상을 엎었습니다. 마지막 기록 ' + list.length + '개가 지워졌습니다.'); });
+      }
       // effects for how a roll came out (loaded / cursed / twin dice), after the dice land
       function augRollFx(notes) {
         if (!notes || !matchAug) return;
@@ -6662,13 +7189,14 @@
         bomb: { label: '폭탄', chip: '시한폭탄', kind: 'instant' },
         fuse: { label: '도화선', chip: '도화선', kind: 'instant' },
         ride: { label: '편승', chip: '편승', kind: 'instant' },
+        tableFlip: { label: '밥상', chip: '밥상 엎기', kind: 'instant' },
         gauntlet: { label: '도전장', chip: '도전장', kind: 'tile' },
         twofer: { label: '일석이조', chip: '일석이조', kind: 'toggle' },
         overwrite: { label: '덮어쓰기', chip: '덮어쓰기', kind: 'toggle' },
         joker: { label: '조커', chip: 'JOKER', kind: 'toggle' },
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' }
       };
-      const POWER_KEYS = ['slam', 'ride', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer'];
+      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
@@ -6720,6 +7248,7 @@
         if (kind === 'bomb') return !encoreTurn && !(cur.bomb >= 0) && leaderOther(currentPlayerIdx) >= 0;
         if (kind === 'ride') return !hasRolledThisTurn && !encoreTurn && !!lastRec && lastRec.seq === turnNo - 1 && lastRec.p !== currentPlayerIdx && rollsMax >= 1;
         if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
+        if (kind === 'tableFlip') return flipUsable();
         if (!hasRolledThisTurn) return false;
         if (kind === 'rewind') return rollsLeft < rollsMax || (!!rewindSnap && !!rewindSnap.fuse);
         if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
@@ -6794,6 +7323,64 @@
         if (p && pIdx !== powerOwnerIdx()) showChip(p.name + ' 쾅!', 'gold');
         if (p) pingChip(pIdx, augIdForPower(p, 'slam'));
       }
+      // ---------- 밥상 엎기 ----------
+      // p.last = the newest record { cat, prev, val }: prev = what the box held before (null = empty), val = what the record wrote.
+      // It "stands" only while the box still holds val, so a later trade (맞바꾸기) or a won 도전장 keeps its change.
+      const FLIP_CAP = 16, FLIP_MS = REDUCED ? 1100 : 2400;
+      let flipArmT = 0, armT0 = 0, flipMarkSig = '';
+      function setLast(p, cat, prev, val) { if (matchAug && p) p.last = { cat: cat, prev: prev, val: val }; }
+      function lastOk(p) { const l = p && p.last; return !!l && p.scores[l.cat] === l.val; }
+      // the records a flip would erase right now
+      function flipList() {
+        const out = [];
+        players.forEach(function (q, j) { if (lastOk(q)) out.push({ p: j, cat: q.last.cat, val: q.last.val, prev: q.last.prev }); });
+        return out;
+      }
+      // the part of canUsePower that is specific to 밥상 엎기 (the generic guard has already run)
+      function flipUsable() {
+        if (hasRolledThisTurn || encoreTurn || duel || flipRound === round || lastRound >= FLIP_CAP) return false;
+        return flipList().some(function (e) { return e.p !== currentPlayerIdx; });
+      }
+      function doTableFlip(onComplete) {
+        if (!canUsePower('tableFlip')) return false;
+        const cur = players[currentPlayerIdx];
+        const erased = flipList();
+        cur.ch.tableFlip -= 1;
+        erased.forEach(function (e) { players[e.p].scores[e.cat] = e.prev; });
+        // 뻥카 (later job): mark the newest bluffLog entry with the same seat and box as flipped here
+        players.forEach(function (q) { q.last = null; });
+        lastRec = null;
+        lastRound += 1;
+        flipRound = round;
+        armedPower = null; clearTimeout(flipArmT);
+        clearTimeout(toastEl._t); toastEl.hidden = true; // the arm prompt is stale once the table goes
+        isScoring = true; // no roll, record or power while the show plays
+        fx('aug', { id: 'tableFlip', p: currentPlayerIdx, phase: 'flip', last: lastRound,
+          erased: erased.map(function (e) { return { p: e.p, cat: e.cat, val: e.val, prev: e.prev }; }) });
+        broadcastState();
+        renderAll();
+        const mid = matchId, tn = turnNo;
+        setTimeout(function () {
+          if (matchId !== mid || turnNo !== tn) return;
+          isScoring = false;
+          broadcastState();
+          renderAll();
+          if (typeof onComplete === 'function') onComplete();
+        }, FLIP_MS);
+        return true;
+      }
+      // what the armed key would erase, shown on the seat cards (ring) and read out by the seat's label
+      function flipMarkOf(i) {
+        if (armedPower !== 'tableFlip' || !isMyTurn()) return null;
+        return flipList().filter(function (e) { return e.p === i; })[0] || null;
+      }
+      function markFlipPreview() {
+        const sig = armedPower === 'tableFlip' && isMyTurn() ? flipList().map(function (e) { return e.p + e.cat + e.val; }).join('|') : '';
+        if (sig === flipMarkSig) return;
+        flipMarkSig = sig;
+        players.forEach(function (p, i) { const el = seatsEl.children[i]; if (el) el.classList.toggle('flip-mark', !!flipMarkOf(i)); });
+        labelSeats();
+      }
       // authoritative (local / host); returns false when the power can't be used
       function usePower(kind, idx, face, onComplete, cat) {
         if (!canUsePower(kind)) return false;
@@ -6806,6 +7393,7 @@
         if (kind === 'bomb') return doBomb(onComplete);
         if (kind === 'fuse') return doFuse(onComplete);
         if (kind === 'ride') return doRide(onComplete);
+        if (kind === 'tableFlip') return doTableFlip(onComplete);
         if (kind === 'gauntlet') return doGauntlet(cat, onComplete);
         if (POWER_DEFS[kind].kind !== 'target') return false;
         if (!(idx >= 0 && idx < 5)) return false;
@@ -6890,6 +7478,7 @@
         cur.ch.swap -= 1;
         cur.scores[cat] = sw.b;
         players[sw.q].scores[cat] = sw.a;
+        [cur, players[sw.q]].forEach(function (q) { if (q.last && q.last.cat === cat) q.last = null; }); // the number moved, so the record no longer stands
         armedPower = null;
         fx('aug', { id: 'swap', p: currentPlayerIdx, q: sw.q, cat: cat, a: sw.a, b: sw.b });
         broadcastState();
@@ -7420,12 +8009,14 @@
           b.disabled = !ok;
           b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || !!armed[k]);
-          b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회');
+          b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
+          if (k === 'tableFlip') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           const cnt = b.querySelector('.pw-n');
           if (cnt.textContent !== String(n)) cnt.textContent = String(n);
         });
         syncSeatChips(); // a 쾅 redraws only this bar: the slammer's seat chip counts down with it
         updateSeatSlams();
+        markFlipPreview();
         renderFacePick();
         if (tipFor && (!tipFor.isConnected || tipFor.closest('#powers'))) refreshTip(); // a tooltip open on a key follows its count
       }
@@ -7551,6 +8142,19 @@
           renderDice(); renderTiles(); renderPowers();
           return;
         }
+        if (kind === 'tableFlip') {
+          // irreversible and global: the first tap arms (and says how many records go), the second flips
+          if (armedPower !== 'tableFlip') {
+            armedPower = 'tableFlip'; armT0 = performance.now(); sfxTick();
+            showToast('지워질 기록은 ' + flipList().length + '개입니다. 한 번 더 누르면 엎습니다.');
+            clearTimeout(flipArmT);
+            const mid = matchId;
+            flipArmT = setTimeout(function () { if (matchId === mid && armedPower === 'tableFlip') { armedPower = null; renderTiles(); renderPowers(); } }, 5000);
+            renderTiles(); renderPowers();
+            return;
+          }
+          if (performance.now() - armT0 < 350) return; // a double tap or a bounce never flips
+        }
         armedPower = null;
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: kind }); return; }
         usePower(kind);
@@ -7590,12 +8194,16 @@
       function onesOf() { if (!ONES_OF) ONES_OF = YachtAI.buildSC(function (ci, d) { return ci ? 0 : d.filter(function (v) { return v === 1; }).length; }); return ONES_OF; }
       const modsCache = {};
       function aiMods(p) {
-        if (!matchAug || !p || !p.aug || !p.aug.length) return null;
-        const key = p.aug.slice().sort().join(',') + '|' + (round >= 10 ? 'L' : 'E') + '|W' + (p.wake ? 1 : 0) + '|P' + (augHas(p, 'pupa') ? (round >= (p.hatch || 99) ? 'B' : 'C') : '');
+        if (!matchAug || !p) return null;
+        const lk = lawKey();
+        if (!(p.aug && p.aug.length) && !lk) return null; // no augments and no laws: classic mods
+        const aug = p.aug || [];
+        const key = aug.slice().sort().join(',') + '|' + (round >= 10 ? 'L' : 'E') + '|W' + (p.wake ? 1 : 0) + '|P' + (augHas(p, 'pupa') ? (round >= (p.hatch || 99) ? 'B' : 'C') : '') + '|law:' + lk;
         if (modsCache[key]) return modsCache[key];
         const sc = YachtAI.buildSC(function (ci, d) { return scoreFor(p, CAT_IDS[ci], d, { noGolden: true, noProphecy: true, roundNo: round }); });
         const boost = new Float64Array(12);
         Object.keys(AUG_BOOST).forEach(function (id) { if (augHas(p, id)) AUG_BOOST[id].forEach(function (b) { boost[b[0]] += b[1]; }); });
+        lawList().forEach(function (L) { const b = LAW_BOOST[L]; if (b) Object.keys(b).forEach(function (id) { boost[CAT_IDS.indexOf(id)] += b[id]; }); });
         // 만능 1 awake: patterns come much easier from now on
         if (augHas(p, 'wildOne') && p.wake) { boost[11] += 12; boost[10] += 5; boost[9] += 3; boost[8] += 3; boost[7] += 3; }
         // 번데기 cocoon: fill the low boxes now, keep the high ones for the butterfly half
@@ -7710,7 +8318,7 @@
       }
       function withExact(mods, p, flags) {
         const bust = fuseBust && p === players[currentPlayerIdx];
-        const exact = CAT_IDS.map(function (id) { return bust ? (flags && flags.allin ? -20 : 0) : scoreFor(p, id, dice, Object.assign(previewOpts(false), flags || {})); });
+        const exact = CAT_IDS.map(function (id) { return bust ? (flags && flags.allin ? -20 : lawBust(id)) : scoreFor(p, id, dice, Object.assign(previewOpts(false), flags || {})); });
         const m = Object.assign({}, mods || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: exact });
         const adj = aiRecordAdj(p, exact);
         if (adj) m.adj = adj;
@@ -7734,9 +8342,9 @@
           const t = getPlayerTotals(p);
           let par = t.upper;
           CATEGORIES.slice(0, 6).forEach(function (c, ci) { if (open(c.id)) par += 3 * (ci + 1); });
-          const pB = t.bonus ? 1 : Math.max(0, Math.min(1, (par - 50) / 26));
+          const pB = t.bonus ? 1 : Math.max(0, Math.min(1, (par - (t.need - 13)) / 26));
           const openUp = CATEGORIES.slice(0, 6).filter(function (c) { return open(c.id); }).length;
-          v = t.upper >= 63 ? 0 : 2.3 * openUp * left * 1.5 - 35 * pB + 4;
+          v = t.upper >= t.need ? 0 : 2.3 * openUp * left * 1.5 - 35 * pB + 4;
         }
         if (id === 'pupa') {
           const N = lastRound - round + 1;
@@ -7767,6 +8375,7 @@
           v = best;
         }
         if (id === 'twofer') v = a.ev * Math.min(1, left * 1.5);
+        if (id === 'tableFlip') v = players.length < 2 ? 0 : a.ev * Math.max(0, Math.min(1, (lastRound - round) / 11));
         if (id === 'fuse') { v = a.ev * left; if (augHas(p, 'loaded')) v += 3; if (players.some(function (q) { return q !== p && augHas(q, 'curse'); })) v -= 3; }
         if (id === 'ride') v = a.ev * (lastRound - round + 1 < 3 ? 0.6 : 1);
         if (id === 'gauntlet') v = a.ev * (lastRound - round < 1 ? 0.3 : 1);
@@ -7783,7 +8392,7 @@
           const t = getPlayerTotals(p);
           let par = t.upper;
           CATEGORIES.slice(0, 6).forEach(function (c, ci) { if (open(c.id)) par += 3 * (ci + 1); });
-          const pB = t.bonus ? 1 : Math.max(0, Math.min(1, (par - 50) / 26));
+          const pB = t.bonus ? 1 : Math.max(0, Math.min(1, (par - (t.need - 13)) / 26));
           v = 30 - 50 * (1 - pB);
         }
         if (id === 'comeback') v = 40 * Math.max(0, Math.min(1, (topOther - myT - 5) / 40)) + 3;
@@ -7853,7 +8462,7 @@
             const A = CAT_IDS[xa.ci];
             const scA = Object.assign({}, sc);
             scA[A] = ex1[xa.ci];
-            const crossA = xa.ci < 6 && t0.upper < 63 && t0.upper + ex1[xa.ci] >= 63 ? bAmt : 0;
+            const crossA = xa.ci < 6 && t0.upper < t0.need && t0.upper + ex1[xa.ci] >= t0.need ? bAmt : 0;
             const m2 = withExact(tm, cur, { second: true });
             YachtAI.catValues(scA, CAT_IDS, dice, m2).forEach(function (xb) {
               if (xb.ci === xa.ci || ex2[xb.ci] <= 0) return;
@@ -7875,8 +8484,8 @@
         }
         if (charges(cur, 'overwrite') > 0) {
           const open = openCats(cur).filter(function (id) { return id !== sealId; });
-          const nowBest = open.reduce(function (m, id) { return Math.max(m, scoreFor(cur, id, dice, previewOpts(false)) - BASE_EV[id]); }, -1e9);
-          const minBase = open.reduce(function (m, id) { return Math.min(m, BASE_EV[id]); }, 99);
+          const nowBest = open.reduce(function (m, id) { return Math.max(m, scoreFor(cur, id, dice, previewOpts(false)) - baseEv(id)); }, -1e9);
+          const minBase = open.reduce(function (m, id) { return Math.min(m, baseEv(id)); }, 99);
           let ow = null;
           CATEGORIES.forEach(function (c) {
             const old = cur.scores[c.id];
@@ -7903,7 +8512,7 @@
           return b;
         };
         const stop = bestFor(dice, exactFor(dice));
-        const bust = bestFor(dice, CAT_IDS.map(function () { return 0; }));
+        const bust = bestFor(dice, CAT_IDS.map(function (id) { return lawBust(id); }));
         const cands = [];
         const plan = YachtAI.decide(sc, CAT_IDS, dice, 1, held, 0, aiExact(cur));
         if (plan.hold) cands.push(plan.hold);
@@ -7954,11 +8563,42 @@
         return { kind: best, idx: o[best].idx };
       }
       // before its first roll the AI may trade a box or seal the next player
+      // points player e.p loses if their newest record is erased (negative = they gain)
+      function flipLoss(e) {
+        const q = players[e.p], m = aiMods(q);
+        // copies: aiScores hands back the live card when nothing is written off, and the what-if below edits that card
+        const before = Object.assign({}, aiScores(q)); // the card as it is now (write-offs included)
+        const old = q.scores[e.cat];
+        q.scores[e.cat] = e.prev; lastRound += 1; // the card after the flip, with the extra turn
+        let after;
+        try { after = Object.assign({}, aiScores(q)); } finally { q.scores[e.cat] = old; lastRound -= 1; }
+        const V = function (sc) { return YachtAI.valueAt(sc, CAT_IDS, [1, 1, 1, 1, 1], 3, m, true); };
+        const keep = e.prev === null ? 0 : e.prev;
+        let side = 0; // the extra round pays holders of these
+        if (augHas(q, 'lateBloom')) side += 8;
+        if (augHas(q, 'compound')) side += 0.05 * (getPlayerTotals(q).total + 12 * Math.max(0, lastRound - round));
+        return e.val - keep + V(before) - V(after) - side;
+      }
+      function aiFlipGain() {
+        const me = currentPlayerIdx, lead = leaderOther(me);
+        let gain = 0;
+        flipList().forEach(function (e) {
+          const L = flipLoss(e);
+          gain += e.p === me ? -L : (players.length === 2 || e.p === lead ? 1 : 0.4) * L;
+        });
+        return gain;
+      }
       function aiPreTurn(done) {
         const cur = players[currentPlayerIdx];
         if (!matchAug || !cur || encoreTurn) { done(); return; }
         const myMatch = matchId;
         const later = function (fn, ms) { aiTimer = setTimeout(function () { if (matchId === myMatch && gameActive) fn(); }, ms); };
+        // 밥상 엎기: first, so it also beats 편승 (which would ride a record that is about to vanish)
+        if (charges(cur, 'tableFlip') > 0 && canUsePower('tableFlip')) {
+          const k = cur.level === 'easy' ? 1.5 : 1;
+          const th = (round >= lastRound ? 0 : round >= 10 ? 10 : 18) * k;
+          if (aiFlipGain() > th) { later(function () { if (!doTableFlip(function () { aiPreTurn(done); })) done(); }, 600); return; }
+        }
         // 편승: start from the previous player's recorded dice when that beats a fresh turn
         if (charges(cur, 'ride') > 0 && canUsePower('ride')) {
           const sc = aiScores(cur), tm = aiTurnMods(cur), ch = charges(cur, 'ride');
@@ -7977,7 +8617,7 @@
             if (!gi) return;
             const q = players[gi.q];
             const qt = getPlayerTotals(q);
-            const bonusLoss = dci < 6 && qt.bonus && qt.upper - gi.val < 63 ? qt.amount : 0;
+            const bonusLoss = dci < 6 && qt.bonus && qt.upper - gi.val < qt.need ? qt.amount : 0;
             const w = players.length === 2 || gi.q === leaderOther(currentPlayerIdx) ? 1 : 0.6;
             const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, base || {});
             const src = m.sc || YachtAI.baseSC(), scd = new Float64Array(src.length);
@@ -8095,7 +8735,8 @@
         const base = calcCategoryScore(catId, dice);
         let pts = scoreFor(cur, catId, dice, { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn, joker: useJoker, allin: useAllin, trace: trace });
         // 도화선 went off: a zero (all-in still costs its 20)
-        if (fuseBust) { pts = useAllin ? -20 : 0; trace.length = 0; if (useAllin) trace.push('allin'); }
+        // (a caught 뻥카 lie writes lawBust(catId) as well, in a later job)
+        if (fuseBust) { pts = useAllin ? -20 : lawBust(catId); trace.length = 0; if (useAllin) trace.push('allin'); }
         if (useOw && pts <= old) return;
         // 일석이조 armed: this record opens a second one with the same dice
         const useTwofer = !!flags.twofer && charges(cur, 'twofer') > 0 && !filled && !encoreTurn && !duel && !fuseBust && pts > 0;
@@ -8113,6 +8754,7 @@
         if (useAllin && !keepOld) cur.ch.allin -= 1;
         if (useOw) cur.ch.overwrite -= 1;
         if (!keepOld) cur.scores[catId] = pts;
+        if (!keepOld && !encoreTurn) setLast(cur, catId, filled ? old : null, pts); // 밥상 엎기: covers every record path (bust, duel, joker, all-in, overwrite, and later a bluff)
         lastRec = { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo };
         // 칠전팔기: a zero you wrote yourself into an empty box
         const riseNow = !keepOld && !filled && !encoreTurn && augHas(cur, 'rise') && pts <= 0 && !cur.rise;
@@ -8191,6 +8833,7 @@
         cur.ch.twofer -= 1;
         const prevT = getPlayerTotals(cur);
         cur.scores[B] = pts2;
+        setLast(cur, B, null, pts2); // only the second box counts as the record
         const newT = getPlayerTotals(cur);
         const ptsA = cur.scores[A] || 0;
         twoferPend = null;
@@ -9026,6 +9669,16 @@
         }).sort(function (a, b) { return (b.isHost - a.isHost) || (a.joinedAt - b.joinedAt); });
       }
 
+      // a law phase from the wire: a seat in range, at most 3 distinct known ids, a known id or nothing for `show`; anything else is no phase
+      function readLawPhase(l) {
+        if (!l || typeof l !== 'object' || typeof l.by !== 'number') return null;
+        const by = Math.floor(l.by);
+        if (!(by >= 0 && by < players.length)) return null;
+        const offer = toArr(l.offer).filter(function (x, i, a) { return lawIdOk(x) && a.indexOf(x) === i; }).slice(0, 3);
+        const show = lawIdOk(l.show) ? l.show : null;
+        if (!offer.length && !show) return null;
+        return { by: by, offer: offer, show: show };
+      }
       function applyRemoteState(d) {
         const wasActive = gameActive && isOnlineMatch;
         const wasRolling = isRolling;
@@ -9047,6 +9700,16 @@
           q.hatch = int(p.hatch, 0, 99, 0); q.hatched = p.hatched ? 1 : 0; q.rise = p.rise ? 1 : 0; q.wake = p.wake ? 1 : 0;
           q.glue = int(p.glue, 0, 6, 0); q.glueBy = int(p.glueBy, -1, 3, -1); q.bomb = int(p.bomb, -1, 3, -1); q.bombT = int(p.bombT, -1, 3, -1);
           q.mim = p.mim && AUG[String(p.mim)] ? String(p.mim) : null;
+          // 밥상 엎기: the newest record. Firebase drops null children, so a missing key is null; anything malformed becomes null
+          q.last = null;
+          const L = p.last;
+          if (L && typeof L === 'object' && CAT_IDS.indexOf(String(L.cat)) !== -1) {
+            const lv = Number(L.val), pv = (L.prev === null || L.prev === undefined) ? null : Number(L.prev);
+            if (typeof L.val === 'number' && isFinite(lv) && lv >= -100 && lv <= 1000 && (pv === null || (typeof L.prev === 'number' && isFinite(pv) && pv >= -100 && pv <= 1000))) {
+              q.last = { cat: String(L.cat), prev: pv === null ? null : Math.floor(pv), val: Math.floor(lv) };
+            }
+          }
+          q.law = lawIdOk(p.law) ? p.law : null; // 개헌: an own key of LAW, else nothing (Firebase drops a null)
           return q;
         });
         // parse order (each card fills its slot): players (law, last) -> globals (lastRound, flipRound) -> held, yaw -> cup
@@ -9058,7 +9721,8 @@
             const src = {};
             if (o && o.src && typeof o.src === 'object') Object.keys(o.src).forEach(function (k) { if (AUG[k]) src[k] = Number(o.src[k]); });
             return { tier: Number(o && o.tier) || 1, cards: toArr(o && o.cards).map(String), rerolls: Number(o && o.rerolls) || 0, chosen: (o && o.chosen) || null, up: !!(o && o.up), mirror: !!(o && o.mirror), src: src };
-          })
+          }),
+          law: readLawPhase(d.draft.law)
         } : null;
         rollsMax = Number(d.rollsMax) || 3;
         rollSeq = Number(d.seq) || 0;
@@ -9075,9 +9739,10 @@
         const lr = d.lastRec;
         const lrd = lr ? toArr(lr.dice).map(Number) : [];
         lastRec = lr && lrd.length === 5 && lrd.every(function (v) { return v >= 1 && v <= 6; }) ? { p: Number(lr.p) || 0, dice: lrd, seq: Number(lr.seq) || 0 } : null;
-        const lrn = Math.floor(Number(d.lastRound));
+        const lrn = typeof d.lastRound === 'number' ? Math.floor(d.lastRound) : 12;
         lastRound = lrn >= 1 && lrn <= 16 ? lrn : 12; // a flipped table can reach 16; anything else is garbage
-        // (flipRound is parsed here, with the other globals)
+        const fr = typeof d.flipRound === 'number' ? Math.floor(d.flipRound) : -1;
+        flipRound = fr >= -1 && fr <= 99 ? fr : -1; // NaN and Infinity fail the range test
         encoreTurn = !!d.encoreTurn;
         sealTurn = !!d.sealTurn;
         turnLost = !!d.turnLost;
@@ -9093,6 +9758,7 @@
         isRolling = !!d.isRolling;
         isScoring = !!d.isScoring;
         gameActive = !!d.gameActive;
+        if (!gameActive || !(draft && draft.law)) { lawRevealed = {}; lawPendingSig = ''; } // a new match may pass the same law again
         if (!wasActive && gameActive) { resetTotalAnims(); matchId++; OVERLAYS.forEach(closeOv); }
         renderAll();
         // our replay landed before the host's "done" state: the previews only exist now, so cascade them now
@@ -9134,6 +9800,7 @@
         // -> roll, hold, score, power, (cockPick, bluffDecl, bluffLift)
         if (data.action === 'augPick') { if (who >= 0) draftPick(who, String(data.id)); return; }
         if (data.action === 'augReroll') { if (who >= 0) draftReroll(who); return; }
+        if (data.action === 'amend') { if (who >= 0 && typeof data.law === 'string') passLaw(who, data.law); return; } // a law pick: the holder only, an offered law only (passLaw checks)
         // an action aimed at dice that have changed since the guest saw them is dropped
         const stale = data.seq != null && Number(data.seq) !== rollSeq;
         if (data.action === 'slam') { if (who >= 0 && !stale && doSlam(who)) renderAll(); return; }
@@ -9347,8 +10014,23 @@
             updateChatUi();
             if (room.state && room.state.gameActive) {
               applyRemoteState(room.state);
+              // the latch died with the old tab: rebuild it from the room in hand (a seated player with no member entry counts as 0)
+              roomV = 99; roomSeen = {};
+              const rm = room.members || {};
+              Object.keys(rm).forEach(function (k) { if (k !== myId && rm[k] && !rm[k].isHost) { roomV = Math.min(roomV, memberV(rm[k])); roomSeen[k] = 1; } });
+              players.forEach(function (p) { if (p && p.peerId && p.peerId !== myId && !rm[p.peerId]) roomV = 0; });
+              if (draft) {
+                // a draft is open: its timers died with the old tab (no turn is in flight, so no turn is advanced)
+                if (draft.law && !draft.law.show) armLawTimer();
+                else if (draft.law) { draft.law = null; if (!openLawPhase()) { draft = null; startTurn(true); } }
+                else if (draft.offers.every(function (o) { return !!o.chosen; })) finishDraft();
+                broadcastState(); renderAll();
+                showToast('다시 연결됨');
+                return;
+              }
               // anything that was mid-animation when the host dropped is settled now
-              if (isScoring) { isScoring = false; advanceTurn(); }
+              if (isScoring && flipRound === round && !hasRolledThisTurn && !turnLost && !restTurn && !twoferPend) { isScoring = false; broadcastState(); renderAll(); } // a flip's lock: the flipper still has this turn to play
+              else if (isScoring) { isScoring = false; advanceTurn(); }
               else { isRolling = false; broadcastState(); renderAll(); }
               fx('turn', { idx: currentPlayerIdx, name: players[currentPlayerIdx].name });
               showToast('다시 연결됨');
@@ -9543,7 +10225,9 @@
         hasRolledThisTurn = false; isRolling = false; isScoring = false; gameActive = true;
         lastScored = null; selectedTile = null; armedPower = null; armedReset();
         draft = null; rewindSnap = null; liveRoll = null;
-        lastRound = 12; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
+        clearTimeout(lawTimer); lawPendingSig = ''; lawRevealed = {}; lawBarSig = '';
+        stageVignette(0, '', 0); // a flip's dark felt must not carry into the next match
+        lastRound = 12; flipRound = -1; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
         turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         matchId++;
@@ -9561,6 +10245,7 @@
         clearTimeout(aiTimer);
         cleanupPeer(true);
         isOnlineMatch = false;
+        roomV = 99; roomSeen = {};
         matchMode = mode || selectedMode;
         matchAug = ruleMode === 'aug';
         players = [];
@@ -9591,10 +10276,12 @@
         if (onlineRole !== 'host' || lobbyMembers.length < 2) return;
         clearTimeout(aiTimer);
         isOnlineMatch = true;
+        roomV = 99; roomSeen = {};
         matchMode = 'online';
         matchAug = ruleMode === 'aug';
         players = lobbyMembers.map(function (m) { return { name: m.name, isAI: false, peerId: m.peerId, scores: freshScores(), av: validAv(m.av), dice: validDice(m.dice) || 'classic' }; });
         players.forEach(freshAugState);
+        newCardsOk(1); // the lowest version in the room, read once now that the match has started
         resetTurnState();
         OVERLAYS.forEach(closeOv);
         beginMatch();
@@ -9603,6 +10290,7 @@
         if (isOnlineMatch) {
           if (onlineRole === 'host') {
             players.forEach(function (p) { p.scores = freshScores(); freshAugState(p); });
+            roomV = 99; roomSeen = {}; newCardsOk(1);
             resetTurnState();
             OVERLAYS.forEach(closeOv);
             beginMatch();
@@ -10131,7 +10819,8 @@
       $('tPlayAi').addEventListener('click', function () { ensureAudio(); sfxTick(); selectedMode = 'ai'; openMode(); });
       $('tLocal').addEventListener('click', function () { sfxTick(); selectedMode = 'local'; openMode(); });
       $('tOnline').addEventListener('click', function () { sfxTick(); selectedMode = 'online'; openMode(); });
-      $('tRules').addEventListener('click', function () { sfxTick(); openOv(rulesOv); });
+      function openRules() { $('rulesLaws').innerHTML = gameActive && matchAug ? lawListHtml('지금 규칙') : ''; openOv(rulesOv); }
+      $('tRules').addEventListener('click', function () { sfxTick(); openRules(); });
       $('tResume').addEventListener('click', function () { sfxTick(); closeOv(titleOv); syncDraftUi(); });
       $('mainMenuBtn').addEventListener('click', function () { sfxTick(); openTitle(); });
       $('menuBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openOv(menuOv); });
@@ -10153,9 +10842,14 @@
         $('chatQuick').appendChild(b);
       });
       $('sheetBtn').addEventListener('click', function () { ensureAudio(); sfxTick(); openSheet(); });
+      lawCap.addEventListener('click', function () {
+        ensureAudio(); sfxTick(); openSheet();
+        const panel = sheetOv.querySelector('.panel'), el = panel.querySelector('[data-laws]'); // never scrollIntoView: it can scroll the page behind the overlay
+        if (el) panel.scrollTop = el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - 8;
+      });
       $('resumeBtn').addEventListener('click', function () { closeOv(menuOv); if (!gameActive) openMode(); });
       $('newGameBtn').addEventListener('click', openMode);
-      $('rulesBtn').addEventListener('click', function () { closeOv(menuOv); openOv(rulesOv); });
+      $('rulesBtn').addEventListener('click', function () { closeOv(menuOv); openRules(); });
       $('rematchBtn').addEventListener('click', rematch);
       // tap anywhere on the result panel while the standings are still being revealed: skip to the end
       resultOv.querySelector('.panel').addEventListener('pointerdown', function (e) {
@@ -12216,6 +12910,7 @@
         // juice core: ms of freeze, camera spring kick {x,y,z,trauma,fov}, emissive blink of one die
         hitstop: (ms) => hitstop((ms || 0) / 1000),
         kick,
+        jolt: (amp) => D.forEach((d) => joltDie(d, amp || 0.5, -2, null)), // every resting die hops and lands again
         pulse: (i, hex, amt) => flashDie(D[i], amt || 0.6, hex),
         topFaces: () => D.map((d) => {
           const wq = d.group.quaternion.clone().multiply(d.mesh.quaternion);
