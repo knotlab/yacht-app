@@ -636,6 +636,10 @@
   .pw-btn.is-live .pw-n { background: #fff; color: var(--ruby-lo); }
   @keyframes pwLive { from { transform: scale(1); } to { transform: scale(1.08); } }
   .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 3px 0 #8a5a12, 0 0 0 2px #fff, 0 0 22px rgba(255, 215, 122, 0.9); animation: pwArm 0.7s ease-in-out infinite alternate; }
+  /* 올인 after the first roll: still on, no longer a choice - the gold stays, the pulse and the glow go */
+  .pw-btn.is-arm:disabled { animation: none; box-shadow: 0 3px 0 #8a5a12, 0 0 0 2px rgba(255, 255, 255, 0.55); filter: saturate(0.8) brightness(0.9); }
+  .pw-btn.is-arm:disabled .pw-ico { filter: none; }
+  .pw-btn.is-arm:disabled .pw-n { background: var(--ink); color: var(--ivory); }
   @keyframes pwArm { from { filter: brightness(1); } to { filter: brightness(1.14); } }
   /* shared device: the coin of the player these powers belong to leads the bar */
   .pw-owner {
@@ -4149,6 +4153,7 @@
         const sealId = showPreview ? sealCatFor(cur) : null;
         if (selectedTile && (!canSelect || !cur || !tileSelectable(selectedTile))) selectedTile = null;
         const pOpts = previewOpts(mineNow);
+        pOpts.allin = allinOn() && !twoferPend; // every viewer sees the doubled numbers
         const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : scoreFor(cur, id, dice, pOpts); };
         const duelArm = armedPower === 'gauntlet' && mineNow && !isRolling && !isScoring;
         const bombOn = !!cur && players.some(function (o) { return o.bomb === currentPlayerIdx; });
@@ -4453,7 +4458,7 @@
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
           stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
-          dice: dice, held: held, yaw: yawLive() ? yaw : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn,
+          dice: dice, held: held, yaw: yawLive() ? yaw : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
         };
       }
@@ -4579,7 +4584,7 @@
         ensureAudio();
         if (!canScoreNow()) return;
         if (fuseBust && performance.now() < fuseGagUntil) sfxTick(); // heard: it is recorded when the blast is over
-        const flags = { joker: armed.joker, allin: armed.allin, overwrite: armed.overwrite, twofer: armed.twofer };
+        const flags = { joker: armed.joker, allin: allinTurn, overwrite: armed.overwrite, twofer: armed.twofer };
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'score', catId: catId, joker: flags.joker, allin: flags.allin, overwrite: flags.overwrite, twofer: flags.twofer }); return; }
         commitScore(catId, flags);
       }
@@ -4683,6 +4688,7 @@
       function tossDice(next, heldSnap, extra, onComplete, notes) {
         yfxClear(true);
         isRolling = true;
+        lockAllin();
         selectedTile = null;
         aimCat = null;
         armedPower = null;
@@ -4859,7 +4865,7 @@
         { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임 끝에 1등 상대의 최고 점수 칸 절반을 훔칩니다.', ev: 24 },
         { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '눈 하나를 찍습니다. 다음 상대 첫 굴림에 그 눈이 붙습니다.', ch: { glue: 2 }, ev: 8 },
         { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등 상대와 폭탄을 주고받습니다. 20점 못 쓰면 -20점입니다.', ch: { bomb: 1 }, ev: 12, show: true },
-        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '켠 채 기록하면 점수가 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 16 },
+        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '첫 굴림 전에 켭니다. 그 턴 기록이 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 20 },
         { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에 바로 기록하면 +6점입니다.', ev: 6 },
         { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 30점을 빌립니다. 상단 보너스를 놓치면 -50점입니다.', ev: 8 },
         { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임 끝에 1등 상대보다 30점 이상 뒤지면 +40점입니다.', ev: 10 },
@@ -4960,7 +4966,10 @@
       let restTurn = false;    // 일석이조: every box is filled, this turn is skipped
       const QUEST = ['fourKind', 'fullHouse', 'smallStraight', 'largeStraight', 'yacht']; // 그랜드슬램
       let lastRollNotes = null;
-      const armed = { joker: false, allin: false, overwrite: false, twofer: false };
+      const armed = { joker: false, overwrite: false, twofer: false };
+      // 올인: public, turn-scoped, host-owned. allinTurn = switched on; allinLock = a roll has started this turn (a rewind never unlocks it)
+      let allinTurn = false, allinLock = false;
+      function allinOn() { const c = players[currentPlayerIdx]; return !!allinTurn && !!c && matchAug && charges(c, 'allin') > 0; }
 
       function glyphSvg(id) {
         return '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (GLYPH[id] || '') + '</svg>';
@@ -5095,6 +5104,8 @@
             if (draft && draft.law && draft.law.by === idx && !draft.law.show) { st.cls = 'is-hot'; st.n = '!'; st.tip = '새 규칙을 고르는 중입니다.'; }
             else st.tip = '새 규칙을 곧 고릅니다.';
           }
+        } else if (id === 'allin' && mine && allinTurn && charges(p, 'allin') > 0) {
+          st.cls = 'is-hot'; st.n = String(charges(p, 'allin')); st.tip = '이번 턴 기록이 2배입니다.';
         } else if (key) {
           const n = charges(p, key);
           if (n > 0) { st.n = String(n); st.tip = '남은 횟수 ' + b(n); }
@@ -5230,7 +5241,7 @@
       function previewOpts(withFlags) {
         const o = { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn };
         if (twoferPend) o.second = true;
-        if (withFlags) { o.joker = armed.joker; o.allin = armed.allin; }
+        if (withFlags) { o.joker = armed.joker; o.allin = allinOn() && !twoferPend; }
         return o;
       }
 
@@ -5578,7 +5589,7 @@
       // ---------- turns ----------
       function prepIdle() {
         held = [false, false, false, false, false];
-        hasRolledThisTurn = false;
+        hasRolledThisTurn = false; allinTurn = false; allinLock = false;
         rollsMax = 3; rollsLeft = 3; prevRollsLeft = 3;
         armedPower = null; armedReset(); rewindSnap = null; turnLost = false;
         riseTurn = false;
@@ -7499,7 +7510,7 @@
       // ================= Augment powers =================
       // slam: anyone, from the start of a roll until the roller rolls again or records · flip / reroll / psychic: pick a die
       // rewind: undo the last roll · seal: lock the next opponent's best box · swap: trade a box with an opponent
-      // overwrite / joker / allin: toggles that change the next record
+      // overwrite / joker: toggles that change the next record (올인 is a turn field: toggleAllin, locked at the first roll)
       const POWER_DEFS = {
         slam: { label: '샷건', chip: '샷건', kind: 'live' },
         flip: { label: '뒤집기', chip: 'FLIP', kind: 'target' },
@@ -7524,7 +7535,7 @@
       let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
       let flipIdx = -1;      // 2D fallback: die doing a flip
-      function armedReset() { armed.joker = false; armed.allin = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
+      function armedReset() { armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
       // the opponent box with the best trade for player pi in category cat (both filled, theirs higher)
       function swapInfo(pi, cat) {
         const me = players[pi];
@@ -7569,6 +7580,7 @@
         if (kind === 'swap') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return !!swapInfo(currentPlayerIdx, c.id); });
         if (kind === 'glue') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].glue > 0) && !encoreTurn; }
         if (kind === 'bomb') return !encoreTurn && !(cur.bomb >= 0) && leaderOther(currentPlayerIdx) >= 0;
+        if (kind === 'allin') return !hasRolledThisTurn && !allinLock; // before the first roll of the turn, never again
         if (kind === 'ride') return !hasRolledThisTurn && !encoreTurn && !!lastRec && lastRec.seq === turnNo - 1 && lastRec.p !== currentPlayerIdx && rollsMax >= 1;
         if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
         if (kind === 'tableFlip') return flipUsable();
@@ -7708,7 +7720,8 @@
       function usePower(kind, idx, face, onComplete, cat) {
         if (!canUsePower(kind)) return false;
         const cur = players[currentPlayerIdx];
-        if (POWER_DEFS[kind].kind === 'toggle') return false; // toggles (joker / allin / overwrite / twofer) apply when recording
+        if (kind === 'allin') return toggleAllin();
+        if (POWER_DEFS[kind].kind === 'toggle') return false; // toggles (joker / overwrite / twofer) apply when recording
         if (kind === 'rewind') return doRewind(onComplete);
         if (kind === 'seal') return doSeal(onComplete);
         if (kind === 'swap') return doSwap(cat, onComplete);
@@ -7730,6 +7743,20 @@
         }
         flipDie(idx, kind === 'flip' ? 7 - dice[idx] : face, kind, onComplete);
         return true;
+      }
+      // 올인 is switched on or off by the host's field alone (a guest asks with a power action); the charge is spent at the record
+      function toggleAllin() {
+        if (!canUsePower('allin')) return false;
+        allinTurn = !allinTurn;
+        broadcastState();
+        renderTiles(); renderPowers();
+        return true;
+      }
+      // the first roll of a turn closes the choice for good; an armed 올인 is announced once
+      function lockAllin() {
+        if (allinLock) return;
+        allinLock = true;
+        if (allinOn()) fx('power', { power: 'allin', pIdx: currentPlayerIdx, still: true });
       }
       // flip / psychic: the die hops and turns in place (no physics throw)
       function flipDie(idx, v, kind, onComplete) {
@@ -8270,6 +8297,16 @@
           if (!sfxBuf.swap || !sfxBuf.swap.length) { noise(800, 1, 0.25, 0.06, 'bandpass', 0, 3000); tone(660, 0.12, 'triangle', 0.05); }
           const q = players[extra.from];
           if (q) setTimeout(function () { showChip('편승! ' + q.name + '의 주사위', 'cool'); }, 500);
+        } else if (k === 'allin') {
+          // the stake goes in as the dice leave the hand: chips from the seat onto the felt, the word over the table
+          const chips = ['#e0314b', '#141519', '#3fe0a9', '#ffc94d'], to = stagePt();
+          stream(seatPt(extra.pIdx), to, { shape: 'chip', count: 12, arc: 60, dur: 560, stagger: 30, color: chips });
+          setTimeout(function () { burst(stagePt(), { shape: 'chip', count: 14, dist: 120, color: chips, dur: 950 }); }, 430);
+          wordFx(to, 'ALL IN');
+          sample('chips');
+          pingChip(extra.pIdx, 'allin');
+          buzz(15);
+          return;
         }
         const augId = augIdForPower(p, k);
         const owner = p && extra.pIdx !== powerOwnerIdx() ? p.name + ' · ' : '';
@@ -8283,11 +8320,10 @@
         const owner = players[me];
         const keys = owner && matchAug && gameActive && !draft ? POWER_KEYS.filter(function (k) { return charges(owner, k) > 0; }) : [];
         const mine = isMyTurn();
-        if (!mine) { armedPower = null; armed.joker = false; armed.allin = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
+        if (!mine) { armedPower = null; armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
         if (armed.twofer && (charges(owner, 'twofer') <= 0 || twoferPend)) armed.twofer = false;
         if (armedPower && !canUsePower(armedPower)) { armedPower = null; psychicDie = -1; }
         if (armed.joker && charges(owner, 'joker') <= 0) armed.joker = false;
-        if (armed.allin && charges(owner, 'allin') <= 0) armed.allin = false;
         if (armed.overwrite && charges(owner, 'overwrite') <= 0) armed.overwrite = false;
         bar.hidden = !keys.length;
         const augFor = function (k) { return augIdForPower(owner, k); };
@@ -8331,9 +8367,10 @@
           b.dataset.seen = '1';
           b.disabled = !ok;
           b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
-          b.classList.toggle('is-arm', armedPower === k || !!armed[k]);
+          b.classList.toggle('is-arm', armedPower === k || (k === 'allin' ? allinTurn && me === currentPlayerIdx : !!armed[k]));
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
           if (k === 'tableFlip') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
+          if (k === 'allin') b.setAttribute('aria-pressed', allinTurn && me === currentPlayerIdx ? 'true' : 'false');
           const cnt = b.querySelector('.pw-n');
           if (cnt.textContent !== String(n)) cnt.textContent = String(n);
         });
@@ -8452,6 +8489,12 @@
           return;
         }
         if (!isMyTurn() || !canUsePower(kind)) return;
+        if (kind === 'allin') {
+          sfxTick();
+          if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: 'allin' }); return; }
+          usePower('allin');
+          return;
+        }
         if (def.kind === 'toggle') {
           armed[kind] = !armed[kind];
           sfxTick();
@@ -8568,12 +8611,15 @@
       // this turn's view: prophecy bonus box, pressure on the last roll
       function aiTurnMods(p) {
         if (!matchAug || !p) return null;
+        const dbl = p === players[currentPlayerIdx] && allinOn();
         const base = aiMods(p);
         const pressureN = players.filter(function (q) { return q !== p && augHas(q, 'pressure'); }).length;
-        if (!base && !pressureN && !p.prophecy && !duel && !players.some(function (o) { return o.bomb === currentPlayerIdx; })) return null;
+        if (!base && !pressureN && !dbl && !p.prophecy && !duel && !players.some(function (o) { return o.bomb === currentPlayerIdx; })) return null;
         const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, base || {});
         let scx = null;
         const scw = function () { if (!scx) { scx = Float64Array.from(m.sc || YachtAI.baseSC()); m.sc = scx; } return scx; };
+        // 올인 on: this turn's record is doubled (0 costs 20); written first so the later bonuses stay plain
+        if (dbl) { const sc = scw(); for (let i = 0; i < sc.length; i++) if (sc[i] > -1e5) sc[i] = sc[i] > 0 ? sc[i] * 2 : -20; }
         if (p.prophecy && p === players[currentPlayerIdx]) {
           const ci = CAT_IDS.indexOf(p.prophecy), pc = p.prophecy;
           const sc = scw();
@@ -8641,7 +8687,9 @@
       }
       function withExact(mods, p, flags) {
         const bust = fuseBust && p === players[currentPlayerIdx];
-        const exact = CAT_IDS.map(function (id) { return bust ? (flags && flags.allin ? -20 : lawBust(id)) : scoreFor(p, id, dice, Object.assign(previewOpts(false), flags || {})); });
+        flags = Object.assign({}, flags || {});
+        if (p === players[currentPlayerIdx] && allinOn()) flags.allin = true; // the record is doubled whatever the bot would like
+        const exact = CAT_IDS.map(function (id) { return bust ? (flags.allin ? -20 : lawBust(id)) : scoreFor(p, id, dice, Object.assign(previewOpts(false), flags)); });
         const m = Object.assign({}, mods || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: exact });
         const adj = aiRecordAdj(p, exact);
         if (adj) m.adj = adj;
@@ -8765,6 +8813,7 @@
         if (!cat || cat === sealId || cur.scores[cat] !== null) cat = YachtAI.decide(sc, CAT_IDS, dice, 0, null, aiTemp(), withExact(tm, cur)).category;
         if (!matchAug) return { cat: cat, flags: {} };
         const keep = Math.max(0, lastRound - round) / 11;
+        const alF = allinOn() ? { allin: true } : {}; // a doubled record is the one being judged
         const bestOf = function (flags) {
           const L = YachtAI.catValues(sc, CAT_IDS, dice, withExact(tm, cur, flags));
           let b = L[0];
@@ -8773,7 +8822,7 @@
         };
         // 일석이조: write these dice twice when that beats a single record by enough to pay for the lost turn
         if (charges(cur, 'twofer') > 0 && canUsePower('twofer')) {
-          const ex1 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, previewOpts(false)); });
+          const ex1 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, Object.assign(previewOpts(false), alF)); });
           const ex2 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })); });
           const L = YachtAI.catValues(sc, CAT_IDS, dice, withExact(tm, cur));
           let single = -1e9;
@@ -8799,21 +8848,19 @@
             if (gain > 5 * (ch >= 2 ? 1 : 1.4) * Math.min(1, turnsLeft / 5) || (gain > 0 && turnsLeft <= ch)) return { cat: pair.A, flags: { twofer: pair.B } };
           }
         }
-        if (charges(cur, 'joker') > 0 || charges(cur, 'allin') > 0) {
-          let best = bestOf({}), flags = {};
-          if (charges(cur, 'joker') > 0) { const j = bestOf({ joker: true }); if (j.val - best.val > 24 * keep + 1) { best = j; flags = { joker: true }; } }
-          if (charges(cur, 'allin') > 0) { const f2 = Object.assign({ allin: true }, flags); const al = bestOf(f2); if (al.val - best.val > 18 * keep + 1) { best = al; flags = f2; } }
-          if (flags.joker || flags.allin) return { cat: CAT_IDS[best.ci], flags: flags };
+        if (charges(cur, 'joker') > 0) {
+          const best = bestOf({}), j = bestOf({ joker: true });
+          if (j.val - best.val > 24 * keep + 1) return { cat: CAT_IDS[j.ci], flags: { joker: true } };
         }
         if (charges(cur, 'overwrite') > 0) {
           const open = openCats(cur).filter(function (id) { return id !== sealId; });
-          const nowBest = open.reduce(function (m, id) { return Math.max(m, scoreFor(cur, id, dice, previewOpts(false)) - baseEv(id)); }, -1e9);
+          const nowBest = open.reduce(function (m, id) { return Math.max(m, scoreFor(cur, id, dice, Object.assign(previewOpts(false), alF)) - baseEv(id)); }, -1e9);
           const minBase = open.reduce(function (m, id) { return Math.min(m, baseEv(id)); }, 99);
           let ow = null;
           CATEGORIES.forEach(function (c) {
             const old = cur.scores[c.id];
             if (old === null) return;
-            const g = scoreFor(cur, c.id, dice, previewOpts(false)) - old;
+            const g = scoreFor(cur, c.id, dice, Object.assign(previewOpts(false), alF)) - old;
             if (g > 0 && (!ow || g > ow.g)) ow = { cat: c.id, g: g };
           });
           if (ow && ow.g - minBase > nowBest + 6) return { cat: ow.cat, flags: { overwrite: true } };
@@ -8824,7 +8871,8 @@
       // 도화선: value of one more throw (any re-rolled 1 = a zero in the cheapest box) vs. recording now
       function aiFuseOption(cur) {
         const sc = aiScores(cur), tm = aiTurnMods(cur);
-        const exactFor = function (d) { return CAT_IDS.map(function (id) { return scoreFor(cur, id, d, previewOpts(false)); }); };
+        const alF = allinOn() ? { allin: true } : {};
+        const exactFor = function (d) { return CAT_IDS.map(function (id) { return scoreFor(cur, id, d, Object.assign(previewOpts(false), alF)); }); };
         const bestFor = function (d, ex) {
           const m = Object.assign({}, tm || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: ex });
           const adj = aiRecordAdj(cur, ex);
@@ -8835,7 +8883,7 @@
           return b;
         };
         const stop = bestFor(dice, exactFor(dice));
-        const bust = bestFor(dice, CAT_IDS.map(function (id) { return lawBust(id); }));
+        const bust = bestFor(dice, CAT_IDS.map(function (id) { return alF.allin ? -20 : lawBust(id); }));
         const cands = [];
         const plan = YachtAI.decide(sc, CAT_IDS, dice, 1, held, 0, aiExact(cur));
         if (plan.hold) cands.push(plan.hold);
@@ -8885,6 +8933,16 @@
         if (best === 'psychic') return { kind: 'psychic', idx: o.psychic.idx, face: o.psychic.face };
         return { kind: best, idx: o[best].idx };
       }
+      // 올인: what doubling this turn's record is worth to the AI (the turn's value with and without the doubled table)
+      const AI_ALLIN_TH = 6;
+      function aiAllinGain(cur) {
+        const sc = aiScores(cur), base = aiTurnMods(cur);
+        const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, base || {});
+        const src = m.sc || YachtAI.baseSC(), dbl = new Float64Array(src.length);
+        for (let k = 0; k < src.length; k++) { const v = src[k]; dbl[k] = v <= -1e5 ? v : v > 0 ? v * 2 : -20; }
+        const m2 = Object.assign({}, m, { sc: dbl });
+        return YachtAI.valueAt(sc, CAT_IDS, dice, rollsMax, m2, true) - YachtAI.valueAt(sc, CAT_IDS, dice, rollsMax, base, true);
+      }
       // before its first roll the AI may trade a box or seal the next player
       // points player e.p loses if their newest record is erased (negative = they gain)
       function flipLoss(e) {
@@ -8916,6 +8974,8 @@
         if (!matchAug || !cur || encoreTurn) { done(); return; }
         const myMatch = matchId;
         const later = function (fn, ms) { aiTimer = setTimeout(function () { if (matchId === myMatch && gameActive) fn(); }, ms); };
+        // 올인: first of all, since it must be decided before any roll (a 편승 below rolls at once)
+        if (charges(cur, 'allin') > 0 && canUsePower('allin') && !allinTurn && aiAllinGain(cur) > AI_ALLIN_TH * Math.max(0, lastRound - round) / 11) toggleAllin();
         // 밥상 엎기: first, so it also beats 편승 (which would ride a record that is about to vanish)
         if (charges(cur, 'tableFlip') > 0 && canUsePower('tableFlip')) {
           const k = cur.level === 'easy' ? 1.5 : 1;
@@ -9052,7 +9112,7 @@
         const useOw = filled && !encoreTurn && !fuseBust && !duel && !!flags.overwrite && charges(cur, 'overwrite') > 0;
         if (filled && !encoreTurn && !useOw) return;
         const useJoker = !!flags.joker && charges(cur, 'joker') > 0;
-        const useAllin = !!flags.allin && charges(cur, 'allin') > 0;
+        const useAllin = !!allinTurn && charges(cur, 'allin') > 0; // the host's own field; a guest's flag is ignored
         const prevT = getPlayerTotals(cur);
         const trace = [];
         const base = calcCategoryScore(catId, dice);
@@ -10080,6 +10140,7 @@
         yaw = cleanYaw(d.yaw); // a host without the field gives zeros
         rollsLeft = typeof d.rollsLeft === 'number' ? d.rollsLeft : 3;
         hasRolledThisTurn = !!d.hasRolledThisTurn;
+        allinTurn = !!d.allinTurn; allinLock = !!d.allinLock; // an older host sends neither: off
         isRolling = !!d.isRolling;
         isScoring = !!d.isScoring;
         gameActive = !!d.gameActive;
@@ -10547,7 +10608,7 @@
         currentPlayerIdx = 0; round = 1;
         held = [false, false, false, false, false]; yaw = [0, 0, 0, 0, 0];
         rollsLeft = 3; rollsMax = 3; prevRollsLeft = 3;
-        hasRolledThisTurn = false; isRolling = false; isScoring = false; gameActive = true;
+        hasRolledThisTurn = false; allinTurn = false; allinLock = false; isRolling = false; isScoring = false; gameActive = true;
         lastScored = null; selectedTile = null; armedPower = null; armedReset();
         draft = null; rewindSnap = null; liveRoll = null;
         clearTimeout(lawTimer); lawPendingSig = ''; lawRevealed = {}; lawBarSig = '';
