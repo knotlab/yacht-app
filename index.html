@@ -8593,6 +8593,13 @@
         open.forEach(function (id) { const v = scoreFor(p, id, dice, previewOpts(false)); if (v > bv) { bv = v; best = id; } });
         return best;
       }
+      // a box a bot can always record: the best open box for these dice that is not sealed this turn
+      function aiAnyCat(p) {
+        const seal = sealCatFor(p);
+        let best = null, bv = -1e9;
+        openCats(p).forEach(function (id) { if (id === seal) return; const v = scoreFor(p, id, dice, previewOpts(false)); if (v > bv) { bv = v; best = id; } });
+        return best;
+      }
       function tileSelectable(id) {
         const cur = players[currentPlayerIdx];
         if (!cur) return false;
@@ -11474,6 +11481,7 @@
           aiTimer = setTimeout(function () {
             if (!alive()) return;
             const f = aiFinalScore(cat);
+            if (!f.cat) f.cat = aiAnyCat(cur0); // the solver offered no box (more boxes open than turns left, and the best one sealed)
             aimFx(f.cat);
             aiTimer = setTimeout(function () {
               aimCat = null;
@@ -11481,7 +11489,7 @@
               commitScore(f.cat, f.flags);
               // safety net: if that record was refused, record plainly so the turn can't stall
               if (!isScoring && !twoferPend && alive() && !isRolling && hasRolledThisTurn && players[currentPlayerIdx] === cur0) {
-                commitScore(YachtAI.decide(aiScores(cur0), CAT_IDS, dice, 0, null, 0, withExact(aiTurnMods(cur0), cur0)).category, {});
+                commitScore(YachtAI.decide(aiScores(cur0), CAT_IDS, dice, 0, null, 0, withExact(aiTurnMods(cur0), cur0)).category || aiAnyCat(cur0), {});
               }
             }, AI_AIM_MS);
           }, Math.max(150, ms - AI_AIM_MS));
