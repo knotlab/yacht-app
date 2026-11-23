@@ -4507,11 +4507,11 @@
         { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
         { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
         { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 항상 같은 눈으로 나옵니다.', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
-        { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
+        { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, show: true, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
         { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다. 연속으로는 못 씁니다.', ch: { rewind: 2 }, ev: 12 },
-        { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꿉니다.', ch: { psychic: 2 }, ev: 24, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
+        { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꿉니다.', ch: { psychic: 2 }, ev: 24, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
         { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람이 기록한 주사위를 첫 굴림으로 씁니다.', ch: { ride: 2 }, ev: 22 },
         { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1을 6점으로 셉니다.', ev: 10 },
         { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '채운 칸을 더 높게 덮어씁니다. 빈칸 하나가 0점으로 남습니다.', ch: { overwrite: 1 }, ev: 10 },
@@ -4529,13 +4529,13 @@
         { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '같은 칸끼리 상대의 더 높은 점수와 맞바꿉니다.', ch: { swap: 1 }, ev: 16 },
         { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임 끝에 1등 상대의 최고 점수 칸 절반을 훔칩니다.', ev: 24 },
         { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '눈 하나를 찍습니다. 다음 상대 첫 굴림에 그 눈이 붙습니다.', ch: { glue: 2 }, ev: 8 },
-        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등 상대와 폭탄을 주고받습니다. 20점 못 쓰면 -20점입니다.', ch: { bomb: 1 }, ev: 12 },
+        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등 상대와 폭탄을 주고받습니다. 20점 못 쓰면 -20점입니다.', ch: { bomb: 1 }, ev: 12, show: true },
         { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '켠 채 기록하면 점수가 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 16 },
         { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에 바로 기록하면 +6점입니다.', ev: 6 },
         { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 30점을 빌립니다. 상단 보너스를 놓치면 -50점입니다.', ev: 8 },
         { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임 끝에 1등 상대보다 30점 이상 뒤지면 +40점입니다.', ev: 10 },
         { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 턴에 2번 더 굴립니다.', ev: 8 },
-        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '매 턴 다 굴린 뒤 3번 더 굴립니다. 1이 뜨면 터져서 0점입니다.', ch: { fuse: 3 }, ev: 13 },
+        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '매 턴 다 굴린 뒤 3번 더 굴립니다. 1이 뜨면 터져서 0점입니다.', ch: { fuse: 3 }, ev: 13, show: true },
         { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '도전한 칸을 따라잡으면 상대 칸 0점, 지면 내 칸 절반입니다.', ch: { gauntlet: 1 }, ev: 22 },
         { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 기록마다 +8점입니다.', ev: 20, fixed: true },
         { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다. 못 채운 칸은 0점입니다.', ev: 8 },
@@ -4543,8 +4543,8 @@
         { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
         { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
-        { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17 },
-        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, act: true },
+        { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17, show: true },
+        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, show: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
         { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
       ];
@@ -5050,9 +5050,9 @@
         if (a.id === 'lateBloom' && lastRound < 10) return false;
         return true;
       }
-      // cards the player acts with (a key to press, a rule to choose) are dealt three times as often as plain bonuses
-      const ACT_W = 3;
-      function augWeight(a) { return a.ch || a.act ? ACT_W : 1; }
+      // cards that put on a show (the table or the dice visibly do something: 샷건, 밥상 엎기 ...) are dealt three times as often as the rest
+      const SHOW_W = 3;
+      function augWeight(a) { return a.show ? SHOW_W : 1; }
       function drawCards(p, tier, roundNo, avoid) {
         const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo) && augFits(p, a.id); };
         // a weighted draw without replacement: the order of -ln(U) / w gives each card odds in proportion to its weight
