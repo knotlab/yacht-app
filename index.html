@@ -4546,7 +4546,6 @@
         { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17 },
         { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
-        { id: 'rerollMaster', tier: 1, cat: 'meta', name: '리롤 장인', desc: '증강 선택마다 다시 뽑기가 2번 늘어납니다.', ev: 4 },
         { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
       ];
       const AUG = {};
@@ -4584,7 +4583,6 @@
         compound: '<ellipse cx="15" cy="35" rx="9" ry="3.5"/><path d="M6 35v-6c0 2 4 3.5 9 3.5s9-1.5 9-3.5v6"/><ellipse cx="15" cy="29" rx="9" ry="3.5"/><path d="M27 31l6-7 4 4 7-9"/><path d="M37 19h7v7"/><circle class="a" cx="15" cy="29" r="2"/>',
         encore: '<path d="M24 4l5 10 11 1.6-8 7.8 2 11L24 29l-10 5.4 2-11-8-7.8L19 14z"/><path d="M24 34v9M15 44h18"/><circle class="a" cx="24" cy="19" r="3"/>',
         timeThief: '<path d="M14 5h20M14 43h20"/><path d="M16 5c0 10 16 12 16 19S16 33 16 43M32 5c0 10-16 12-16 19s16 9 16 19"/><path class="a" d="M19 39c2-4 8-4 10 0z"/>',
-        rerollMaster: '<rect x="6" y="12" width="17" height="24" rx="3"/><rect x="14" y="8" width="17" height="24" rx="3"/><path d="M38 24a9 9 0 1 1-4 12"/><path d="M40 16v8h-8"/>',
         deepWell: '<path d="M9 25h30v14a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3z"/><path d="M9 32h30M17 25v7M31 32v10"/><path d="M13 25V9M35 25V9M9 9h30"/><path d="M24 9v7"/><rect class="a" x="20" y="16" width="8" height="8" rx="2"/>',
         pupa: '<path d="M8 6h32"/><path d="M22 6v6"/><ellipse cx="22" cy="27" rx="8" ry="14"/><path d="M15 21l13 5M14 29l15 5M16 36l10 3"/><path class="a" d="M30 21c7-7 15-3 13 5-1 6-8 8-12 4z"/>',
         rise: '<rect x="12" y="17" width="19" height="19" rx="4" transform="rotate(-28 21.5 26.5)"/><path d="M5 42h38"/><path d="M38 39c3-9 1-16-5-21"/><path d="M28 17l5 1 1-5"/><path class="a" d="M35 3l5 5 5-5h-3l-2 2-2-2zM35 9l5 5 5-5h-3l-2 2-2-2z"/>',
@@ -4648,7 +4646,6 @@
           (pIdx >= 0 ? '<b class="ab-n"></b>' : '') + '</span>'; // .ab-n: the state tag, filled in by syncChips()
       }
       function augHas(p, id) { return !!(matchAug && p && p.aug && p.aug.indexOf(id) !== -1); }
-      function augCount(p, id) { return matchAug && p && p.aug ? p.aug.filter(function (x) { return x === id; }).length : 0; }
       // ---------- 개헌: laws ----------
       // a law lives on the passer's p.law and never in a score cell; it applies to every record made after it passes
       const LAW_IDS = ['house', 'straight', 'bonus', 'quad', 'tax', 'cap'];
@@ -4817,8 +4814,6 @@
         } else if (id === 'boxUp') {
           if (p.boxUp > 0) st.tip = '다음 증강 선택에 적용';
           else { st.cls = 'is-spent'; st.tip = '사용 완료'; }
-        } else if (id === 'rerollMaster') {
-          if (!draft && !DRAFT_ROUNDS.some(function (r) { return r > round && r <= lastRound; })) { st.cls = 'is-spent'; st.tip = '남은 증강 선택 없음'; }
         } else if (id === 'encore') {
           if (mine && encoreTurn) { st.cls = 'is-hot'; st.tip = '앙코르 턴'; }
         } else if (id === 'earlyEnd') {
@@ -5070,7 +5065,7 @@
       function makeOffer(p, roundNo) {
         let tier = rollTier(roundNo), up = false;
         if (p.boxUp > 0) { tier = Math.min(3, tier + 1); p.boxUp -= 1; up = true; }
-        return { tier: tier, cards: drawCards(p, tier, roundNo, []), rerolls: 1 + 2 * augCount(p, 'rerollMaster'), chosen: null, up: up };
+        return { tier: tier, cards: drawCards(p, tier, roundNo, []), rerolls: 1, chosen: null, up: up };
       }
       function grantAug(p, id) {
         const a = AUG[id];
