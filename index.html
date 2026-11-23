@@ -2037,10 +2037,6 @@
   .law-chg { display: flex; flex-wrap: wrap; gap: 1px 10px; font: 400 10.5px/1.35 var(--f-game); color: var(--text-dim); }
   .law-chg i { font-style: normal; color: var(--brass-hi); }
   .law-chg .to { color: #bff0ff; font-weight: 400; }
-  .law-gain { font: 700 11.5px/1.3 var(--f-ui); color: var(--text-dim); }
-  .law-gain b { font-weight: 700; color: #d4cdbd; }
-  .law-gain b.up { color: #7cf29c; }
-  .law-gain b.down { color: #ff8d9a; }
   @media (min-width: 720px) {
     .law-card { width: 220px; min-height: 0; padding: 16px 16px 14px; gap: 7px; justify-content: flex-start; }
     .law-name { font-size: 22px; }
@@ -5232,7 +5228,7 @@
         openCats(q).forEach(function (cid) { if (b && b[cid]) sum += b[cid]; });
         return sum;
       }
-      // what each side gains from a law: the holder, and the best of the others (the pick screen shows both)
+      // what each side gains from a law: the holder and the others (bots and the auto-pick weigh both; never shown)
       function lawEdge(id, by) {
         const mine = lawGain(id, players[by]);
         const opp = players.filter(function (q, j) { return j !== by; }).map(function (q) { return lawGain(id, q); });
@@ -5424,17 +5420,14 @@
         if (!players[by]) return false;
         return isOnlineMatch ? players[by].peerId === myPeerId : !players[by].isAI;
       }
-      function signedGain(x) { const n = Math.round(x); return n > 0 ? '+' + n : String(n); }
-      function lawCardEl(id, k, by) {
+      function lawCardEl(id, k) {
         const l = LAW[id], el = document.createElement('button');
-        const e = lawEdge(id, by), mine = e.mine, opp = e.opp.length ? Math.max.apply(null, e.opp) : 0; // the best any other seat gets
         el.type = 'button';
         el.className = 'law-card';
         el.style.setProperty('--d', (k * 0.08) + 's');
-        el.setAttribute('aria-label', l.name + ': ' + l.desc + ' 예상 이득, 나 ' + Math.round(mine) + '점, 상대 ' + Math.round(opp) + '점');
+        el.setAttribute('aria-label', l.name + ': ' + l.desc);
         el.innerHTML = '<span class="law-name">' + esc(l.name) + '</span><span class="law-desc">' + esc(l.desc) + '</span>' +
-          '<span class="law-chg" aria-hidden="true">' + l.chg.map(function (c) { return '<span><b>' + esc(c[0]) + '</b> <i>→</i> <b class="to">' + esc(c[1]) + '</b></span>'; }).join('') + '</span>' +
-          '<span class="law-gain" aria-hidden="true">예상 이득 <b class="' + (mine > 0.5 ? 'up' : mine < -0.5 ? 'down' : '') + '">나 ' + signedGain(mine) + '</b> <b class="' + (opp > 0.5 ? 'down' : '') + '">상대 ' + signedGain(opp) + '</b></span>';
+          '<span class="law-chg" aria-hidden="true">' + l.chg.map(function (c) { return '<span><b>' + esc(c[0]) + '</b> <i>→</i> <b class="to">' + esc(c[1]) + '</b></span>'; }).join('') + '</span>';
         return el;
       }
       function onLawPick(el, id, sig) {
@@ -5480,7 +5473,7 @@
           draftCardsEl.classList.add('lit');
           const base = 'law:' + draft.round + ':' + L.by + ':' + L.offer.join(',');
           L.offer.forEach(function (id, k) {
-            const el = lawCardEl(id, k, L.by);
+            const el = lawCardEl(id, k);
             el.addEventListener('click', function () { onLawPick(el, id, base); });
             draftCardsEl.appendChild(el);
             setTimeout(sfxDeal, k * 110);
