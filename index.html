@@ -818,8 +818,11 @@
   .dw-pick { flex: none; display: flex; align-items: center; gap: 8px; font: 400 15px var(--f-display); color: var(--text); }
   .dw-pick .aug-badge { width: 24px; height: 24px; }
   .dw-pick .aug-badge svg { width: 16px; height: 16px; }
-  .dw-pick.wait { gap: 8px; font: 600 12px var(--f-ui); color: var(--text-dim); }
+  .dw-pick.wait { gap: 8px; min-height: 24px; font: 600 12px var(--f-ui); color: var(--text-dim); }
   .dw-pick.wait::after { content: ""; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--brass-hi); border-right-color: transparent; animation: spin 0.8s linear infinite; }
+  /* picked, still face-down: the card is named when the whole table has chosen */
+  .dw-pick.done { gap: 8px; min-height: 24px; font: 600 12px var(--f-ui); color: var(--mint); }
+  .dw-pick.done::after { content: ""; width: 5px; height: 10px; margin: -3px 4px 0 2px; border: solid var(--mint); border-width: 0 2px 2px 0; transform: rotate(45deg); }
 
   /* card: back = brass deck pattern, front = tier frame + category felt art */
   .aug-card {
@@ -2968,7 +2971,7 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 5; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 뻥카
+      const NET_V = 6; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 가린 증강 선택, 7 = 뻥카
       function memberV(m) { return Number(m && m.v) || 0; }
       // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
       let roomV = 99, roomSeen = {};
@@ -4015,7 +4018,7 @@
           if (!gap) return;
           const o = on ? draft.offers[idx] : null;
           const lawBy = on && draft.law && !draft.law.show ? draft.law.by : -1; // 개헌: only the holder is still choosing
-          const want = !o ? '' : lawBy >= 0 ? (idx === lawBy ? 'wait' : 'done') : o.chosen ? 'done' : (!isOnlineMatch && !p.isAI && idx !== picker ? 'queue' : 'wait');
+          const want = !o ? '' : lawBy >= 0 ? (idx === lawBy ? 'wait' : 'done') : draftSeatDone(idx) ? 'done' : (!isOnlineMatch && !p.isAI && idx !== picker ? 'queue' : 'wait');
           const was = gap.dataset.d || '';
           if (was === want) return;
           gap.dataset.d = want;
@@ -4254,7 +4257,7 @@
           const offer = gameActive && draft ? draft.offers[idx] : null;
           const label = p.name + ', ' + (r ? r.total : getPlayerTotals(p).total) + '점' + (r && r.on ? ', ' + r.rank + '위' : '') + (idx === me ? ', 나' : '') +
             (idx === currentPlayerIdx && gameActive ? ', 차례' : '') + (matchAug && p.aug && p.aug.length ? ', 증강 ' + p.aug.length + '개' : '') +
-            (offer ? (offer.chosen ? ', 증강 선택 완료' : ', 증강 고르는 중') : '') +
+            (offer ? (draftSeatDone(idx) ? ', 증강 선택 완료' : ', 증강 고르는 중') : '') +
             (gameActive && draft && draft.law && !draft.law.show && draft.law.by === idx ? '. 새 규칙을 고르는 중입니다.' : '') +
             (hexes.length ? ', 걸린 효과 ' + hexes.join(' ') : '') + flipNote(idx);
           if (s.getAttribute('aria-label') !== label) s.setAttribute('aria-label', label);
@@ -4920,8 +4923,9 @@
         let next, notes = null;
         if (luck) {
           next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, dice, heldSnap, rollsLeft, luck, aiTurnMods(roller), matchAug ? [0, 1, 2, 3, 4].map(function (i) { return faceList(roller, i); }) : null);
-          if (twinsOn(roller)) applyTwins(next, heldSnap);
-        } else { next = rollValues(roller, dice, heldSnap, first); notes = lastRollNotes; }
+          if (next && twinsOn(roller)) applyTwins(next, heldSnap);
+        }
+        if (!next) { next = rollValues(roller, dice, heldSnap, first); notes = lastRollNotes; }
         if (matchAug && rollsLeft === 0) {
           if (augHas(roller, 'fourth') && rollsMax >= 4) fx('aug', { id: 'fourth', p: currentPlayerIdx });
           // 압박: spending every roll costs 3 per pressure holder
@@ -5676,8 +5680,8 @@
       // cards that put on a show (the table or the dice visibly do something: 샷건, 밥상 엎기 ...) are dealt three times as often as the rest
       const SHOW_W = 3;
       function augWeight(a) { return a.show ? SHOW_W : 1; }
-      function drawCards(p, tier, roundNo, avoid) {
-        const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo) && augFits(p, a.id); };
+      function drawCards(p, tier, roundNo, avoid, ban) {
+        const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo) && augFits(p, a.id) && !(ban && ban.indexOf(a.id) !== -1); };
         // a weighted draw without replacement: the order of -ln(U) / w gives each card odds in proportion to its weight
         const shuffle = function (arr) {
           return arr.map(function (a) { return { a: a, k: -Math.log(1 - Math.random()) / augWeight(a) }; }).sort(function (x, y) { return x.k - y.k; }).map(function (x) { return x.a; });
@@ -5712,7 +5716,8 @@
       }
       function startDraft(roundNo) {
         clearCock();
-        draft = { round: roundNo, offers: players.map(function (p) { return makeOffer(p, roundNo); }) };
+        // face: picks stay face-down until the whole table has chosen. Not in a room with an older client, which would name every pick on its own screen
+        draft = { round: roundNo, offers: players.map(function (p) { return makeOffer(p, roundNo); }), face: newCardsOk(6) };
         broadcastState();
         renderAll();
         const myMatch = matchId;
@@ -5720,29 +5725,59 @@
           if (p.isAI) setTimeout(function () { if (matchId === myMatch) aiDraftPick(i); }, 1700 + Math.random() * 1400);
         });
       }
+      // A pick stays face-down: it is only recorded here. Nobody sees what another seat took while they are still choosing;
+      // the cards are handed out together once the whole table has chosen (dealDraft).
+      // has this seat chosen, as THIS screen may show it?
+      function draftSeatDone(i) {
+        const o = draft ? draft.offers[i] : null;
+        if (!o) return false;
+        const me = viewerIdx();
+        return !!o.chosen || (!!o.mirror && !!draft.face && me >= 0 && me !== i);
+      }
       function draftPick(pIdx, id) {
-        if (!draft) return false;
+        if (!draft || draft.dealt) return false;
         const o = draft.offers[pIdx];
         if (!o || o.chosen || o.cards.indexOf(id) === -1) return false;
         o.chosen = id;
-        const pl = players[pIdx];
-        if (o.mirror && pl.aug.indexOf('mimic') !== -1) {
-          pl.aug.splice(pl.aug.indexOf('mimic'), 1);
-          grantAug(pl, id);
-          pl.mim = id;
-          fx('aug', { id: 'mimic', p: pIdx, q: o.src && o.src[id] != null ? o.src[id] : -1, copy: id });
-        } else {
-          grantAug(pl, id);
-          fx('augPick', { pIdx: pIdx, id: id });
+        if (draft.face) fx('augPick', { pIdx: pIdx }); // no id: a tick on that seat, nothing more
+        else dealPick(pIdx, false);                    // an older client is in the room: the card is handed out and named now, as before
+        broadcastState();
+        renderAll();
+        draftAdvance();
+        return true;
+      }
+      const augKnown = function (id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(AUG, id); };
+      // hand one seat the card it chose (a 모방 copy takes the place of the 모방 card and carries its mark)
+      function dealPick(i, quiet) {
+        const o = draft.offers[i], pl = players[i], id = o ? o.chosen : null;
+        if (!pl || !augKnown(id) || o.cards.indexOf(id) === -1) return;
+        if (o.mirror) { const k = pl.aug.indexOf('mimic'); if (k !== -1) pl.aug.splice(k, 1); } // the older path granted 모방 at the first pick
+        grantAug(pl, id);
+        if (o.mirror) { pl.mim = id; fx('aug', { id: 'mimic', p: i, q: o.src && o.src[id] != null ? o.src[id] : -1, copy: id }); }
+        else fx('augPick', quiet ? { pIdx: i, id: id, deal: 1, mute: 1 } : draft.face ? { pIdx: i, id: id, deal: 1 } : { pIdx: i, id: id });
+      }
+      // after a pick (or a host resume): the 모방 round first, then the deal, then the table
+      function draftAdvance() {
+        if (!draft || !draft.offers.every(function (x) { return !!x.chosen; })) return false;
+        if (startMirrors()) return true;
+        dealDraft();
+        const myMatch = matchId, d0 = draft;
+        setTimeout(function () { if (matchId === myMatch && draft === d0) finishDraft(); }, 1700);
+        return true;
+      }
+      // everyone has chosen: every pick goes on the table at once. The cards that change the totals or the length of the game
+      // (빚, 조기 종료) land first, so a card that reads them (시간 도둑's leader, 번데기's half-way round) sees the same table
+      // whichever seat took it; the rest follow in seat order.
+      function dealDraft() {
+        if (!draft || draft.dealt) return;
+        draft.dealt = true;
+        if (draft.face) {
+          const first = function (i) { const c = draft.offers[i] && draft.offers[i].chosen; return c === 'debt' || c === 'earlyEnd'; };
+          const order = players.map(function (p, i) { return i; }).filter(first).concat(players.map(function (p, i) { return i; }).filter(function (i) { return !first(i); }));
+          order.forEach(function (i, k) { dealPick(i, k > 0); }); // one sound for the whole deal
         }
         broadcastState();
         renderAll();
-        if (draft.offers.every(function (x) { return !!x.chosen; }) && startMirrors()) return true;
-        if (draft.offers.every(function (x) { return !!x.chosen; })) {
-          const myMatch = matchId, d0 = draft;
-          setTimeout(function () { if (matchId === myMatch && draft === d0) finishDraft(); }, 1700);
-        }
-        return true;
       }
       // everyone picked: each 모방 owner now chooses from what the others took this round
       function startMirrors() {
@@ -5758,7 +5793,7 @@
             cards.push(c);
             src[c] = j;
           });
-          draft.offers[pi] = { tier: o.tier, cards: cards.length ? cards : drawCards(p, o.tier, draft.round, []), rerolls: cards.length ? 0 : o.rerolls, chosen: null, up: false, mirror: true, src: src };
+          draft.offers[pi] = { tier: o.tier, cards: cards.length ? cards : drawCards(p, o.tier, draft.round, [], ['mimic']), rerolls: cards.length ? 0 : o.rerolls, chosen: null, up: false, mirror: true, src: src };
         });
         broadcastState();
         renderAll();
@@ -5775,13 +5810,14 @@
         const o = draft.offers[pIdx];
         if (!o || o.chosen || !(o.rerolls > 0)) return false;
         o.rerolls -= 1;
-        o.cards = drawCards(players[pIdx], o.tier, draft.round, o.cards);
+        o.cards = drawCards(players[pIdx], o.tier, draft.round, o.cards, o.mirror ? ['mimic'] : null);
         broadcastState();
         renderAll();
         return true;
       }
       function finishDraft() {
         if (draft && draft.law) return; // a repeated call (a late timer) must not deal a holder's cards again
+        if (draft && !draft.dealt) dealDraft(); // never open the table with a pick still face-down
         if (draft && openLawPhase()) return; // 개헌 holders pass a law before the first turn
         draft = null;
         startTurn(true);
@@ -6139,7 +6175,7 @@
         } else {
           rr.hidden = true;
           $('draftWho').textContent = '';
-          const sig = 'wait:' + draft.offers.map(function (x) { return x.chosen || '-'; }).join(',');
+          const sig = 'wait:' + draft.offers.map(function (x, k) { return x.chosen || (draftSeatDone(k) ? '+' : '-'); }).join(',') + (draft.dealt ? ':dealt' : '');
           if (sig !== draftSig) { draftSig = sig; showDraftWait(); }
         }
       }
@@ -6233,15 +6269,24 @@
         w.hidden = false;
         w.innerHTML = '';
         players.forEach(function (p, i) {
-          const o = draft.offers[i];
-          const a = o && o.chosen ? AUG[o.chosen] : null;
           const row = document.createElement('div');
           row.className = 'dw-row';
           row.style.animationDelay = (i * 0.06) + 's';
-          row.innerHTML = '<span class="dw-name" style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span>' +
-            (a ? '<span class="dw-pick">' + badgeHtml(a.id, false, i) + esc(a.name) + '</span>' : '<span class="dw-pick wait">고르는 중</span>');
+          row.innerHTML = draftWaitRow(i);
           w.appendChild(row);
         });
+      }
+      // one line of the waiting list. A pick is named for its own seat at once, and for the others when it is on the table
+      // (dealt; an older host hands a card out at the pick, so a card its seat already holds is named too).
+      function draftWaitRow(i) {
+        const p = players[i], o = draft ? draft.offers[i] : null;
+        const a = o && augKnown(o.chosen) ? AUG[o.chosen] : null;
+        const has = !!a && augHas(p, a.id);
+        const open = !!a && (!!draft.dealt || i === viewerIdx() || has);
+        // the badge carries its owner only once the card is held (its tooltip then reads that seat's live state)
+        return '<span class="dw-name" style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span>' +
+          (open ? '<span class="dw-pick">' + badgeHtml(a.id, false, has ? i : -1) + esc(a.name) + '</span>'
+            : draftSeatDone(i) ? '<span class="dw-pick done">선택 완료</span>' : '<span class="dw-pick wait">고르는 중</span>');
       }
       function flyCardToSeat(card, pIdx, done) {
         const seat = seatsEl.children[pIdx];
@@ -6284,17 +6329,25 @@
             if (draft && draft.round === round0) {
               lastLocalPick = i;
               if (isOnlineMatch && onlineRole === 'guest') { draftPending = round0 + (o.mirror ? 0.5 : 0); sendAction({ action: 'augPick', id: id }); }
-              else draftPick(i, id);
+              else if (!draftPick(i, id)) lastLocalPick = -1;
             }
             syncDraftUi();
           });
         }, 420);
       }
       function augPickFx(extra) {
-        const a = AUG[extra.id], p = players[extra.pIdx];
-        if (!a || !p) return;
-        if (extra.pIdx === lastLocalPick) { lastLocalPick = -1; if (!sample('badge')) tone(1568, 0.12, 'triangle', 0.05); return; }
-        if (!sample(a.tier >= 3 ? 'sparkle' : 'badge')) {
+        const p = players[extra.pIdx];
+        if (!p) return;
+        if (extra.id == null) { // a face-down pick: my own lands with its sound, another seat's is a tick
+          if (extra.pIdx === lastLocalPick) { lastLocalPick = -1; if (!sample('badge')) tone(1568, 0.12, 'triangle', 0.05); }
+          else sfxTick();
+          return;
+        }
+        const a = typeof extra.id === 'string' ? AUG[extra.id] : null;
+        if (!a) return;
+        if (!extra.deal && extra.pIdx === lastLocalPick) { lastLocalPick = -1; if (!sample('badge')) tone(1568, 0.12, 'triangle', 0.05); return; } // a card named at the pick (an older client in the room)
+        if (extra.deal) lastLocalPick = -1;
+        if (!extra.mute && !sample(a.tier >= 3 ? 'sparkle' : 'badge')) {
           tone(a.tier >= 3 ? 1319 : 988, 0.12, 'triangle', 0.06);
           tone(a.tier >= 3 ? 1976 : 1319, 0.18, 'triangle', 0.05, 0, 0.07);
         }
@@ -10704,6 +10757,7 @@
           if (rollsLeft > 0 && stopTurn < 0) { // a stopped throw leaves no roll to use: record what landed
             const plan = YachtAI.decide(aiScores(cur), CAT_IDS, dice, rollsLeft, held, aiTemp(), aiExact(cur));
             if (plan.category) { scoreSoon(plan.category, 850); return; }
+            if (!plan.hold) { scoreSoon(null, 700); return; } // no open box (앙코르's extra turn on a full card): the solver has no plan, so record now (aiFinalScore picks the best upgrade)
             const want = plan.hold.map(function (h, i) { return !!(h || stuck[i]); });
             if (want.every(Boolean)) { held = want; scoreSoon(null, 700); return; }
             holdThenRoll(want);
@@ -11107,7 +11161,9 @@
             if (o && o.src && typeof o.src === 'object') Object.keys(o.src).forEach(function (k) { if (AUG[k]) src[k] = Number(o.src[k]); });
             return { tier: Number(o && o.tier) || 1, cards: toArr(o && o.cards).map(String), rerolls: Number(o && o.rerolls) || 0, chosen: (o && o.chosen) || null, up: !!(o && o.up), mirror: !!(o && o.mirror), src: src };
           }),
-          law: readLawPhase(d.draft.law)
+          law: readLawPhase(d.draft.law),
+          dealt: d.draft.dealt === true, // the picks are on the table (absent from an older host: it hands a card out at the pick)
+          face: d.draft.face === true    // picks stay face-down until then (read back by a host that resumes)
         } : null;
         rollsMax = Number(d.rollsMax) || 3;
         rollSeq = Number(d.seq) || 0;
@@ -11418,7 +11474,7 @@
                 // a draft is open: its timers died with the old tab (no turn is in flight, so no turn is advanced)
                 if (draft.law && !draft.law.show) armLawTimer();
                 else if (draft.law) { draft.law = null; if (!openLawPhase()) { draft = null; startTurn(true); } }
-                else if (draft.offers.every(function (o) { return !!o.chosen; })) finishDraft();
+                else if (draft.offers.every(function (o) { return !!o.chosen; })) { if (draft.dealt) finishDraft(); else draftAdvance(); }
                 broadcastState(); renderAll();
                 showToast('다시 연결됨');
                 return;
