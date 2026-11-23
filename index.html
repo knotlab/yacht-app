@@ -762,6 +762,48 @@
   .die2d.cocked { transform: rotate(-9deg) translateY(-5px); animation: cockRock 1.1s ease-in-out infinite alternate; }
   @keyframes cockRock { from { transform: rotate(-9deg) translateY(-5px); } to { transform: rotate(7deg) translateY(-3px); } }
   @media (prefers-reduced-motion: reduce) { .die2d.cocked { animation: none; } }
+  /* 뻥카: the cups lie in one persistent layer over the free dice (never rebuilt by a render); the bar sits above the keys, the bubble under the round caps */
+  #cupLayer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .cup { position: absolute; transform-origin: 50% 100%; filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.55)); transition: transform 0.16s ease-in, opacity 0.16s ease-in; }
+  .cup svg { display: block; width: 100%; height: 100%; }
+  #cupLayer.peek .cup { transform: translateY(-64%) rotate(-12deg); opacity: 0.14; transition: transform 0.16s ease-out, opacity 0.16s ease-out; }
+  .sr-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .bluff-bar {
+    position: absolute; left: 50%; bottom: 66px; z-index: 6; transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: max-content; max-width: calc(100% - 20px); padding: 6px; border-radius: 16px;
+    background: rgba(6, 22, 17, 0.92); box-shadow: inset 0 0 0 1.5px rgba(224, 169, 59, 0.55), 0 10px 24px rgba(0, 0, 0, 0.5);
+    animation: chipIn2 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .bluff-bar[hidden], .bluff-bar [hidden] { display: none !important; }
+  .bluff-bar button { height: 44px; min-width: 44px; padding: 0 12px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: 400 15px var(--f-display); white-space: nowrap; color: var(--ink); background: linear-gradient(180deg, var(--ivory), var(--ivory-lo)); box-shadow: 0 3px 0 var(--ivory-edge); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .bluff-bar button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ivory-edge); }
+  .bluff-bar button:disabled { opacity: 0.45; }
+  .bluff-bar button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .bluff-bar .bb-peek svg { width: 22px; height: 22px; }
+  .bluff-bar .bb-peek.on { background: linear-gradient(180deg, #ffe9a8, #e0a93b); box-shadow: 0 3px 0 #8a5d12, 0 0 14px rgba(255, 215, 122, 0.7); }
+  .bluff-bar .bb-ok, .bluff-bar .bb-call { color: #fff; background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 3px 0 #7d0f24; }
+  .bb-hint, .bb-wait { padding: 0 8px; font: 600 13px var(--f-body); color: var(--ivory); white-space: nowrap; }
+  .bb-step { display: inline-flex; align-items: center; gap: 4px; }
+  .bb-step button { padding: 0; width: 44px; font-size: 22px; }
+  .bb-val { min-width: 2.2ch; text-align: center; font: 400 24px/1 var(--f-game); color: var(--brass-hi); font-variant-numeric: tabular-nums; }
+  .bb-ring { position: absolute; left: 10px; right: 10px; bottom: 2px; height: 3px; border-radius: 2px; background: var(--brass-hi); transform-origin: 0 50%; pointer-events: none; }
+  @media (max-width: 420px) { .bluff-bar { gap: 6px; padding: 5px; } .bluff-bar .bb-peek span { display: none; } .bluff-bar button { padding: 0 9px; } .bb-step button { width: 40px; } }
+  @media (orientation: landscape) and (max-height: 560px) { .bluff-bar button { height: 38px; } }
+  .bluff-bubble {
+    position: absolute; left: 50%; top: 34px; z-index: 6; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 16px; border-radius: 16px; pointer-events: none;
+    background: rgba(250, 244, 230, 0.96); color: #2a2418; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 10px 22px rgba(0, 0, 0, 0.4); text-align: center; max-width: calc(100% - 24px);
+  }
+  .bluff-bubble::after { content: ""; position: absolute; left: 50%; top: 100%; width: 14px; height: 10px; transform: translateX(-50%); background: inherit; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+  .bluff-bubble b { font: 400 20px/1.1 var(--f-game); white-space: nowrap; }
+  .bluff-bubble span { font: 600 12px var(--f-body); opacity: 0.8; white-space: nowrap; }
+  .bluff-bubble.pop { animation: bubblePop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes bubblePop { 0% { transform: translateX(-50%) scale(0.6); opacity: 0; } 70% { transform: translateX(-50%) scale(1.06); opacity: 1; } 100% { transform: translateX(-50%); } }
+  @media (min-width: 900px) { .bluff-bubble b { font-size: 28px; } .bluff-bubble span { font-size: 14px; } }
+  .tile.is-pick .t-val { color: #7a5a14; }
+  .tile.is-pickd { transform: translateY(-6px); box-shadow: 0 0 0 3px var(--brass-hi), 0 10px 0 var(--ivory-edge), 0 0 22px rgba(255, 215, 122, 0.6); }
+  .tile.is-open.is-claim { filter: none; background: linear-gradient(180deg, #f4efe0, #d9d1bd); box-shadow: 0 0 0 2px #fff, 0 4px 0 var(--ivory-edge); }
+  .tile.is-claim .t-val { color: #2a2418; }
+  @media (prefers-reduced-motion: reduce) { .bluff-bar, .bluff-bubble.pop { animation: none; } .cup { transition: none; } }
   .die2d.skin-gold { background: linear-gradient(145deg, #fff3c4, #e2b046); }
   .die2d.skin-lead { background: linear-gradient(145deg, #dfe2e7, #9aa1ad); }
   .die2d.skin-curse { background: linear-gradient(145deg, #ffd5da, #e07a8a); box-shadow: 0 0 16px rgba(224, 49, 75, 0.5), 0 9px 16px rgba(0, 0, 0, 0.45); }
@@ -1197,6 +1239,7 @@
   .podium-augs { display: flex; gap: 3px; flex: none; }
 
   .combo-chip {
+    text-wrap: balance; word-break: keep-all; /* a long line breaks between words, never inside one */
     position: absolute; top: 48px; left: 50%; z-index: 5; pointer-events: none;
     transform: translateX(-50%);
     padding: 7px 16px; border-radius: 999px; width: max-content; max-width: calc(100% - 16px); text-align: center; line-height: 1.3;
@@ -1652,6 +1695,25 @@
   .podium-name { flex: 1; min-width: 0; font: 700 15px var(--f-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .podium-score { font: 400 22px var(--f-game); color: var(--text); font-variant-numeric: tabular-nums; }
   .best-line { text-align: center; min-height: 1.2em; margin: 0 0 16px; font: 600 12px var(--f-ui); color: var(--brass-hi); }
+  /* 뻥카 전적: every claim of the game with the dice that were under the cup */
+  .bluff-recap { margin: 0 0 16px; padding: 10px 12px; border-radius: 15px; background: rgba(255, 255, 255, 0.05); }
+  .bluff-recap[hidden] { display: none; }
+  .recap-t { margin: 0 0 6px; font: 400 15px var(--f-display); color: var(--brass-hi); }
+  .recap-list { max-height: 30vh; overflow-y: auto; overscroll-behavior: contain; }
+  .recap-row { padding: 7px 0; border-top: 1px solid rgba(255, 255, 255, 0.09); font: 600 13px var(--f-ui); }
+  .recap-row:first-child { border-top: 0; }
+  .recap-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .recap-line + .recap-line { margin-top: 4px; }
+  .recap-name { font-weight: 700; }
+  .recap-dice { display: inline-flex; gap: 2px; color: var(--ivory); }
+  .recap-dice svg { width: 17px; height: 17px; display: block; }
+  .recap-real { color: var(--text-dim); font-weight: 600; }
+  .recap-badge { white-space: nowrap; padding: 1px 8px; border-radius: 9px; font: 700 11px/1.5 var(--f-ui); background: rgba(255, 255, 255, 0.1); color: var(--ivory); }
+  .recap-badge.is-lie { background: rgba(255, 91, 114, 0.25); color: #ff8da0; }
+  .recap-badge.is-true { background: rgba(255, 215, 122, 0.22); color: #ffd77a; }
+  @media (max-width: 400px) { .recap-dice svg { width: 14px; height: 14px; } .recap-real { white-space: nowrap; } }
+  .recap-sum { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.09); font: 600 12px/1.5 var(--f-ui); color: var(--text-dim); }
+  .recap-sum div + div { margin-top: 2px; }
   @keyframes rowIn { 0% { transform: translateX(-26px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 
   /* ================= Big moments ================= */
@@ -2271,6 +2333,7 @@
         <canvas id="diceCanvas" hidden></canvas>
         <div id="stageVig" class="stage-vig" aria-hidden="true"></div>
         <div id="diceGrid" class="slot-layer"></div>
+        <div id="cupLayer" aria-hidden="true"><svg width="0" height="0" focusable="false"><defs><linearGradient id="cupG" x1="0" x2="1"><stop offset="0" stop-color="#6b3f1f"/><stop offset="0.42" stop-color="#b9773c"/><stop offset="1" stop-color="#55301a"/></linearGradient></defs></svg></div>
         <div id="turnCap" class="cap cap-l"><b></b><em></em></div>
         <div id="roundCap" class="cap cap-r">ROUND 1/12</div>
         <button id="lawCap" class="cap cap-law" type="button" hidden></button>
@@ -2279,6 +2342,19 @@
         <div id="facePick" class="face-pick" hidden></div>
         <div id="tiltPick" class="tilt-pick" role="group" aria-label="기울일 방향" hidden><span class="tp-hint"></span><div class="tp-row"></div></div>
         <div id="cockPick" class="face-pick cock-pick" role="group" hidden><span class="cp-cap" aria-live="polite"></span><div class="cp-row"></div></div>
+        <div id="bluffBar" class="bluff-bar" role="group" aria-label="뻥카" hidden>
+          <button id="bbPeek" class="bb-peek" type="button" aria-label="엿보기. 누르는 동안 컵 안을 봅니다."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>엿보기</span></button>
+          <span id="bbHint" class="bb-hint">칸을 고릅니다.</span>
+          <span id="bbStep" class="bb-step" hidden><button id="bbDn" type="button" aria-label="점수 줄이기">−</button><output id="bbVal" class="bb-val"></output><button id="bbUp" type="button" aria-label="점수 늘리기">+</button></span>
+          <button id="bbOk" class="bb-ok" type="button">선언</button>
+          <button id="bbLift" class="bb-lift" type="button" aria-label="컵을 열고 기록합니다.">열기</button>
+          <span id="bbWait" class="bb-wait" hidden>상대가 정하는 중입니다.</span>
+          <button id="bbNo" class="bb-no" type="button" hidden>믿는다</button>
+          <button id="bbCall" class="bb-call" type="button" hidden>까본다</button>
+          <i id="bbRing" class="bb-ring" hidden></i>
+        </div>
+        <div id="bluffBubble" class="bluff-bubble" aria-hidden="true" hidden><b></b><span>믿을지 까볼지 정합니다.</span></div>
+        <div id="bluffLive" class="sr-live" aria-live="polite"></div>
         <div id="turnSweep" class="turn-sweep" hidden><span></span></div>
         <div id="loader" class="loader">
           <div class="loader-die"><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i><i class="o"></i><i></i></div>
@@ -2522,6 +2598,11 @@
       <p class="result-sub">FINAL STANDINGS</p>
       <div id="podium" class="podium"></div>
       <p id="bestLine" class="best-line"></p>
+      <div id="bluffRecap" class="bluff-recap" hidden>
+        <h3 class="recap-t">뻥카 전적</h3>
+        <div id="bluffRecapList" class="recap-list"></div>
+        <div id="bluffRecapSum" class="recap-sum"></div>
+      </div>
       <div class="btn-row">
         <button id="rematchBtn" class="btn btn-ruby" type="button">한 판 더</button>
         <button id="resultMenuBtn" class="btn" type="button">메인 메뉴</button>
@@ -2992,6 +3073,43 @@
       function cupLive() { return !!cup && cup.phase !== 'spent'; }
       function tableHeld() { return !!cock || cupLive(); }
       function tiltBlocked() { return tableHeld(); }
+      // 뻥카, stage a: one human against bots, offline. The flag only decides whether the draft deals the card.
+      const BLUFF_ENABLED = true;
+      const BLUFF_MS = 6000, BLUFF_SHAKE_MS = 1000, BLUFF_DOWN_MS = 90000, BLUFF_STAKE = 10;
+      let LOOKAWAY_READY = false; // the shared-device look-away gate is not built yet: a table with 2+ humans never gets the card
+      let cupVals = null, cupPeek = false, cupTimer = 0, cupDeadline = 0, cupComps = null, cupAt = 0, closeTries = 0, cupLegal = {};
+      let bluffSel = null;        // this screen: the box being declared { box, list, k }
+      const bluffAI = { callM: {}, kappa: {} }; // what the bots have learned from reveals only
+      // the dice a screen that is not the bluffer's may see: the free slots read 0 while a cup stands (the only place a hidden value could leave the host)
+      function publicDice() { return cup ? dice.map(function (v, i) { return cup.free[i] ? 0 : v; }) : dice; }
+      // can THIS screen know the dice under the cup? the bluffer's own screen (offline: the one human)
+      function cupKnows() { return !cup || (!!players[cup.by] && !players[cup.by].isAI); }
+      function trueDice() { return cup && cupKnows() ? dice.slice() : null; }
+      // what any display may read: the real dice, or the masked ones while a cup stands (a peek on the bluffer's screen shows the real ones)
+      function viewDice() { return cupPeek && cupLive() && cupKnows() ? dice.slice() : publicDice(); }
+      function cupShown(i) { return !!cup && cup.free[i]; }
+      function cupHides(i) { return cupShown(i) && !(cupPeek && cupLive() && cupKnows()); } // a peek is heard as well as seen
+      // the card only works against bots: one human, the rest bots, offline
+      function bluffOk() { return !isOnlineMatch && players.length >= 2 && players.filter(function (q) { return !q.isAI; }).length === 1; }
+      function heldVals() { return dice.map(function (v, i) { return held[i] ? v : 0; }); }
+      function bluffComps(p, free, hv) { return cupComps || (cupComps = cupCompletions(p, free, hv)); }
+      // the numbers a box may be declared at: from the held dice alone, never a free slot
+      function bluffLegalFor(box) {
+        if (cupLegal[box]) return cupLegal[box];
+        const p = players[cup ? cup.by : currentPlayerIdx], hv = publicDice();
+        return (cupLegal[box] = bluffLegal(p, box, cup.free, hv, bluffComps(p, cup.free, hv)));
+      }
+      // canUsePower runs on every render: remember the answer until a die, a hold, a box, the round or a card changes
+      let legalSig = '', legalVal = false;
+      function bluffAnyLegal(p) {
+        const free = held.map(function (h) { return !h; }), hv = heldVals();
+        const sig = [players.indexOf(p), round, p.aug.join(','), free.map(Number).join(''), hv.join(''), openCats(p).join(','), p.wake ? 1 : 0, cursedBy(p) ? 1 : 0, p.twinOff ? 1 : 0, lawKey()].join('|');
+        if (sig === legalSig) return legalVal;
+        const comps = cupCompletions(p, free, hv);
+        legalVal = openCats(p).some(function (id) { return bluffLegal(p, id, free, hv, comps).length > 0; });
+        legalSig = sig;
+        return legalVal;
+      }
       // each die's resting turn (yaw): 0..3 quarter turns about the vertical. The host draws it at a throw, guests copy it from STATE.
       // 기울이기 tips a die by TIP_FLAT[(face-1)*16 + yaw*4 + dir] = face2*4 + yaw2   (dir: 0 far / up, 1 right, 2 near / down, 3 left)
       const TIP_FLAT = [8,16,20,12,17,21,13,9,22,14,10,18,15,11,19,23,26,17,4,15,18,5,12,27,6,13,24,19,14,25,16,7,9,4,23,24,5,20,25,10,21,26,11,6,27,8,7,22,11,24,21,4,25,22,5,8,23,6,9,26,7,10,27,20,4,19,26,13,16,27,14,5,24,15,6,17,12,7,18,25,10,12,22,16,13,23,17,11,20,18,8,14,19,9,15,21];
@@ -3121,6 +3239,10 @@
       const hudEl = document.querySelector('.hud');
       const diceGrid = $('diceGrid');
       const tilesEl = $('tiles');
+      // 뻥카: the cups lie in one persistent layer over the dice, the bar and the bubble sit in the strips above and below them
+      const cupLayer = $('cupLayer'), cupEls = [null, null, null, null, null];
+      const bluffBar = $('bluffBar'), bluffBubble = $('bluffBubble'), bbEl = {};
+      ['Peek', 'Hint', 'Step', 'Dn', 'Val', 'Up', 'Ok', 'Lift', 'Wait', 'No', 'Call', 'Ring'].forEach(function (k) { bbEl[k] = $('bb' + k); });
       // stage prompt strip: tilt picker, cock picker, bluff bar, face picker sit just above the power bar
       function promptBottom() { const bar = $('powers'); return ((!bar || bar.hidden) ? 12 : bar.offsetHeight + 12) + 10; }
       // does a picker cover a die? i = one slot, -1 = any slot; k = how much of the slot's half height counts (1.3 = with the room a standing die needs)
@@ -3130,8 +3252,8 @@
         return window.Dice3D.slotRects().some(function (r, n) { return (i < 0 || n === i) && pr.bottom > sr.top + r.cy - r.hw * k && pr.top < sr.top + r.cy + r.hw * k; });
       }
       // a picker that took the power bar's place hides the bar until it closes
-      const pickLow = { tilt: false, cock: false };
-      function pickOver(who, on) { pickLow[who] = !!on; const bar = $('powers'); if (bar) bar.classList.toggle('pick-over', pickLow.tilt || pickLow.cock); }
+      const pickLow = { tilt: false, cock: false, bluff: false };
+      function pickOver(who, on) { pickLow[who] = !!on; const bar = $('powers'); if (bar) bar.classList.toggle('pick-over', pickLow.tilt || pickLow.cock || pickLow.bluff); }
       const rollBtn = $('rollBtn');
       const rollMain = $('rollMain');
       const rollPips = $('rollPips');
@@ -3856,6 +3978,7 @@
           });
           b.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && selectedTile !== cat.id) setHighlight(null); });
           b.addEventListener('click', function () {
+            if (cupLive()) { cupTileTap(cat.id); return; }
             if (armedPower === 'swap') { handleSwapTap(cat.id); return; }
             if (armedPower === 'gauntlet') { handleGauntletTap(cat.id); return; }
             if (!canScoreNow()) return;
@@ -4158,6 +4281,7 @@
         if (h && h !== hudH) { hudH = h; document.documentElement.style.setProperty('--hud-h', h + 'px'); }
         document.body.classList.toggle('hud-tall', h > 100); // two rows of cards: a short phone tightens the draft under them
         fitGaps();
+        if (cupLive()) { syncCups(); renderBluffBar(); } // a resize or a turn of the phone moves the dice, the cups and the bar with them
         placePeek(); // an open popover follows its card
       }
       function queueHud() { if (!hudRaf) hudRaf = requestAnimationFrame(syncHud); }
@@ -4286,6 +4410,7 @@
       function renderDice() {
         const canClick = hasRolledThisTurn && !isRolling && !isScoring && isMyTurn() && !tableHeld();
         const marks = diceMarks();
+        const vd = viewDice(); // what a display may read: masked while a cup stands
         const cs = cockShown() ? cock : null; // 모서리 착지: the die that stands on an edge, and the faces it may show
         const cockTxt = function (i) { return cs && cs.i === i ? '. 모서리에 섰습니다. ' + (cs.faces.length === 3 ? cs.faces.join(', ') + ' 중 하나입니다.' : cs.faces[0] + ' 또는 ' + cs.faces[1] + '입니다.') : ''; };
         const gh = armedPower === 'tilt' && tiltSel >= 0 && canClick ? tiltResult(tiltSel) : null; // 기울이기: where each free die would land
@@ -4293,7 +4418,7 @@
 
         if (use3D()) {
           const D3 = window.Dice3D;
-          if (!D3.isAnimating()) D3.setState(dice, held, yaw);
+          if (!D3.isAnimating()) D3.setState(cup && cupKnows() ? dice : vd, held, yaw); // the bluffer's canvas loads the real faces under the opaque cups, so a peek has no hop
           if (D3.setSkins) D3.setSkins(diceSkins());
           if (D3.setDesign) D3.setDesign(tableDesign());
           D3.setDim(gameActive && !hasRolledThisTurn && !isRolling);
@@ -4305,7 +4430,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stopTurn >= 0 ? ' stopped' : stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (cupHides(i) ? '컵에 덮여 있음' : dice[i]) + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
             if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + ' (기울이면 ' + gh.values[i] + ')'); }
@@ -4316,7 +4441,7 @@
           }
           placeSlots();
         } else {
-          const shown = displayDice || dice;
+          const shown = displayDice || vd;
           const skins2d = diceSkins();
           const dz2d = tableDesign() !== 'classic' ? designOf(tableDesign()) : null;
           diceGrid.className = 'dice2d';
@@ -4327,13 +4452,13 @@
             btn.type = 'button';
             const dzOn = dz2d && !skins2d[i];
             btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '') + (fbTilt && fbTilt.idx.indexOf(i) !== -1 ? ' tipping' : '') + (cs && cs.i === i ? ' cocked' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (cupHides(i) ? '컵에 덮여 있음' : v) + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
             if (fbTilt && fbTilt.idx.indexOf(i) !== -1) { btn.style.setProperty('--td', fbTilt.idx.indexOf(i) * 40 + 'ms'); btn.style.setProperty('--r', fbTilt.dir === 1 ? '10deg' : fbTilt.dir === 3 ? '-10deg' : '0deg'); }
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (dzOn) btn.style.cssText = '--dz-bg:' + dz2d.css[0] + ';--dz-pip:' + dz2d.css[1] + ';--dz-one:' + dz2d.css[2];
             if (skins2d[i] && SKIN_EDGE[skins2d[i]]) btn.style.setProperty('--mk', SKIN_EDGE[skins2d[i]]);
             let h = '';
-            for (let c = 0; c < 9; c++) h += '<i class="' + (PIP_MAP[v].indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
+            for (let c = 0; c < 9; c++) h += '<i class="' + ((PIP_MAP[v] || []).indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
             if (held[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
             btn.innerHTML = h + marksHtml(marks[i], i);
             if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + ' (기울이면 ' + gh.values[i] + ')'); }
@@ -4342,6 +4467,7 @@
           }
         }
         prevHeld = held.slice();
+        syncCups();
         prevMarks = marks.map(function (ids) { return ids.join(','); });
       }
 
@@ -4383,16 +4509,17 @@
       function renderTiles() {
         const cur = players[currentPlayerIdx];
         const canSelect = canScoreNow();
-        const showPreview = !!cur && hasRolledThisTurn && !isRolling && gameActive;
+        const cupMode = cupLive(), peekOn = cupMode && cupKnows() && cupPeek, vd = viewDice(); // under a cup only a peek shows numbers, and only to the bluffer
+        const showPreview = !!cur && hasRolledThisTurn && !isRolling && gameActive && (!cup || peekOn); // a spent cup hides its dice too
         const mineNow = isMyTurn();
         const swapMode = armedPower === 'swap' && mineNow && !isRolling && !isScoring;
         const owMode = showPreview && (encoreTurn || (armed.overwrite && mineNow && charges(cur, 'overwrite') > 0));
         const sealId = showPreview ? sealCatFor(cur) : null;
         if (selectedTile && (!canSelect || !cur || !tileSelectable(selectedTile))) selectedTile = null;
-        const pOpts = previewOpts(mineNow);
-        pOpts.allin = allinOn() && !twoferPend; // every viewer sees the doubled numbers
+        const pOpts = peekOn ? { own: true } : previewOpts(mineNow); // a peek shows what a cup record would write: the box's own score
+        if (!peekOn) pOpts.allin = allinOn() && !twoferPend; // every viewer sees the doubled numbers
         const cockPv = cockShown(); // 모서리 착지: while the pick is pending a tile shows its best face on offer
-        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : cockPv ? cockBest(cur, id, pOpts) : scoreFor(cur, id, dice, pOpts); };
+        const pv = function (id) { return fuseBust ? (pOpts.allin ? -20 : lawBust(id)) : cockPv ? cockBest(cur, id, pOpts) : scoreFor(cur, id, vd, pOpts); };
         const duelArm = armedPower === 'gauntlet' && mineNow && !isRolling && !isScoring;
         const bombOn = !!cur && players.some(function (o) { return o.bomb === currentPlayerIdx; });
         let bestId = null, bestPts = 0;
@@ -4434,6 +4561,12 @@
               else if (encoreTurn) cls += ' is-ow';
             }
             label += ', 기록 ' + val + '점';
+          } else if (cupMode && !peekOn) {
+            // a cup stands: the bluffer picks a box from the ones a declaration can reach, everyone else sees the declared box
+            const claim = cup.phase === 'call' && cup.box === c.id, pick = cupPickable(c.id), chosen = pick && !!bluffSel && bluffSel.box === c.id;
+            cls += claim ? ' is-open is-claim' : pick ? ' is-open is-live is-pick' + (chosen ? ' is-pickd' : '') : ' is-idle';
+            vEl.textContent = claim ? cup.decl + '?' : chosen ? String(bluffSel.list[bluffSel.k]) : pick ? '?' : '';
+            enabled = pick;
           } else if (showPreview) {
             const p = pv(c.id);
             const sealed = c.id === sealId;
@@ -4441,7 +4574,7 @@
             cls += ' is-open' + (canSelect && !sealed ? ' is-live' : '') + (p <= 0 ? ' is-zero' : '') + (p < 0 ? ' is-neg' : '') + (hot ? ' is-hot' : '') +
               (c.id === bestId ? ' is-best' : '') + (selectedTile === c.id ? ' is-sel' : '') + (aimCat === c.id ? ' is-aim' : '') +
               (sealed ? ' is-sealed' : '') + (cockPv ? ' is-cockpv' : '') + (cur.prophecy === c.id ? ' is-prophecy' : '') + (pOpts.allin ? ' is-allin' : '') +
-              (pOpts.joker && calcCategoryScore(c.id, dice) === 0 && p > 0 ? ' is-joker' : '') +
+              (pOpts.joker && calcCategoryScore(c.id, vd) === 0 && p > 0 ? ' is-joker' : '') +
               (fuseBust ? ' is-bust' : '') + (bombOn && p >= 20 ? ' is-defuse' : '') +
               (duel ? (duel.cat === c.id ? ' is-duel' : ' is-dim') : '') +
               (twoferPend ? (tileSelectable(c.id) ? ' is-twofer' : ' is-dim') : (armed.twofer && mineNow && p > 0 ? ' is-twofer' : ''));
@@ -4513,6 +4646,7 @@
         else if (restTurn) main = 'REST';
         else if (twoferPend) main = 'PICK 2';
         else if (fuseBust && !isRolling) main = 'BUST';
+        else if (cupLive() && cup.phase === 'down' && mine) main = 'DECLARE';
         else if (isRolling) main = 'ROLLING';
         else if (cockShown()) main = 'PICK FACE';
         else if (isScoring) main = 'NICE';
@@ -4533,6 +4667,7 @@
         let pressN = 0;
         if (matchAug && gameActive && mine && cur && !draft && !isScoring && !turnLost && !restTurn) {
           if (players.some(function (o) { return o.bomb === currentPlayerIdx; })) tags.push(['bomb', 't-bomb', '폭탄 · 20점+']);
+          if (armed.bluff && rollsLeft === 1) tags.unshift(['bluff', 't-hex', '컵으로 굴림']); // in front: only two tags fit
           if (rollsLeft === 1 && !twoferPend && !fuseBust) pressN = players.filter(function (q, j) { return j !== currentPlayerIdx && augHas(q, 'pressure'); }).length;
           if (pressN) tags.push(['pressure', 't-hex', '압박 -' + 3 * pressN]);
           if (sealTurn) tags.push(['seal', 't-seal', '봉인 중']);
@@ -4676,6 +4811,7 @@
         renderCaps();
         renderPowers();
         renderCockPick();
+        renderBluffBar();
         renderSheet();
         updateChatUi();
         syncDraftUi();
@@ -4699,7 +4835,9 @@
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
           stuck: stuck, stopTurn: stopTurn, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
-          dice: dice, held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
+          dice: publicDice(), held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
+          cup: cup ? { by: cup.by, phase: cup.phase, free: cup.free, box: cup.box, decl: cup.decl, ms: cup.ms, caller: cup.caller, pass: cup.pass } : undefined, // never a die value
+          bluffLog: !gameActive && bluffLog.length ? bluffLog : undefined, // only a finished game shows what lay under the cups
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
         };
       }
@@ -4778,7 +4916,7 @@
           sfxHold(extra.held);
         } else if (kind === 'score') {
           aimCat = null;
-          recordFx(extra.catId, extra.pIdx, extra.pts, extra.d);
+          recordFx(extra.catId, extra.pIdx, extra.pts, extra.d, extra.hid === 1);
         } else if (kind === 'banner') {
           afterFeed(function () {
             if (extra.yacht) { yachtRecord(extra); return; }
@@ -4805,6 +4943,16 @@
           augFx(extra);
         } else if (kind === 'amend') {
           amendFx(extra);
+        } else if (kind === 'cup') {
+          const by = seatIdx(extra.by), fv = toArr(extra.free);
+          if (by < 0) return;
+          cupFx(by, [0, 1, 2, 3, 4].map(function (i) { return !!fv[i]; }));
+        } else if (kind === 'bluffDecl') {
+          const by = seatIdx(extra.by), d = Math.floor(Number(extra.decl));
+          if (by < 0 || CAT_IDS.indexOf(String(extra.box)) === -1 || !(d >= 1 && d <= 150)) return;
+          declFx(by, String(extra.box), d);
+        } else if (kind === 'bluffEnd') {
+          bluffEndFx(extra); // validates itself and never reads the cup or the dice
         }
       }
 
@@ -4814,7 +4962,7 @@
         if (!gameActive) { openTitle(); return; }
         if (!isMyTurn() || draft || rollsLeft <= 0 || isRolling || isScoring || tableHeld() || stopTurn >= 0) return;
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'roll' }); return; }
-        rollDice();
+        rollDice(undefined, { bluff: !!armed.bluff });
       }
       function handleHoldInput(idx) {
         ensureAudio();
@@ -4909,8 +5057,10 @@
         }, 60);
       }
 
-      function rollDice(onComplete) {
+      function rollDice(onComplete, opt) {
         if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld() || stopTurn >= 0) return; // 시간 정지: the rolls stay, but no die can be thrown
+        if (cup && cup.phase === 'spent') { cupScrub(); cupDrop(); } // the table is thrown again: the old cups go
+        const cupRoll = !!(opt && opt.bluff) && canUsePower('bluff'); // decided before anything is rolled: a cup throw never cocks
         rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn, stuck: stuck.slice() };
         const first = rollsLeft === rollsMax;
         isRolling = true;
@@ -4937,13 +5087,15 @@
         }
         // 모서리 착지: the values are rolled, then the cock is drawn (뻥카, later: a roll thrown under the cup draws none, decided before this line)
         const spentBefore = cockSpent;
-        cock = drawCock(roller, next, heldSnap, spentBefore);
+        cock = cupRoll ? null : drawCock(roller, next, heldSnap, spentBefore);
         if (cock) { cockSpent = true; cock.seq = rollSeq + 1; cock.t0 = Date.now(); } // tossDice bumps rollSeq once
         cockSpentBefore = spentBefore;
+        if (cupRoll) { tossCup(next, heldSnap, onComplete); return; } // the free dice go under the cup: nothing flies, nothing carries a value
         tossDice(next, heldSnap, null, onComplete, notes);
       }
       // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
       function tossDice(next, heldSnap, extra, onComplete, notes) {
+        if (cup && cup.phase === 'spent') { cupScrub(); cupDrop(); } // no path may leave stale cups behind
         yfxClear(true);
         tsEnd();
         isRolling = true;
@@ -4992,7 +5144,7 @@
 
       function postRollFx(values) {
         const cur = players[currentPlayerIdx];
-        if (!cur) return;
+        if (!cur || cupLive()) return; // nothing is read out over a hidden throw
         revealPreviews();
         const open = function (id) { return cur.scores[id] === null; };
         const all = [0, 1, 2, 3, 4];
@@ -5066,7 +5218,7 @@
       }
       // after a roll the open boxes' previews cascade in grid order, and the best box drops its star
       function revealPreviews() {
-        if (REDUCED) return;
+        if (REDUCED || cupLive()) return;
         let k = 0;
         CATEGORIES.forEach(function (c) {
           const t = tileEls[c.id];
@@ -5081,6 +5233,483 @@
           k++;
         });
       }
+
+      // ================= 뻥카 (stage a: one human against bots) =================
+      // The free dice of the last roll go under a cup. The host decides their values in the background (nothing flies and
+      // nothing shows them); only the bluffer may peek. The declared box and number is then answered by every other seat:
+      // believed (the box takes the number and the dice stay hidden), called and true (the caller pays 10), called and
+      // false (the box takes the bust value and the bluffer pays 10). Everything that changes the cup is one of these functions.
+      // a believed claim keeps the cups on the table; the real dice of those slots must not outlive the cup (a 되감기 snapshot would bring them back)
+      function cupScrub() { if (cup && cup.phase === 'spent') dice = dice.map(function (v, i) { return cup.free[i] ? 0 : v; }); }
+      function cupDrop() { cup = null; cupVals = null; cupComps = null; cupLegal = {}; }
+      function cupClear() { // a new match: no cup stays, not even one that is leaving
+        cupLayer.querySelectorAll('.cup').forEach(function (el) { el.remove(); });
+        for (let i = 0; i < 5; i++) cupEls[i] = null;
+      }
+      function bluffLive(t) { const el = $('bluffLive'); if (el) el.textContent = t; }
+      // the leather cup: wide at the rim, a dome on top (one gradient, defined once in the layer)
+      function cupHtml() {
+        return '<svg viewBox="0 0 64 80" preserveAspectRatio="none" aria-hidden="true"><path d="M7 72 L14 22 Q16 5 32 5 Q48 5 50 22 L57 72 Z" fill="url(#cupG)" stroke="#2a1608" stroke-width="2"/>' +
+          '<rect x="3" y="66" width="58" height="11" rx="5.5" fill="#3b2110" stroke="#1f1108" stroke-width="1.5"/><path d="M11 50 H53" stroke="#e0a93b" stroke-width="2.5" opacity="0.85"/>' +
+          '<path d="M21 24 Q23 13 31 11" stroke="#fff" stroke-opacity="0.38" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+      }
+      // keep one cup over each free die, laid on the slot button (same rectangle in 3D and in the 2D fallback). Elements are never
+      // rebuilt by a render; a cup that is leaving is detached from the list and finishes its own animation.
+      function syncCups() {
+        if (!cup && !cupEls.some(Boolean)) { cupLayer.classList.remove('peek'); return; } // no cup anywhere: no layout read
+        const sr = $('diceStage').getBoundingClientRect();
+        for (let i = 0; i < 5; i++) {
+          const want = cupShown(i) && gameActive, b = diceGrid.children[i];
+          let el = cupEls[i];
+          if (!want || !b) { if (el) { el.remove(); cupEls[i] = null; } continue; }
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'cup';
+            el.innerHTML = cupHtml();
+            cupLayer.appendChild(el);
+            cupEls[i] = el;
+          }
+          const r = b.getBoundingClientRect();
+          const cw = r.width * (!use3D() ? 1.22 : 1.14), cl = Math.max(0, Math.min(sr.width - cw, r.left - sr.left - r.width * (use3D() ? 0.07 : 0.02))); // never cut by the felt's edge
+          el.style.left = cl.toFixed(1) + 'px';
+          const flat = !use3D(); // the 2D die is a square: the cup stands a little taller than it
+          el.style.top = (r.top - sr.top + r.height * (flat ? -0.14 : 0.05)).toFixed(1) + 'px';
+          el.style.width = cw.toFixed(1) + 'px';
+          el.style.height = (r.height * (flat ? 1.14 : 0.86)).toFixed(1) + 'px';
+        }
+        cupLayer.classList.toggle('peek', cupPeek && cupLive() && cupKnows());
+      }
+      // the cups leave the table: they stay in the layer until their animation is over, whatever renders in between
+      function cupLeave(kind, wait) {
+        wait = wait || 0;
+        const dur = kind === 'knock' ? 500 : kind === 'fast' ? 350 : 650;
+        cupEls.forEach(function (el, i) {
+          if (!el) return;
+          cupEls[i] = null;
+          el.classList.add('leaving');
+          const done = function () { if (el.parentNode) el.remove(); };
+          if (REDUCED || !el.animate) { el.style.transition = 'opacity 0.15s ' + wait + 'ms'; el.style.opacity = '0'; setTimeout(done, 170 + wait); return; }
+          const dx = (i % 2 ? 1 : -1) * 140;
+          const kf = kind === 'knock' ? [{ transform: 'none', opacity: 1 }, { transform: 'translate(' + dx + 'px,-120px) rotate(' + (dx > 0 ? 540 : -540) + 'deg)', opacity: 0 }]
+            : [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-120%) rotate(-8deg)', opacity: 0 }];
+          const a = el.animate(kf, { duration: dur, delay: (kind === 'knock' ? 0 : i * 60) + wait, easing: 'ease-out', fill: 'forwards' });
+          a.onfinish = done;
+          setTimeout(done, dur + i * 60 + 150 + wait);
+        });
+      }
+      // beat 1, on every screen: the cups drop on the free dice and shake
+      function cupFx(by, free) {
+        const mid = matchId, idx = [0, 1, 2, 3, 4].filter(function (i) { return free[i]; });
+        sfxWhoosh();
+        idx.forEach(function (i, k) {
+          const el = cupEls[i];
+          if (el && el.animate) {
+            if (REDUCED) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
+            else {
+              el.animate([{ transform: 'translateY(-90px) rotate(-8deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, delay: k * 40, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+              const sh = [];
+              for (let s = 0; s < 10; s++) sh.push({ transform: 'translate(' + (s % 2 ? 3 : -3) + 'px,0) rotate(' + (s % 2 ? 2 : -2) + 'deg)', easing: 'steps(1)' });
+              sh.push({ transform: 'none' });
+              el.animate(sh, { duration: 700, delay: 280 + k * 40 });
+            }
+          }
+          setTimeout(function () {
+            if (matchId !== mid) return;
+            sample('thud', { vol: 0.7, rate: 0.9 });
+            burst(diePt(i), { shape: 'dust', count: 6, dist: 36, color: 'rgba(235,222,196,0.7)', dur: 700 });
+            if (k === 0 && !REDUCED) { if (use3D()) { window.Dice3D.kick({ y: -2, trauma: 0.3 }); window.Dice3D.hitstop(60); } buzz([12, 30, 12]); }
+          }, REDUCED ? 0 : 220 + k * 40);
+        });
+        if (!REDUCED) {
+          [0, 0.32, 0.64].forEach(function (d) { noise(700, 1, 0.45, 0.08, 'lowpass', 0.26 + d); });
+          sample('roll', { rate: 0.6, vol: 0.35, delay: 0.26 });
+          setTimeout(function () { if (matchId === mid) sample('wobble', { vol: 0.4 }); }, 1000);
+        }
+        bluffLive('컵이 덮였습니다.');
+      }
+      // the declaration lands: the bubble pops, the box is ringed
+      function declFx(by, box, d) {
+        const mid = matchId;
+        bluffBubble.querySelector('b').textContent = catKo(box) + ' ' + d + '점';
+        bluffBubble.hidden = false;
+        restartAnim(bluffBubble, 'pop');
+        sample('scribble');
+        ringFx(tilePt(box), '#ffffff', 2.2);
+        pingChip(by, 'bluff');
+        bluffLive((players[by] ? players[by].name : '') + ' 님이 ' + catKo(box) + ' ' + d + '점을 선언했습니다.');
+        const me = viewerIdx();
+        if (me >= 0 && me !== by) [3000, 2000, 1000].forEach(function (left) {
+          setTimeout(function () { if (matchId === mid && cup && cup.phase === 'call' && cup.by === by && !(cup.pass & (1 << me))) sample('clock', { vol: 0.35 }); }, BLUFF_MS - left);
+        });
+      }
+      // the cup is opened, knocked off or called: every screen plays the reveal. It reads no cup and no dice of its own (values come in the payload).
+      function bluffEndFx(e) {
+        const res = e && typeof e.res === 'string' ? e.res : '';
+        if (['lift', 'knock', 'believed', 'truth', 'caught'].indexOf(res) === -1) return;
+        const by = seatIdx(e.by), caller = seatIdx(e.caller), who = seatIdx(e.who);
+        const vals = toArr(e.values).map(Number), shown = diceOk(vals) ? vals : null;
+        const mid = matchId, nm = function (j) { return players[j] ? players[j].name : ''; };
+        const later = function (ms, fn) { setTimeout(function () { if (matchId === mid) fn(); }, REDUCED ? Math.min(ms, 300) : ms); };
+        let line = '';
+        if (shown && res !== 'believed' && use3D()) window.Dice3D.setState(shown, held, yaw);
+        if (res === 'believed') {
+          line = '아무도 까지 않았습니다.';
+          showChip(line, 'cool');
+          sample('lock', { vol: 0.5 });
+        } else if (res === 'lift') {
+          line = '컵을 열었습니다.';
+          cupLeave('fast');
+          sample('cardflip');
+          showChip(line, 'cool');
+          if (shown) later(450, function () { if (!cupLive()) postRollFx(shown); });
+        } else if (res === 'knock') {
+          if (who >= 0) slamFx(who);
+          cupLeave('knock');
+          sample('thud');
+          line = nm(who) + ' 님이 책상을 쳤습니다. 컵이 넘어졌습니다.';
+          later(450, function () { showChip(line, 'gold'); });
+          if (shown) later(900, function () { if (!cupLive()) postRollFx(shown); });
+        } else {
+          const caught = res === 'caught';
+          stageVignette(0.5, '', 700);
+          sample('spotlight');
+          cupLeave('lift', REDUCED ? 0 : 250); // detached now: closeBluffWindow drops the cup right after this fx
+          line = caught ? nm(caller) + ' 님이 거짓을 잡았습니다. 10점을 받습니다.' : nm(by) + ' 님의 선언이 맞았습니다. ' + nm(caller) + ' 님이 10점을 줍니다.';
+          later(700, function () {
+            if (caught) { sample('shatter'); impact(3, { tone: 'bad' }); }
+            stampFx(stagePt(), caught ? '거짓' : '진실', caught ? '#ff5b72' : '#ffd77a');
+            if (by >= 0 && caller >= 0) stream(seatPt(caught ? by : caller), seatPt(caught ? caller : by), { shape: 'coin', count: 8, dur: 800, arc: 60, stagger: 40 });
+            sfxCoins(8);
+            if (!caught) sample('chime');
+            showChip(line, 'gold');
+          });
+        }
+        bluffLive(line);
+      }
+
+      // ---------- the throw under the cup ----------
+      function tossCup(next, heldSnap, onComplete) {
+        const myMatch = matchId, by = currentPlayerIdx, tn = turnNo;
+        yfxClear(true);
+        tsEnd();
+        isRolling = true;
+        lockAllin();
+        selectedTile = null; aimCat = null; armedPower = null; psychicDie = -1; armedReset();
+        if (hlIndices) setHighlight(null);
+        rollSeq++;
+        liveRoll = null; // nothing is in the air: no 샷건 window and no 시간 정지 window
+        if (yawLive()) yaw = drawYaw(heldSnap); // the turns are public and do not depend on the values
+        dice = next.slice();
+        cupVals = next.slice();
+        cup = { by: by, phase: 'down', free: heldSnap.map(function (h) { return !h; }), box: null, decl: null, ms: 0, caller: -1, pass: 0 };
+        cupComps = null; cupLegal = {}; cupAt = performance.now(); cupPeek = false; bluffSel = null;
+        clearTimeout(cupTimer);
+        cupTimer = setTimeout(function () { if (matchId === myMatch && turnNo === tn && cup && cup.by === by && cup.phase === 'down') liftCup(by); }, BLUFF_DOWN_MS); // nobody holds the table for ever
+        broadcastState();
+        renderAll();
+        fx('cup', { by: by, free: cup.free.slice() }); // no value in it
+        setTimeout(function () {
+          if (matchId !== myMatch) return;
+          if (turnNo === tn && isRolling) isRolling = false; // always released: a lift or a new turn during the shake must not leave the table locked
+          broadcastState();
+          renderAll();
+          if (!cup || cup.by !== by || turnNo !== tn) return;
+          if (typeof onComplete === 'function') onComplete();
+        }, REDUCED ? 250 : BLUFF_SHAKE_MS);
+      }
+
+      // ---------- declaring, opening, calling, resolving (host / local authority) ----------
+      function declareBluff(box, score) {
+        if (!cup || cup.phase !== 'down' || isRolling || !gameActive || draft) return false;
+        const cur = players[cup.by];
+        if (!cur || cur !== players[currentPlayerIdx] || charges(cur, 'bluff') <= 0) return false;
+        if (typeof box !== 'string' || CAT_IDS.indexOf(box) === -1 || cur.scores[box] !== null) return false;
+        if (typeof score !== 'number' || !Number.isInteger(score)) return false;
+        if (bluffLegalFor(box).indexOf(score) === -1) return false;
+        cur.ch.bluff -= 1; // spent here, not at arming: a cup that is opened costs nothing
+        cup.box = box; cup.decl = score; cup.phase = 'call'; cup.ms = BLUFF_MS; cup.caller = -1; cup.pass = 0;
+        cupAt = performance.now(); cupDeadline = cupAt + BLUFF_MS;
+        rollSeq++;
+        clearTimeout(cupTimer);
+        const mid = matchId, tn = turnNo;
+        cupTimer = setTimeout(function () { if (matchId === mid && turnNo === tn && cup && cup.phase === 'call') closeBluffWindow(-1); }, BLUFF_MS + 200);
+        fx('bluffDecl', { by: cup.by, box: box, decl: score, ms: BLUFF_MS });
+        broadcastState();
+        renderAll();
+        scheduleBotCallers();
+        return true;
+      }
+      function liftCup(by) { // the bluffer opens it: an ordinary turn goes on
+        if (!cup || cup.phase !== 'down' || cup.by !== by || isRolling) return false;
+        revealCup('lift', { by: by });
+        return true;
+      }
+      function knockCup(pIdx) { // 샷건 on a cup that is not declared yet
+        if (!cup || cup.phase !== 'down' || pIdx === cup.by || isRolling || !players[pIdx]) return false;
+        players[pIdx].ch.slam -= 1;
+        revealCup('knock', { by: cup.by, who: pIdx });
+        return true;
+      }
+      function revealCup(res, e) { // the dice go to everyone, the cup is gone, the turn is an ordinary one
+        const vals = dice.slice();
+        clearTimeout(cupTimer);
+        cupDrop();
+        cupPeek = false; bluffSel = null;
+        fx('bluffEnd', Object.assign({ res: res, values: vals }, e));
+        broadcastState();
+        renderAll();
+        const cur = players[currentPlayerIdx];
+        if (cur && cur.isAI && typeof aiResume === 'function') { clearTimeout(aiTimer); aiResume(); } // a bot carries on with the dice in view
+      }
+      function callBluff(seat) {
+        if (!cup || cup.phase !== 'call' || seat === cup.by || !(seat >= 0 && seat < players.length)) return false;
+        if (cup.pass & (1 << seat)) return false;               // an answer is final
+        if (performance.now() - cupAt < 300) return false;      // a tap that was meant for something under the bubble
+        cup.caller = seat;
+        closeBluffWindow(seat);
+        return true;
+      }
+      function passBluff(seat) {
+        if (!cup || cup.phase !== 'call' || seat === cup.by || !(seat >= 0 && seat < players.length)) return false;
+        if (cup.pass & (1 << seat)) return true;
+        cup.pass |= (1 << seat);
+        const need = players.reduce(function (m, q, j) { return j === cup.by ? m : m | (1 << j); }, 0);
+        if ((cup.pass & need) === need) { // everybody has answered: the window closes once the bubble has been readable for a moment
+          const tn = turnNo, wait = Math.max(0, 1200 - (performance.now() - cupAt)), mid = matchId;
+          setTimeout(function () { if (matchId === mid && cup && cup.phase === 'call' && turnNo === tn) closeBluffWindow(-1); }, wait);
+        }
+        broadcastState();
+        renderAll();
+        return true;
+      }
+      // can commitScore take this record right now? It returns silently in several states, and the 10 must not move before it does.
+      function bluffCommitReady(cur, box) {
+        return gameActive && !draft && hasRolledThisTurn && !isRolling && !isScoring && !twoferPend && !duel && !fuseBust && !encoreTurn &&
+          cur === players[currentPlayerIdx] && cur.scores[box] === null && box !== sealCatFor(cur);
+      }
+      function closeBluffWindow(caller) {
+        if (!cup || cup.phase !== 'call') return;
+        const by = cup.by, cur = players[by], box = cup.box, decl = cup.decl, mid = matchId, tn = turnNo;
+        if (isRolling || isScoring || draft) { // something else holds the table for a moment: try again, then give up with an open cup
+          if (++closeTries > 12) { closeTries = 0; cur.ch.bluff += 1; revealCup('lift', { by: by }); return; } // an opened cup costs nothing
+          setTimeout(function () { if (matchId === mid && cup && cup.phase === 'call' && turnNo === tn) closeBluffWindow(caller); }, 150);
+          return;
+        }
+        closeTries = 0;
+        clearTimeout(cupTimer);
+        if (!cur || !bluffCommitReady(cur, box)) { if (cur) cur.ch.bluff += 1; revealCup('lift', { by: by }); return; } // the box vanished under us: an open cup, the 10 does not move
+        const real = scoreFor(cur, box, dice, { own: true });
+        let pts = decl, res = 'believed';
+        if (caller >= 0) {
+          const truth = real >= decl, who = players[caller], mv = truth ? BLUFF_STAKE : -BLUFF_STAKE; // + = the caller pays
+          res = truth ? 'truth' : 'caught';
+          if (!truth) pts = lawBust(box);
+          cur.extra = (cur.extra || 0) + mv;
+          who.extra = (who.extra || 0) - mv;
+        }
+        bluffLearn(by, caller, res);
+        bluffLog.push({ p: by, round: round, box: box, decl: decl, real: Math.max(0, real), vals: dice.slice(), res: res, caller: caller, flipped: false });
+        if (bluffLog.length > 16) bluffLog.shift();
+        fx('bluffEnd', { res: res, by: by, caller: caller, box: box, decl: decl, values: caller >= 0 ? dice.slice() : null });
+        if (caller >= 0) cupDrop(); else cup.phase = 'spent'; // a believed lie leaves the cups on the table until the next throw
+        cupVals = null; cupComps = null; cupPeek = false;
+        const commit = function () { commitScore(box, { bluff: { pts: pts } }); };
+        if (caller < 0) { commit(); return; }
+        // called: the reveal plays first, and nothing else may record meanwhile
+        isScoring = true;
+        broadcastState();
+        renderAll();
+        setTimeout(function () {
+          if (matchId !== mid || turnNo !== tn) return;
+          isScoring = false;
+          commit();
+        }, REDUCED ? 900 : 1700); // the result chip is read before the record's own chip replaces it
+      }
+      // what the bots remember from reveals only
+      function bluffLearn(by, caller, res) {
+        if (res === 'caught') bluffAI.callM[by] = Math.min(1.6, (bluffAI.callM[by] || 1) * 1.25);
+        if (res === 'truth') bluffAI.callM[by] = Math.max(0.6, (bluffAI.callM[by] || 1) * 0.85);
+        players.forEach(function (q, j) {
+          if (j === by || q.isAI) return;
+          const k = bluffAI.kappa[j] || 1;
+          if (caller === j) bluffAI.kappa[j] = Math.min(1.8, k * 1.3);
+          else if (caller < 0 && res === 'believed') bluffAI.kappa[j] = Math.max(0.4, k * 0.75);
+        });
+      }
+      // every bot answers the claim from the held ones, the box and the number: never from what lies under the cup
+      function scheduleBotCallers() {
+        const mid = matchId, tn = turnNo, by = cup.by;
+        const bots = players.filter(function (q, j) { return q.isAI && j !== by; }).length;
+        if (!bots) return;
+        let table = null; // built once per claim: every bot reads the same one
+        players.forEach(function (q, j) {
+          if (!q.isAI || j === by) return;
+          setTimeout(function () {
+            if (matchId !== mid || turnNo !== tn || !cup || cup.phase !== 'call' || cup.by !== by || (cup.pass & (1 << j))) return;
+            const bl = players[by], held5 = publicDice(), K = players.length === 2 ? 2 : 1;
+            if (!table) { const sc = aiScores(bl), md = aiMods(bl), W = bluffW(sc, md); table = { sc: sc, md: md, W: W, outs: bluffOuts(bl, sc, bluffComps(bl, cup.free, held5), W) }; }
+            const r = botCallProb({ p: bl, scores: table.sc, mods: table.md, free: cup.free, heldVals: held5, box: cup.box, decl: cup.decl, K: K, W: table.W, outs: table.outs });
+            const jitter = q.level === 'easy' ? (Math.random() - 0.5) * 0.3 : 0;
+            const c = Math.max(0, Math.min(1, r.c * (bluffAI.callM[by] || 1) + jitter));
+            if (Math.random() < 1 - Math.pow(1 - c, 1 / Math.max(1, bots))) callBluff(j); else passBluff(j);
+          }, 1250 + Math.random() * 2600); // never before the bubble has been readable
+        });
+      }
+      // ---------- the bot as the bluffer: it reads its own throw and the public card, nothing else ----------
+      function botOpp(by) { return players.map(function (q, j) { return { bot: q.isAI, kappa: bluffAI.kappa[j] || 1, j: j }; }).filter(function (o) { return o.j !== by; }); }
+      // decided before any die is known: is a cup throw with this hold worth more than a plain one?
+      function aiWantsCup() {
+        const cur = players[currentPlayerIdx];
+        if (!cur || !cur.isAI || !canUsePower('bluff')) return false;
+        const free = held.map(function (h) { return !h; }), hv = heldVals();
+        const comps = cupCompletions(cur, free, hv);
+        if (comps.length > 700) return false; // special dice with many free: skip it, it keeps the turn short
+        const gain = botBluffGain({ p: cur, scores: aiScores(cur), mods: aiMods(cur), free: free, heldVals: hv, K: players.length === 2 ? 2 : 1, comps: comps, opp: botOpp(currentPlayerIdx) });
+        const left = lastRound - round + 1, ch = charges(cur, 'bluff');
+        return gain >= (left <= ch ? 0.3 : (cur.level === 'easy' ? 2.5 : 1.2));
+      }
+      // its dice are down: it declares the best claim, or opens the cup when a plain record is worth more (the charge stays)
+      function aiDeclare(tries) {
+        if (!cup || cup.phase !== 'down' || cup.by !== currentPlayerIdx || !players[cup.by] || !players[cup.by].isAI) return;
+        const by = cup.by, mid = matchId, tn = turnNo;
+        if (isRolling || !cupVals) { // the shake is still on: wait a little, then open the cup so the table never stalls
+          if ((tries || 0) >= 20) { liftCup(by); return; }
+          aiTimer = setTimeout(function () { if (matchId === mid && turnNo === tn) aiDeclare((tries || 0) + 1); }, 250);
+          return;
+        }
+        const cur = players[by], K = players.length === 2 ? 2 : 1, hv = publicDice();
+        const ctx = { p: cur, scores: aiScores(cur), mods: aiMods(cur), free: cup.free, heldVals: hv, K: K };
+        const comps = bluffComps(cur, cup.free, hv), W = bluffW(ctx.scores, ctx.mods), outs = bluffOuts(cur, ctx.scores, comps, W);
+        const pk = botBluffPick(Object.assign({ trueDice: cupVals, callOf: bluffCallEst(Object.assign({ comps: comps }, ctx), W, outs, botOpp(by)), comps: comps, W: W }, ctx));
+        if (pk.honest || !declareBluff(pk.box, pk.decl)) liftCup(by);
+      }
+
+      // ---------- the human's side: the cups' bar, the stepper, the peek ----------
+      function cupPickable(id) {
+        if (!cupLive() || cup.phase !== 'down' || isRolling || !gameActive || !cupKnows() || viewerIdx() !== cup.by) return false;
+        const cur = players[cup.by];
+        return !!cur && cur.scores[id] === null && bluffLegalFor(id).length > 0;
+      }
+      // a keyboard player reaches the bar without hunting for it; a mouse or touch player never sees a ring from this
+      function bluffFocus(el) {
+        const a = document.activeElement;
+        if (!a || a === document.body || (a.closest && (a.closest('#diceStage') || a.closest('#tiles') || a.closest('#powers')))) { try { el.focus({ preventScroll: true }); } catch (x) {} }
+      }
+      function cupTileTap(id) {
+        ensureAudio();
+        if (!cupPickable(id)) return;
+        const list = bluffLegalFor(id);
+        bluffSel = { box: id, list: list, k: Math.floor((list.length - 1) / 2) }; // the middle number: it does not depend on the real dice
+        sfxTick();
+        renderTiles();
+        renderBluffBar();
+        bluffFocus(bbEl.Ok);
+      }
+      function bluffStep(d) {
+        if (!bluffSel) return;
+        const k = Math.max(0, Math.min(bluffSel.list.length - 1, bluffSel.k + d));
+        if (k === bluffSel.k) return;
+        bluffSel.k = k;
+        sfxTick();
+        renderTiles();
+        renderBluffBar();
+      }
+      function bluffConfirm() {
+        ensureAudio();
+        const s = bluffSel;
+        if (!s || !cupPickable(s.box)) return;
+        if (declareBluff(s.box, s.list[s.k])) bluffSel = null;
+      }
+      function setPeek(on) {
+        on = !!on && cupLive() && cup.phase === 'down' && !isRolling && cupKnows();
+        bbEl.Peek.classList.toggle('on', on);
+        if (cupPeek === on) return;
+        cupPeek = on;
+        renderDice();
+        renderTiles();
+        syncCups();
+      }
+      function renderBluffBar() {
+        const live = cupLive() && gameActive && !draft, me = viewerIdx();
+        const mineB = live && cup.by === me && cupKnows();
+        const down = mineB && cup.phase === 'down' && !isRolling;
+        const wait = mineB && cup.phase === 'call';
+        const ask = live && cup.phase === 'call' && me >= 0 && cup.by !== me && !(cup.pass & (1 << me)) && cup.caller < 0;
+        const bub = live && cup.phase === 'call';
+        if (bluffBubble.hidden === bub) bluffBubble.hidden = !bub;
+        if (bub) { const t = catKo(cup.box) + ' ' + cup.decl + '점'; const b = bluffBubble.querySelector('b'); if (b.textContent !== t) b.textContent = t; }
+        const wasHidden = bluffBar.hidden;
+        bluffBar.hidden = !(down || wait || ask);
+        if (ask && wasHidden) bluffFocus(bbEl.No);
+        if (bluffBar.hidden) {
+          pickOver('bluff', false);
+          if (!down) { bluffSel = null; bbEl.Peek.classList.remove('on'); if (cupPeek) setPeek(false); }
+          bluffBar.dataset.sig = '';
+          return;
+        }
+        bbEl.Peek.hidden = !down;
+        bbEl.Hint.hidden = !(down && !bluffSel);
+        bbEl.Step.hidden = !(down && !!bluffSel);
+        bbEl.Ok.hidden = bbEl.Lift.hidden = !down;
+        bbEl.Wait.hidden = !wait;
+        bbEl.No.hidden = bbEl.Call.hidden = !ask;
+        bbEl.Ring.hidden = !(wait || ask);
+        if (down && bluffSel) {
+          const v = bluffSel.list[bluffSel.k];
+          if (bbEl.Val.textContent !== String(v)) bbEl.Val.textContent = String(v);
+          bbEl.Val.setAttribute('aria-label', '선언할 점수 ' + v);
+          bbEl.Dn.disabled = bluffSel.k <= 0;
+          bbEl.Up.disabled = bluffSel.k >= bluffSel.list.length - 1;
+        }
+        bbEl.Ok.disabled = !(down && bluffSel);
+        if (wait || ask) {
+          const sig = cup.box + ':' + cup.decl + ':' + Math.round(cupAt);
+          if (bluffBar.dataset.sig !== sig) {
+            bluffBar.dataset.sig = sig;
+            if (bbEl.Ring.animate) {
+              bbEl.Ring.getAnimations().forEach(function (a) { a.cancel(); });
+              bbEl.Ring.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: Math.max(0, cupDeadline - performance.now()), easing: REDUCED ? 'steps(6, end)' : 'linear', fill: 'forwards' }); // reduced motion: six jumps, no glide
+            }
+          }
+        } else bluffBar.dataset.sig = '';
+        bluffBar.style.bottom = promptBottom() + 'px';
+        // on a short felt the bar takes the keys' place, like the tilt picker. Measured from the layout box: its pop-in animation moves the painted one.
+        const ph = bluffBar.offsetParent ? bluffBar.offsetParent.clientHeight : 0, bBot = ph - (parseFloat(bluffBar.style.bottom) || 0), bTop = bBot - bluffBar.offsetHeight;
+        const low = use3D() && window.Dice3D.slotRects().some(function (r) { return bBot > r.cy - r.hw * 0.95 && bTop < r.cy + r.hw * 0.95; });
+        if (low) bluffBar.style.bottom = '14px';
+        pickOver('bluff', low);
+      }
+      // the number buttons repeat while held (a choice box has 26 numbers)
+      function bluffRepeat(btn, d) {
+        let t1 = 0, t2 = 0;
+        const stop = function () { clearTimeout(t1); clearInterval(t2); t1 = t2 = 0; };
+        btn.addEventListener('pointerdown', function (e) {
+          if (e.button) return;
+          bluffStep(d);
+          stop();
+          t1 = setTimeout(function () { t2 = setInterval(function () { bluffStep(d); }, 90); }, 420);
+        });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { btn.addEventListener(ev, stop); });
+        btn.addEventListener('click', function (e) { if (e.detail === 0) bluffStep(d); }); // keyboard
+      }
+      bluffRepeat(bbEl.Dn, -1);
+      bluffRepeat(bbEl.Up, 1);
+      bbEl.Ok.addEventListener('click', bluffConfirm);
+      bbEl.Lift.addEventListener('click', function () { ensureAudio(); const me = viewerIdx(); if (me >= 0) liftCup(me); });
+      bbEl.No.addEventListener('click', function () { ensureAudio(); const me = viewerIdx(); if (me >= 0) passBluff(me); });
+      bbEl.Call.addEventListener('click', function () { ensureAudio(); const me = viewerIdx(); if (me >= 0) callBluff(me); });
+      bluffBar.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); bluffStep(e.key === 'ArrowLeft' ? -1 : 1); }
+      });
+      bbEl.Peek.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        try { bbEl.Peek.setPointerCapture(e.pointerId); } catch (x) {}
+        setPeek(true);
+      });
+      ['pointerup', 'pointercancel', 'lostpointercapture', 'blur'].forEach(function (ev) { bbEl.Peek.addEventListener(ev, function () { setPeek(false); }); });
+      bbEl.Peek.addEventListener('keydown', function (e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); setPeek(true); } });
+      bbEl.Peek.addEventListener('keyup', function (e) { if (e.key === ' ' || e.key === 'Enter') setPeek(false); });
+      document.addEventListener('visibilitychange', function () { if (document.hidden) setPeek(false); });
 
       // ================= Augments (증강 모드) =================
       // Rounds 1 / 5 / 9 open a draft: every player is dealt three augments of one tier and keeps one.
@@ -5138,6 +5767,7 @@
         { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 턴에 2번 더 굴립니다.', ev: 8 },
         { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '매 턴 다 굴린 뒤 3번 더 굴립니다. 1이 뜨면 터져서 0점입니다.', ch: { fuse: 3 }, ev: 13, show: true },
         { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '도전한 칸을 따라잡으면 상대 칸 0점, 지면 내 칸 절반입니다.', ch: { gauntlet: 1 }, ev: 22 },
+        { id: 'bluff', tier: 2, cat: 'risk', name: '뻥카', desc: '마지막 굴림을 컵으로 덮습니다. 점수를 선언합니다. 거짓이 들키면 0점입니다.', ch: { bluff: 2 }, ev: 7, show: true },
         { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 기록마다 +8점입니다.', ev: 20, fixed: true },
         { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다. 못 채운 칸은 0점입니다.', ev: 8 },
         { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드마다 총점의 5%를 이자로 받습니다.', ev: 32 },
@@ -5197,6 +5827,7 @@
         fuse: '<path d="M4 41c7 1 10-4 8-9s-7-3-6 1 7 6 12 1 5-12 11-16 9-5 10-9"/><path d="M43 15l3 2M36 3l1-2"/><path class="a" d="M40.0 3.5L41.6 8.4L46.5 10.0L41.6 11.6L40.0 16.5L38.4 11.6L33.5 10.0L38.4 8.4z"/>',
         ride: '<rect x="4" y="15" width="18" height="18" rx="4" stroke-dasharray="4 3"/><rect x="26" y="17" width="18" height="18" rx="4"/><path d="M12 12c3-7 15-9 21-3"/><path d="M34 4l-1 6-6-1"/><circle class="a" cx="35" cy="26" r="3.2"/>',
         gauntlet: '<rect x="4" y="14" width="22" height="17" rx="5"/><path d="M10 14v6M15 14v6M20 14v6"/><path d="M6 31h18v10H6z"/><rect x="33" y="20" width="11" height="11" rx="2"/><path class="a" d="M27 9l4 5-6 1zM28 33l6 2-4 4z"/>',
+        bluff: '<path d="M12 41h24"/><path d="M15 41L11 15h26l-4 26"/><path d="M8 15h32"/><circle class="a" cx="24" cy="28" r="3.6"/><path d="M19 9c2-3 8-3 10 0"/>',
         twofer: '<rect x="4" y="17" width="14" height="14" rx="3"/><circle class="a" cx="11" cy="24" r="2"/><path d="M18 24h7c4 0 6-4 8-9M25 24c4 0 6 4 8 9"/><rect class="a" x="34" y="7" width="10" height="10" rx="2"/><rect class="a" x="34" y="31" width="10" height="10" rx="2"/>',
         timeStop: '<circle cx="24" cy="24" r="17"/><path d="M24 13v11l7 4"/><rect class="a" x="12" y="6" width="6" height="36" rx="2"/><rect class="a" x="30" y="6" width="6" height="36" rx="2"/>',
         tableFlip: '<path d="M5 31l27-13 5 10L10 41z"/><path d="M13 38l-3 6M30 26l5 14"/><path class="a" d="M30 6h14c0 5-3 8-7 8s-7-3-7-8z"/><path class="a" d="M17 6l-5 9M21 5l-4 10"/>',
@@ -5238,7 +5869,7 @@
       let restTurn = false;    // 일석이조: every box is filled, this turn is skipped
       const QUEST = ['fourKind', 'fullHouse', 'smallStraight', 'largeStraight', 'yacht']; // 그랜드슬램
       let lastRollNotes = null;
-      const armed = { joker: false, overwrite: false, twofer: false };
+      const armed = { joker: false, overwrite: false, twofer: false, bluff: false };
       // 올인: public, turn-scoped, host-owned. allinTurn = switched on; allinLock = a roll has started this turn (a rewind never unlocks it)
       let allinTurn = false, allinLock = false;
       function allinOn() { const c = players[currentPlayerIdx]; return !!allinTurn && !!c && matchAug && charges(c, 'allin') > 0; }
@@ -5376,6 +6007,12 @@
         } else if (id === 'cocked') {
           if (mine && cockShown()) { st.cls = 'is-hot'; st.tip = '지금 눈을 고르는 중입니다.'; }
           else st.tip = '굴림마다 ' + b(Math.round(COCK_P * 100) + '%') + ' 확률입니다. 턴당 한 번까지입니다.';
+        } else if (id === 'bluff') {
+          const n = charges(p, 'bluff');
+          if (cup && cup.by === idx && cup.phase === 'down') { st.cls = 'is-hot'; st.n = '컵'; st.tip = '컵 아래에서 점수를 선언하는 중입니다.'; }
+          else if (cup && cup.by === idx && cup.phase === 'call') { st.cls = 'is-hot'; st.n = String(cup.decl); st.tip = b(esc(catKo(cup.box)) + ' ' + cup.decl + '점') + '을 선언했습니다. 상대가 정하는 중입니다.'; }
+          else if (n > 0) { st.n = String(n); st.tip = '남은 횟수 ' + b(n); if (armed.bluff && idx === viewerIdx() && mine) { st.cls = 'is-hot'; st.tip = '이번 굴림을 컵으로 덮습니다.'; } }
+          else { st.cls = 'is-spent'; st.tip = '사용 완료'; }
         } else if (id === 'amend') {
           if (p.law && LAW[p.law]) { st.cls = 'is-done'; st.n = '✓'; st.tip = '통과시킨 규칙은 ' + b(esc(LAW[p.law].name)) + '입니다.'; }
           else if (lawDue(p)) {
@@ -5624,7 +6261,7 @@
         if (cursedBy(p)) m[4].push('curse');
         if (stopTurn >= 0) m.forEach(function (x) { x.push('timeStop'); }); // 시간 정지: the clock tag on every die, never the glue's
         else stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
-        if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
+        if (augHas(p, 'wildOne') && p.wake && !isRolling) viewDice().forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
         if (cockShown()) m[cock.i].push('cocked');
         return m;
       }
@@ -5651,7 +6288,7 @@
         if (cursedBy(p)) s[4] = 'curse';
         if (stopTurn >= 0) { for (let i = 0; i < 5; i++) s[i] = 'stop'; } // 시간 정지: cold steel on all five
         else stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
-        if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1 && !s[i]) s[i] = 'wild'; });
+        if (augHas(p, 'wildOne') && p.wake && !isRolling) viewDice().forEach(function (v, i) { if (v === 1 && !s[i]) s[i] = 'wild'; });
         return s;
       }
 
@@ -5665,6 +6302,7 @@
         if (a.id === 'tableFlip' && (players.length < 2 || roundNo >= 9 || !newCardsOk(3))) return false;
         if (a.id === 'tilt' && !newCardsOk(4)) return false; // protocol 4: an older client has no tilt picker and no cock chips
         if (a.id === 'cocked' && (!COCK_LIVE || !newCardsOk(4))) return false;
+        if (a.id === 'bluff' && (!BLUFF_ENABLED || !bluffOk())) return false; // stage a: offline, one human against bots (also what 모방 and a reroll may offer)
         if (a.id === 'timeStop' && (players.length < 2 || !newCardsOk(5))) return false; // 시간 정지: needs an opponent and a room that knows the card
         if (a.id === 'amend') {
           // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
@@ -5922,6 +6560,8 @@
       function startTurn(announce) {
         const cur = players[currentPlayerIdx];
         yfxClear(true);
+        if (cup && cup.phase !== 'spent') { cupDrop(); clearTimeout(cupTimer); cupPeek = false; bluffSel = null; } // a cup never outlives its turn (a spent one waits for the next throw)
+        cupScrub(); // the believed dice of the last turn are never read again
         turnNo += 1;
         aimCat = null;
         prepIdle();
@@ -6980,11 +7620,11 @@
       // ---------- the record chain ----------
       // pay in (the scoring dice stream into the box) -> stamp + lob -> coin spin + count-up.
       // Runs from applyFx('score') on the host and on online guests; everything is derived from dice / state.
-      function recordFx(cat, pIdx, pts, d) {
+      function recordFx(cat, pIdx, pts, d, hid) {
         const delta = d === undefined || d === null ? pts : Number(d) || 0; // the change on the seat
         lastScored = { catId: cat, pIdx: pIdx, at: Date.now() };
         // an encore record may keep the old box (the payload can't tell), so encore skips the pay-in
-        const idx = !REDUCED && pts > 0 && !encoreTurn ? contributingDice(cat, dice) : [];
+        const idx = !REDUCED && pts > 0 && !encoreTurn && !hid && !cup ? contributingDice(cat, dice) : []; // a hidden record: the dice stay out of it
         const feed = idx.length ? FEED_MS : 0;
         const now = performance.now();
         feedUntil = now + feed;
@@ -7917,18 +8557,19 @@
         ride: { label: '편승', chip: '편승', kind: 'instant' },
         tableFlip: { label: '밥상', chip: '밥상 엎기', kind: 'instant' },
         gauntlet: { label: '도전장', chip: '도전장', kind: 'tile' },
+        bluff: { label: '뻥카', chip: '뻥카', kind: 'toggle' },
         twofer: { label: '일석이조', chip: '일석이조', kind: 'toggle' },
         overwrite: { label: '덮어쓰기', chip: '덮어쓰기', kind: 'toggle' },
         joker: { label: '조커', chip: 'JOKER', kind: 'toggle' },
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' },
         twins: { label: '쌍둥이', chip: '쌍둥이', kind: 'switch' } // 켜짐 / 꺼짐: never spent
       };
-      const POWER_KEYS = ['slam', 'timeStop', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
+      const POWER_KEYS = ['slam', 'timeStop', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'bluff', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0, lastStopTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
       let flipIdx = -1;      // 2D fallback: die doing a flip
-      function armedReset() { armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
+      function armedReset() { armed.joker = false; armed.overwrite = false; armed.twofer = false; armed.bluff = false; psychicDie = -1; }
       // the opponent box with the best trade for player pi in category cat (both filled, theirs higher)
       function swapInfo(pi, cat) {
         const me = players[pi];
@@ -7980,6 +8621,7 @@
         if (kind === 'gauntlet') return !hasRolledThisTurn && !encoreTurn && !sealTurn && !duel && CATEGORIES.some(function (c) { return !!gauntletInfo(currentPlayerIdx, c.id); });
         if (kind === 'tableFlip') return flipUsable();
         if (!hasRolledThisTurn) return false;
+        if (kind === 'bluff') return bluffOk() && rollsLeft === 1 && stopTurn < 0 && !allinOn() && held.some(function (h) { return !h; }) && !encoreTurn && !duel && !sealTurn && !cup && bluffAnyLegal(cur);
         if (kind === 'tilt') return !tiltBlocked() && tiltMoves().some(Boolean); // a roll has landed and at least one free die can fall
         if (kind === 'rewind') return rollsLeft < rollsMax || (!!rewindSnap && !!rewindSnap.fuse);
         if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
@@ -7999,6 +8641,7 @@
       function canSlam(pIdx) {
         const p = players[pIdx];
         if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
+        if (cup) return cup.phase === 'down' && pIdx !== cup.by && !isRolling; // 뻥카: a cup that is not declared yet can be knocked over, by anyone but its owner; never after that
         if (tsRun || (liveRoll && liveRoll.stopped)) return false; // 시간 정지: nothing knocks the dice while time is stopped
         if (isRolling) return (isOnlineMatch && onlineRole === 'guest') || slamOpen() || slamSettling();
         return hasRolledThisTurn && held.some(function (h) { return !h; });
@@ -8008,6 +8651,7 @@
       // authoritative (local / host)
       function doSlam(pIdx, onComplete) {
         if (!canSlam(pIdx)) return false;
+        if (cup) return knockCup(pIdx); // the cup flies off: bluffEndFx plays the 샷건 beat on every screen, no dice are thrown
         const p = players[pIdx];
         if (isRolling && !slamOpen()) {
           // settling: land the dice now (the roll completes synchronously) and knock them from the table
@@ -8073,7 +8717,7 @@
       function stopWindow() { return !!liveRoll && (use3D() ? window.Dice3D.isAnimating() : !!fbRoll); }
       function canTimeStop(pIdx) {
         const p = players[pIdx];
-        if (!matchAug || !gameActive || draft || !p || charges(p, 'timeStop') <= 0 || !isRolling || tsRun || stopTurn >= 0) return false;
+        if (!matchAug || !gameActive || draft || !p || charges(p, 'timeStop') <= 0 || !isRolling || tsRun || stopTurn >= 0 || cupLive()) return false; // a throw under the cup cannot be stopped
         if (isScoring || turnLost || restTurn || fuseBust || twoferPend) return false;
         const guest = isOnlineMatch && onlineRole === 'guest';
         const roll = liveRoll; // a guest asks while its own replay of the throw is in the air (a tilt or a pick also sets isRolling, with no throw); the host decides
@@ -8125,8 +8769,10 @@
         const cur = players[currentPlayerIdx];
         const erased = flipList();
         cur.ch.tableFlip -= 1;
-        erased.forEach(function (e) { players[e.p].scores[e.cat] = e.prev; });
-        // 뻥카 (later job): mark the newest bluffLog entry with the same seat and box as flipped here
+        erased.forEach(function (e) {
+          players[e.p].scores[e.cat] = e.prev;
+          if (e.prev === null) for (let k = bluffLog.length - 1; k >= 0; k--) if (!bluffLog[k].flipped && bluffLog[k].p === e.p && bluffLog[k].box === e.cat) { bluffLog[k].flipped = true; break; } // the recap and the profile skip it
+        });
         players.forEach(function (q) { q.last = null; });
         lastRec = null;
         lastRound += 1;
@@ -9062,7 +9708,8 @@
         const owner = players[me];
         const keys = owner && matchAug && gameActive && !draft ? POWER_KEYS.filter(function (k) { return charges(owner, k) > 0; }) : [];
         const mine = isMyTurn();
-        if (!mine) { armedPower = null; armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
+        if (!mine) { armedPower = null; armed.joker = false; armed.overwrite = false; armed.twofer = false; armed.bluff = false; psychicDie = -1; }
+        if (armed.bluff && !canUsePower('bluff')) armed.bluff = false;
         if (armed.twofer && (charges(owner, 'twofer') <= 0 || twoferPend)) armed.twofer = false;
         if (armedPower && !canUsePower(armedPower)) { armedPower = null; psychicDie = -1; }
         if (armedPower !== 'tilt') tiltSel = -1;
@@ -9123,6 +9770,7 @@
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
           if (POWER_DEFS[k].kind === 'dir') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
           if (k === 'tableFlip') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
+          if (k === 'bluff') b.setAttribute('aria-pressed', armed.bluff ? 'true' : 'false');
           if (k === 'allin') b.setAttribute('aria-pressed', allinTurn && me === currentPlayerIdx ? 'true' : 'false');
           const cnt = b.querySelector('.pw-n');
           if (cnt.textContent !== String(n)) cnt.textContent = String(n);
@@ -9281,9 +9929,10 @@
           return;
         }
         if (def.kind === 'toggle') {
-          armed[kind] = !armed[kind];
+          if (kind === 'bluff') { armed.joker = armed.overwrite = armed.twofer = false; armed.bluff = !armed.bluff; }
+          else { armed[kind] = !armed[kind]; if (armed[kind]) armed.bluff = false; }
           sfxTick();
-          renderTiles(); renderPowers();
+          renderTiles(); renderPowers(); renderAction(); // the roll button's tag follows the key
           return;
         }
         if (def.kind === 'dir') { // 기울이기: the arrows open above the bar
@@ -9593,6 +10242,150 @@
         SKIP_ORDER.forEach(function (id) { if (k > 0 && s[id] === null && id !== p.prophecy) { s[id] = 0; k--; } });
         return s;
       }
+      // BLUFF-LOGIC:BEGIN
+      // ---------- 뻥카: the pure rules and the bot's tables (no DOM, no network; nothing here reads the table's hidden dice) ----------
+      // every way the free dice can land: [{ d: [5 values], w: probability }]. 쌍둥이 copies exactly like applyTwins.
+      // heldVals: five numbers, anything for free slots. free: five booleans.
+      function cupCompletions(p, free, heldVals) {
+        const twins = twinsOn(p);
+        const base = heldVals.map(function (v, i) { return free[i] ? 0 : v; });
+        // independent dice = free dice that nobody copies (die 2 follows die 1 when it is free and 쌍둥이 is on)
+        const indep = [0, 1, 2, 3, 4].filter(function (i) {
+          if (!free[i]) return false;
+          if (twins && i === 1) return false;                 // die 2 always copies die 1 (rolled or held)
+          if (twins && i === 0 && !free[1]) return false;     // die 1 held: die 1 copies it, so it is not thrown on its own
+          return true;
+        });
+        const faces = indep.map(function (i) { return faceList(p, i); });
+        // when no die is special (no 쌍둥이 / 황금 / own face list), the order of the dice cannot matter: merge by multiset (252 instead of 7776)
+        const std = faceList(p, 0).slice().sort().join();
+        const sym = !twins && !augHas(p, 'golden') && [0, 1, 2, 3, 4].every(function (i) { return faceList(p, i).slice().sort().join() === std; });
+        const out = new Map();
+        const n = indep.length, total = Math.pow(6, n), w = 1 / total;
+        const d = base.slice();
+        const idx = new Array(n).fill(0);
+        for (let k = 0; k < total; k++) {
+          for (let j = 0; j < n; j++) d[indep[j]] = faces[j][idx[j]];
+          if (twins) {
+            if (free[1]) d[1] = d[0];               // both free: die 2 copies the thrown die 1; die 1 held: it copies the held one
+            else if (free[0]) d[0] = d[1];          // die 2 held: die 1 copies it
+          }
+          const dd = sym ? d.slice().sort() : d.slice();
+          const key = dd.join('');
+          const e = out.get(key);
+          if (e) e.w += w; else out.set(key, { d: dd, w: w });
+          for (let j = 0; j < n; j++) { if (++idx[j] < 6) break; idx[j] = 0; }
+        }
+        return Array.from(out.values());
+      }
+      // the scores a box can legally be declared at, given only the held dice (> 0, ascending)
+      function bluffLegal(p, box, free, heldVals, comps) {
+        comps = comps || cupCompletions(p, free, heldVals);
+        const set = {};
+        comps.forEach(function (c) { const s = scoreFor(p, box, c.d, { own: true }); if (s > 0) set[s] = 1; });
+        return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+      }
+      // P(the box's own score >= decl) with the dice still under the cup
+      function bluffHit(p, box, decl, comps) {
+        let h = 0;
+        comps.forEach(function (c) { if (scoreFor(p, box, c.d, { own: true }) >= decl) h += c.w; });
+        return h;
+      }
+      // ---- value tables of the bluffer's card (public information: scores, augments, round) ----
+      // W(v)[ci] = value of writing v into box ci: the score, the bonus it completes and the expected rest of the game
+      function bluffW(scores, mods) {
+        const memo = {}, ONE = [1, 1, 1, 1, 1];
+        return function (v) {
+          if (memo[v]) return memo[v];
+          const m = Object.assign({ sc: null, boost: null, shift: 0, bonus: 35 }, mods || {}, { exact: CAT_IDS.map(function () { return v; }), block: 0, adj: null });
+          const out = new Float64Array(12).fill(-1e9);
+          YachtAI.catValues(scores, CAT_IDS, ONE, m).forEach(function (x) { out[x.ci] = x.val; });
+          return (memo[v] = out);
+        };
+      }
+      // the throw-by-throw table the bots reason on: for every way the free dice can land, the true score of each open box and the
+      // value of the best honest record. Built once per situation; the claim loops reuse it.
+      function bluffOuts(p, scores, comps, W) {
+        const open = CAT_IDS.map(function (id, i) { return i; }).filter(function (i) { return scores[CAT_IDS[i]] === null; });
+        return comps.map(function (c) {
+          const t = new Float64Array(12);
+          let vh = -1e9;
+          open.forEach(function (j) { t[j] = scoreFor(p, CAT_IDS[j], c.d, { own: true }); const v = W(t[j])[j]; if (v > vh) vh = v; });
+          return { t: t, vh: vh, w: c.w };
+        });
+      }
+      // the caller bot: P(call) for the claim (box, decl). Reads ONLY: the bluffer's public card and augments, the held ones and the claim.
+      // It is the 'eq' caller of the balance run: it leaves a lie alone only when the lie pays too little to be worth the 0 + stake.
+      // args: { p, scores, mods, free, heldVals, box, decl, K (stake weight: 2 in a 2-player game, else 1), comps?, W?, outs? }
+      function botCallProb(a) {
+        const W = a.W || bluffW(a.scores, a.mods);
+        const outs = a.outs || bluffOuts(a.p, a.scores, a.comps || cupCompletions(a.p, a.free, a.heldVals), W);
+        const b = CAT_IDS.indexOf(a.box), d = a.decl;
+        let h = 0;
+        outs.forEach(function (o) { if (o.t[b] >= d) h += o.w; });
+        if (h >= 1 - 1e-12) return { c: 0, h: h };
+        if (h < 0.03) return { c: 1, h: h };               // a claim that almost never comes true is always called
+        const K = a.K || 1, beta = BLUFF_STAKE, gamma = BLUFF_STAKE;
+        const Wd = W(d)[b], W0 = W(lawBust(a.box))[b];
+        const S2 = Wd - W0 + K * beta;                      // what a caught lie costs the bluffer
+        if (S2 <= 0) return { c: 0, h: h };
+        const M = h * (K * gamma) / S2;                     // lies the caller can leave alone per honest claim
+        const miss = [];
+        let tm = 0;
+        outs.forEach(function (o) { if (o.t[b] < d) { const T = Wd - o.vh; if (T > 0) { miss.push({ T: T, w: o.w }); tm += o.w; } } });
+        if (tm <= M) return { c: 0, h: h };
+        miss.sort(function (x, y) { return y.T - x.T; });
+        let acc = 0, Ts = 0;
+        for (let i = 0; i < miss.length; i++) { acc += miss[i].w; if (acc > M) { Ts = miss[i].T; break; } }
+        return { c: Math.max(0, Math.min(1, Ts / S2)), h: h };
+      }
+      // P(somebody calls) the bluffer expects, from the eq caller scaled by what it has learned about each human seat.
+      // opp: [{ bot: bool, kappa: number }] one per opponent. A bot opponent shares the caller's P(call) with the other bots (so the table as a whole is as likely to call as one eq caller).
+      function bluffCallEst(a, W, outs, opp) {
+        const bots = opp.filter(function (o) { return o.bot; }).length;
+        return function (box, d) {
+          const c = botCallProb({ p: a.p, scores: a.scores, mods: a.mods, free: a.free, heldVals: a.heldVals, box: box, decl: d, K: a.K, W: W, outs: outs }).c;
+          let keep = 1;
+          opp.forEach(function (o) { const each = o.bot ? 1 - Math.pow(1 - c, 1 / bots) : Math.max(0, Math.min(1, c * o.kappa)); keep *= 1 - each; });
+          return 1 - keep;
+        };
+      }
+      // the bot bluffer's choice once its dice are down. args: botCallProb's plus trueDice (its OWN throw) and callOf(box, decl) -> P(someone calls)
+      // returns { box, decl, lie, honest, value }: the best claim, or just the honest record of the best box
+      function botBluffPick(a) {
+        const W = a.W || bluffW(a.scores, a.mods);
+        const open = CAT_IDS.map(function (id, i) { return i; }).filter(function (i) { return a.scores[CAT_IDS[i]] === null; });
+        const t = new Float64Array(12);
+        open.forEach(function (j) { t[j] = scoreFor(a.p, CAT_IDS[j], a.trueDice, { own: true }); });
+        const K = a.K || 1, g = K * BLUFF_STAKE, bt = K * BLUFF_STAKE;
+        let best = null;
+        open.forEach(function (j) { const v = W(t[j])[j]; if (!best || v > best.value) best = { box: CAT_IDS[j], decl: t[j], lie: false, honest: true, value: v }; }); // an honest record has no window
+        const comps = a.comps || cupCompletions(a.p, a.free, a.heldVals);
+        open.forEach(function (j) {
+          bluffLegal(a.p, CAT_IDS[j], a.free, a.heldVals, comps).forEach(function (d) {
+            const c = a.callOf(CAT_IDS[j], d), truth = t[j] >= d;
+            const v = truth ? W(d)[j] + c * g : (1 - c) * W(d)[j] + c * (W(lawBust(CAT_IDS[j]))[j] - bt);
+            if (v > best.value + 1e-9) best = { box: CAT_IDS[j], decl: d, lie: !truth, honest: false, value: v, c: c };
+          });
+        });
+        return best;
+      }
+      // the expected gain of throwing this hold under the cup instead of normally (decided before the dice are known)
+      function botBluffGain(a) {
+        const W = a.W || bluffW(a.scores, a.mods);
+        const comps = a.comps || cupCompletions(a.p, a.free, a.heldVals);
+        const outs = bluffOuts(a.p, a.scores, comps, W);
+        const callOf = bluffCallEst(a, W, outs, a.opp);
+        const memo = {};
+        const cached = function (box, d) { const k = box + ':' + d; return memo[k] !== undefined ? memo[k] : (memo[k] = callOf(box, d)); };
+        let G = 0;
+        comps.forEach(function (c, k) {
+          const pk = botBluffPick({ p: a.p, scores: a.scores, mods: a.mods, free: a.free, heldVals: a.heldVals, trueDice: c.d, callOf: cached, K: a.K, comps: comps, W: W });
+          G += c.w * (pk.value - outs[k].vh);
+        });
+        return G;
+      }
+      // BLUFF-LOGIC:END
       function withExact(mods, p, flags) {
         const bust = fuseBust && p === players[currentPlayerIdx];
         flags = Object.assign({}, flags || {});
@@ -9655,6 +10448,7 @@
         }
         if (id === 'twofer') v = a.ev * Math.min(1, left * 1.5);
         if (id === 'tilt') v = a.ev * Math.min(1, left * 1.5); // a charge that cannot be used before the game ends is worth nothing
+        if (id === 'bluff') v = players.length < 2 ? 0 : a.ev * Math.min(1, left * 1.5);
         if (id === 'tableFlip') v = players.length < 2 ? 0 : a.ev * Math.max(0, Math.min(1, (lastRound - round) / 11));
         if (id === 'fuse') { v = a.ev * left; if (augHas(p, 'loaded')) v += 3; if (players.some(function (q) { return q !== p && augHas(q, 'curse'); })) v -= 3; }
         if (id === 'ride') v = a.ev * (lastRound - round + 1 < 3 ? 0.6 : 1);
@@ -10133,7 +10927,8 @@
         const prevT = getPlayerTotals(cur);
         const trace = [];
         const base = calcCategoryScore(catId, dice);
-        let pts = scoreFor(cur, catId, dice, { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn, joker: useJoker, allin: useAllin, trace: trace });
+        const bl = flags.bluff || null; // 뻥카: the cell is exactly the number closeBluffWindow decided, never a score read off the dice
+        let pts = bl ? bl.pts : scoreFor(cur, catId, dice, { roundNo: round, firstRoll: rollsMax - rollsLeft === 1 && !rideTurn, joker: useJoker, allin: useAllin, trace: trace });
         // 도화선 went off: a zero (all-in still costs its 20)
         // (a caught 뻥카 lie writes lawBust(catId) as well, in a later job)
         if (fuseBust) { pts = useAllin ? -20 : lawBust(catId); trace.length = 0; if (useAllin) trace.push('allin'); }
@@ -10155,12 +10950,12 @@
         if (useOw) cur.ch.overwrite -= 1;
         if (!keepOld) cur.scores[catId] = pts;
         if (!keepOld && !encoreTurn) setLast(cur, catId, filled ? old : null, pts); // 밥상 엎기: covers every record path (bust, duel, joker, all-in, overwrite, and later a bluff)
-        lastRec = { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo };
+        lastRec = bl ? null : { p: currentPlayerIdx, dice: dice.slice(), seq: turnNo }; // nobody rides a hidden throw
         // 칠전팔기: a zero you wrote yourself into an empty box
         const riseNow = !keepOld && !filled && !encoreTurn && augHas(cur, 'rise') && pts <= 0 && !cur.rise;
         if (riseNow) cur.rise = 1;
         // 만능 1 wakes on a record made with three or more 1s showing
-        const wakeNow = augHas(cur, 'wildOne') && !cur.wake && countsOf(dice)[1] >= 3;
+        const wakeNow = !bl && augHas(cur, 'wildOne') && !cur.wake && countsOf(dice)[1] >= 3;
         if (wakeNow) cur.wake = 1;
         const newT = getPlayerTotals(cur);
         isScoring = true;
@@ -10170,7 +10965,7 @@
         setHighlight(null);
 
         broadcastState();
-        fx('score', { pts: keepOld ? old : pts, d: keepOld ? 0 : filled ? pts - old : pts, catId: catId, pIdx: currentPlayerIdx });
+        fx('score', Object.assign({ pts: keepOld ? old : pts, d: keepOld ? 0 : filled ? pts - old : pts, catId: catId, pIdx: currentPlayerIdx }, bl && cup ? { hid: 1 } : null));
         if (filled && !keepOld) fx('aug', { id: 'overwrite', cat: catId, from: old, to: pts, enc: encoreTurn ? 1 : 0, delay: 150 });
         if (!keepOld) trace.forEach(function (id, k) { fx('aug', { id: id, cat: catId, pts: pts, p: currentPlayerIdx, delay: 250 + k * 420 }); });
         if (riseNow) fx('aug', { id: 'rise', p: currentPlayerIdx, cat: catId, phase: 'fall', delay: 350 });
@@ -10187,10 +10982,10 @@
           const qs = questState(cur);
           fx('aug', { id: 'grandSlam', p: currentPlayerIdx, cat: catId, phase: pts > 0 ? 'lamp' : 'break', lit: qs.lit, delay: 450 });
         }
-        if (!keepOld && catId === 'yacht' && pts >= 50) {
+        if (!keepOld && catId === 'yacht' && pts >= 50 && !(bl && cup)) { // a believed lie announces nothing: the dice are still hidden
           fx('banner', { title: augHas(cur, 'yachtClub') ? 'SNITCH!' : 'YACHT!', sub: '+' + pts + '점', tier: 'hot', yacht: true });
           fx('confetti', { big: true, yacht: true });
-        } else if (!keepOld && catId === 'largeStraight' && pts >= 30) {
+        } else if (!keepOld && catId === 'largeStraight' && pts >= 30 && !(bl && cup)) {
           fx('banner', { title: 'STRAIGHT!', sub: '라지 스트레이트 +' + pts, tier: 'cool', sound: 'straight' });
           fx('confetti', { big: false });
         } else if (!prevT.bonus && newT.bonus) {
@@ -10714,12 +11509,16 @@
         const step = function () {
           if (!alive()) return;
           aiTwinsPick(cur0);
-          rollDice(afterRoll);
+          rollDice(afterRoll, aiWantsCup() ? { bluff: true } : undefined);
         };
         aiResume = function () { clearTimeout(aiTimer); if (alive()) aiTimer = setTimeout(function () { afterRoll(); }, 600); };
         const afterRoll = function (skipPower) {
           if (!alive()) return;
           if (!hasRolledThisTurn) { aiTimer = setTimeout(step, 700); return; }
+          if (cupLive()) { // it threw under the cup: it declares after a beat; an open window needs nothing from it
+            if (cup.by === currentPlayerIdx && cup.phase === 'down') aiTimer = setTimeout(function () { if (alive()) aiDeclare(0); }, 900 + Math.random() * 700);
+            return;
+          }
           if (cock) { // a die stands on its edge: it picks a face first, after a beat the table can see
             const sq = cock.seq;
             aiTimer = setTimeout(function () {
@@ -10881,6 +11680,32 @@
         });
         winnerBeat();
       }
+      // 뻥카 전적: the claims that were made, with the dice that lay under the cup (a flipped record is not on the card any more: skipped)
+      function renderBluffRecap() {
+        const box = $('bluffRecap');
+        if (!box) return;
+        const log = bluffLog.filter(function (e) { return !e.flipped && players[e.p]; });
+        box.hidden = !log.length;
+        $('bluffRecapList').innerHTML = '';
+        $('bluffRecapSum').innerHTML = '';
+        if (!log.length) return;
+        log.slice().sort(function (a, b) { return a.round - b.round; }).forEach(function (e) {
+          const lie = e.decl > e.real, row = document.createElement('div');
+          row.className = 'recap-row';
+          row.innerHTML = '<div class="recap-line"><span class="recap-name" style="color:' + PLAYER_COLORS[e.p % 4] + '">' + esc(players[e.p].name) + '</span><span>' + esc(catKo(e.box)) + ' ' + e.decl + '점 선언</span></div>' +
+            '<div class="recap-line"><span class="recap-real">실제 ' + e.real + '점</span><span class="recap-dice">' + e.vals.map(dieIcon).join('') + '</span>' +
+            '<span class="recap-badge ' + (lie ? 'is-lie' : 'is-true') + '">' + (lie ? '거짓' : '진실') + '</span>' +
+            '<span class="recap-badge">' + (e.res === 'believed' ? '믿음' : e.res === 'caught' ? '적발' : '오판') + '</span></div>';
+          $('bluffRecapList').appendChild(row);
+        });
+        players.forEach(function (p, i) {
+          const mine = log.filter(function (e) { return e.p === i; });
+          if (!mine.length) return;
+          const d = document.createElement('div');
+          d.innerHTML = '<span style="color:' + PLAYER_COLORS[i % 4] + '">' + esc(p.name) + '</span> 님의 선언 ' + mine.length + '번입니다. 거짓 ' + mine.filter(function (e) { return e.decl > e.real; }).length + '번입니다. 적발 ' + mine.filter(function (e) { return e.res === 'caught'; }).length + '번입니다.';
+          $('bluffRecapSum').appendChild(d);
+        });
+      }
       function showResult() {
         stageVignette(0);
         clearReveal();
@@ -10916,6 +11741,7 @@
         });
 
         recordProfileStats(ranked);
+        renderBluffRecap();
         const bestLine = $('bestLine');
         bestLine.textContent = '';
         bestLine.style.visibility = 'hidden';
@@ -10958,6 +11784,7 @@
         draft = null;
         encoreTurn = false;
         clearCock();
+        cupDrop(); cupPeek = false; bluffSel = null; clearTimeout(cupTimer); // the final state shows every die
         broadcastState();
         broadcastFx('end', { delay: wait });
         renderAll();
@@ -11682,6 +12509,7 @@
         turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; stopTurn = -1; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false; cockSentSeq = -1;
+        cupDrop(); cupClear(); cupPeek = false; bluffSel = null; clearTimeout(cupTimer); closeTries = 0; bluffLog = []; bluffAI.callM = {}; bluffAI.kappa = {};
         matchId++;
         yfxReset();
         resetTotalAnims();
@@ -12082,7 +12910,7 @@
         const soleTop = ranked.filter(function (r) { return r.total === top; }).length === 1;
         let touched = false;
         reloadProfiles();
-        players.forEach(function (p) {
+        players.forEach(function (p, pi) {
           let q = null;
           if (isOnlineMatch) { if (p.peerId && p.peerId === myPeerId) q = profById(onlineProfId); }
           else if (!p.isAI && p.profId) q = profById(p.profId);
@@ -12093,7 +12921,8 @@
           st.total += total;
           if (total > st.best) st.best = total;
           if (players.length > 1 && soleTop && total === top) st.wins += 1;
-          if ((p.scores.yacht || 0) >= 50) st.yachts += 1;
+          const lie = bluffLog.some(function (e) { return e.p === pi && e.box === 'yacht' && e.res === 'believed' && e.real < e.decl && !e.flipped; }); // 뻥카: a believed lie is no Yacht
+          if ((p.scores.yacht || 0) >= 50 && !lie) st.yachts += 1;
           touched = true;
         });
         if (touched) { saveProfiles(); renderTitleProfile(); }
@@ -12375,7 +13204,7 @@
       document.addEventListener('contextmenu', function (e) { if (!(e.target && e.target.tagName === 'INPUT')) e.preventDefault(); });
 
       window.addEventListener('dice3d-ready', function () { loader.hidden = true; renderDice(); });
-      window.addEventListener('dice3d-layout', placeSlots);
+      window.addEventListener('dice3d-layout', function () { placeSlots(); syncCups(); if (cupLive()) renderBluffBar(); });
       setTimeout(function () { if (!use3D()) { loader.hidden = true; renderDice(); } }, 7000);
 
       // the rail re-fits when its size changes (rotation, a resized window, the chat button coming or going):
