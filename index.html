@@ -2016,6 +2016,12 @@
   .st-skip { background: #ff9f5a; color: #2a1404; }
   .st-seal { background: #a77bff; color: #fff; }
   .st-glue { background: #7dff9a; }
+  .st[class*="st-mine"] { background: #ffb347; color: #2a1404; }
+  .slot-btn.gone { pointer-events: none; }
+  .slot-btn.gone .slot-hold, .slot-btn.gone .slot-marks { display: none; }
+  .die2d.gone { opacity: 0.3; filter: grayscale(1) brightness(0.5); pointer-events: none; transform: none; box-shadow: none; }
+  .die2d.gone i { visibility: hidden; }
+  .die2d.gone::before { content: ""; position: absolute; left: 14%; right: 14%; bottom: 8%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)); }
   .st-shake { background: #a77bff; color: #fff; }
   .st-curse { background: #3a1520; color: #ff5b72; box-shadow: 0 0 0 1.5px rgba(255, 91, 114, 0.6); }
   .st-more { padding: 0 1.5px; background: #23262d; color: #d8d2c4; font-size: 8.5px; letter-spacing: -0.04em; box-shadow: 0 0 0 1.5px rgba(216, 210, 196, 0.35); }
@@ -3019,6 +3025,23 @@
       let round = 1;
       let dice = [1, 2, 3, 4, 5];
       let held = [false, false, false, false, false];
+      // 지뢰: gone[i] = the die blew up this turn. It stays held (gone => held), keeps its true value in dice[] and scores as if it were not there:
+      // every score reader sees maskGone(dice) (0 pips), never a 4-element list. goneShown[i] = this screen has played the blast (or has no blast to play)
+      let gone = [false, false, false, false, false];
+      let goneShown = [false, false, false, false, false];
+      let goneBlast = [false, false, false, false, false]; // this screen is waiting for / playing the blast of die i
+      function anyGone() { return gone[0] || gone[1] || gone[2] || gone[3] || gone[4]; }
+      function maskGone(v) { return anyGone() ? v.map(function (x, i) { return gone[i] ? 0 : x; }) : v; }
+      function liveDice() { return maskGone(dice); }
+      function goneLate(i) {
+        const mid = matchId;
+        setTimeout(function () {
+          if (matchId !== mid || !gone[i] || goneShown[i]) return;
+          if (goneBlast[i]) { goneLate(i); return; } // its blast is on the way
+          goneShown[i] = true;
+          renderDice();
+        }, 2200);
+      }
       let rollsLeft = 3;
       let hasRolledThisTurn = false;
       let isRolling = false;
@@ -3051,7 +3074,7 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 7; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 가린 증강 선택, 7 = 시간 정지 (칸 고르기), 8 = 뻥카
+      const NET_V = 8; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 가린 증강 선택, 7 = 시간 정지 (칸 고르기), 8 = 지뢰 + 매의 눈 (뻥카 is offline only)
       function memberV(m) { return Number(m && m.v) || 0; }
       // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
       let roomV = 99, roomSeen = {};
@@ -3085,7 +3108,7 @@
       function cupKnows() { return !cup || (!!players[cup.by] && !players[cup.by].isAI); }
       function trueDice() { return cup && cupKnows() ? dice.slice() : null; }
       // what any display may read: the real dice, or the masked ones while a cup stands (a peek on the bluffer's screen shows the real ones)
-      function viewDice() { return cupPeek && cupLive() && cupKnows() ? dice.slice() : publicDice(); }
+      function viewDice() { return maskGone(cupPeek && cupLive() && cupKnows() ? dice.slice() : publicDice()); }
       function cupShown(i) { return !!cup && cup.free[i]; }
       function cupHides(i) { return cupShown(i) && !(cupPeek && cupLive() && cupKnows()); } // a peek is heard as well as seen
       // the card only works against bots: one human, the rest bots, offline
@@ -3134,7 +3157,7 @@
       // which dice a tilt moves right now: bool[5]. base = ignore the holds (the bot picks its holds first)
       function tiltMoves(base) {
         const p = players[currentPlayerIdx];
-        const m = [0, 1, 2, 3, 4].map(function (i) { return !!p && tiltPlain(p, i) && !stuck[i] && (base || !held[i]); });
+        const m = [0, 1, 2, 3, 4].map(function (i) { return !!p && tiltPlain(p, i) && !stuck[i] && !gone[i] && (base || !held[i]); });
         if (p && twinsOn(p) && (!m[0] || !m[1])) { m[0] = false; m[1] = false; } // a pair that cannot move together stays
         return m;
       }
@@ -3147,6 +3170,7 @@
       }
       // the best box score for `values`, and which box: 도전장 = the duel box only, 봉인 = every box but the one the seal would lock for these dice
       function tiltBestBox(p, values) {
+        values = maskGone(values);
         const o = previewOpts(false);
         if (allinOn() && !twoferPend) o.allin = true;
         if (duel && p === players[currentPlayerIdx]) return { id: duel.cat, val: scoreFor(p, duel.cat, values, o) };
@@ -3179,7 +3203,7 @@
         const twin = twinsOn(roller);
         const glueFace = firstThrowPending && roller.glue > 0 && !encoreTurn ? roller.glue : 0;
         const pick = [0, 1, 2, 3, 4].filter(function (i) {
-          return !heldSnap[i] && !stuck[i] && !(twin && i < 2) && !(glueFace && values[i] === glueFace);
+          return !heldSnap[i] && !stuck[i] && !gone[i] && !(twin && i < 2) && !(glueFace && values[i] === glueFace);
         });
         if (!pick.length) return null;
         const i = pick[Math.floor(Math.random() * pick.length)];
@@ -3212,7 +3236,7 @@
       // the tile preview while a pick is pending: the best of the faces on offer
       function cockBest(cur, id, o) {
         let best = -1e9;
-        cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, scoreFor(cur, id, d, o)); });
+        cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, scoreFor(cur, id, maskGone(d), o)); });
         return best;
       }
       // the leaning die no longer rocks, so there is no loop to play: the clacks come from the dice themselves (kept so the stop calls stay valid)
@@ -3314,6 +3338,7 @@
 
       // ================= Scoring =================
       function countsOf(d) {
+        if (d === dice && anyGone()) d = maskGone(d);
         const c = [0, 0, 0, 0, 0, 0, 0];
         for (let i = 0; i < 5; i++) c[d[i]]++;
         return c;
@@ -3327,6 +3352,7 @@
         return 0;
       }
       function calcCategoryScore(catId, d) {
+        if (d === dice && anyGone()) d = maskGone(d);
         const counts = countsOf(d);
         let sum = 0;
         for (let i = 0; i < 5; i++) sum += d[i];
@@ -3344,6 +3370,7 @@
         return 0;
       }
       function contributingDice(catId, d) {
+        if (d === dice && anyGone()) d = maskGone(d);
         const all = [0, 1, 2, 3, 4];
         if (calcCategoryScore(catId, d) === 0) return [];
         if (UPPER_FACE[catId]) return all.filter(function (i) { return d[i] === UPPER_FACE[catId]; });
@@ -3359,7 +3386,7 @@
           for (let v = s; v < s + 4; v++) out.push(d.indexOf(v));
           return out;
         }
-        return all;
+        return all.filter(function (i) { return d[i] > 0; }); // a blown die (0) is in no combination
       }
       function getPlayerTotals(player) {
         let upper = 0, lower = 0;
@@ -4023,6 +4050,9 @@
           const prev = (idx - 1 + players.length) % players.length; // 봉인 always lands on the next seat
           out.push({ k: 'seal', aug: 'seal', on: locked, by: prev !== idx && augHas(players[prev], 'seal') ? [prev] : [], text: locked ? '가장 높게 나오는 빈칸이 잠겼습니다.' : '다음 턴에 가장 높게 나오는 빈칸이 잠깁니다.' });
         }
+        players.forEach(function (q, j) {
+          if (j !== idx && q.mine > 0) out.push({ k: 'mine' + j, aug: 'mine', n: q.mine, by: [j], text: '이 눈이 나오면 터집니다.' });
+        });
         if (p.glue > 0) out.push({ k: 'glue', aug: 'glue', n: p.glue, by: p.glueBy >= 0 && p.glueBy !== idx && players[p.glueBy] ? [p.glueBy] : [], text: '첫 굴림에 ' + p.glue + ' 나오면 고정됩니다.' });
         if (p.shake > 0) out.push({ k: 'shake', aug: 'shaky', n: p.shake, by: owners('shaky'), text: (p.shake > 1 ? '다음 ' + p.shake + '턴' : '다음 턴') + ' 굴림이 1번 줄어듭니다.' });
         if (cursedBy(p)) out.push({ k: 'curse', aug: 'curse', by: owners('curse'), text: '5번 주사위의 6 면이 1로 바뀝니다.' });
@@ -4033,7 +4063,7 @@
         let h = '';
         list.slice(0, show).forEach(function (it) {
           h += '<span class="st st-' + it.k + (it.on ? ' on' : '') + (fresh && fresh.indexOf(it.k) !== -1 ? ' pop' : '') + '" data-st="' + it.k + '" data-p="' + idx + '" role="img" aria-label="' + esc(AUG[it.aug].name) + '">' +
-            (it.k === 'glue' ? dieIcon(it.n) : glyphSvg(it.aug) + (it.n ? '<b>' + it.n + '</b>' : '')) + '</span>';
+            (it.k === 'glue' || it.k.indexOf('mine') === 0 ? dieIcon(it.n) : glyphSvg(it.aug) + (it.n ? '<b>' + it.n + '</b>' : '')) + '</span>';
         });
         if (list.length > show) h += '<span class="st st-more" data-st="more" data-p="' + idx + '" data-from="' + show + '" aria-hidden="true">+' + (list.length - show) + '</span>';
         return h;
@@ -4081,7 +4111,7 @@
         if (!list.length) { box.innerHTML = ''; return; }
         const pinned = getComputedStyle(box).position === 'absolute'; // on the card's edge, not in the chip row: never shrunk
         for (let show = Math.min(list.length, ST_CAP); show >= 1; show--) {
-          const numbered = list.slice(0, show).some(function (it) { return it.k !== 'glue' && it.n; });
+          const numbered = list.slice(0, show).some(function (it) { return it.k !== 'glue' && it.k.indexOf('mine') !== 0 && it.n; });
           for (let lv = 0; lv < 3; lv++) {
             if ((lv === 1 && !numbered) || (lv === 2 && pinned)) continue; // no number to drop / no small size there
             level(lv);
@@ -4408,6 +4438,7 @@
         if (use3D()) {
           const D3 = window.Dice3D;
           if (!D3.isAnimating()) D3.setState(cup && cupKnows() ? dice : vd, held, yaw); // the bluffer's canvas loads the real faces under the opaque cups, so a peek has no hop
+          if (D3.setGone) D3.setGone(goneShown); // 지뢰: the dice whose blast this screen has played stay off the felt
           if (D3.setSkins) D3.setSkins(diceSkins());
           if (D3.setDesign) D3.setDesign(tableDesign());
           D3.setDim(gameActive && !hasRolledThisTurn && !isRolling);
@@ -4418,10 +4449,10 @@
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (cupHides(i) ? '컵에 덮여 있음' : dice[i]) + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
-            btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
-            btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
+            btn.className = 'slot-btn' + (gone[i] ? ' gone' : '') + (canClick && !gone[i] ? ' can' : '') + (stuck[i] && !gone[i] ? ' stuck' : '') + (canClick && !gone[i] && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (gone[i] ? '터짐' : cupHides(i) ? '컵에 덮여 있음' : dice[i]) + (held[i] && !gone[i] ? ' (고정됨)' : '') + cockTxt(i));
+            btn.setAttribute('aria-pressed', held[i] && !gone[i] ? 'true' : 'false');
+            btn.innerHTML = (held[i] && !gone[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + (gone[i] ? '' : marksHtml(marks[i], i));
             if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + ' (기울이면 ' + gh.values[i] + ')'); }
             btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             btn.addEventListener('pointerenter', function (e) { if (canClick && e.pointerType === 'mouse') D3.setHover(i); });
@@ -4440,16 +4471,16 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             const dzOn = dz2d && !skins2d[i];
-            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '') + (fbTilt && fbTilt.idx.indexOf(i) !== -1 ? ' tipping' : '') + (cs && cs.i === i ? ' cocked' : '');
-            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (cupHides(i) ? '컵에 덮여 있음' : v) + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
+            btn.className = 'die2d' + (skins2d[i] ? ' skin-' + skins2d[i] + ' aug' : '') + (dzOn ? ' dz sh-' + (dz2d.shape || 'round') + (dz2d.glow ? ' glow' : '') : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (gone[i] ? ' gone' : held[i] ? ' held' : '') + (hlIndices && hlIndices.indexOf(i) !== -1 ? ' hl' : '') + (fallbackRolling && !held[i] ? ' rolling' : '') + (flipIdx === i ? ' flipping' : '') + (fbTilt && fbTilt.idx.indexOf(i) !== -1 ? ' tipping' : '') + (cs && cs.i === i ? ' cocked' : '');
+            btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + (gone[i] ? '터짐' : cupHides(i) ? '컵에 덮여 있음' : v) + (held[i] && !gone[i] ? ' (고정됨)' : '') + cockTxt(i));
             if (fbTilt && fbTilt.idx.indexOf(i) !== -1) { btn.style.setProperty('--td', fbTilt.idx.indexOf(i) * 40 + 'ms'); btn.style.setProperty('--r', fbTilt.dir === 1 ? '10deg' : fbTilt.dir === 3 ? '-10deg' : '0deg'); }
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             if (dzOn) btn.style.cssText = '--dz-bg:' + dz2d.css[0] + ';--dz-pip:' + dz2d.css[1] + ';--dz-one:' + dz2d.css[2];
             if (skins2d[i] && SKIN_EDGE[skins2d[i]]) btn.style.setProperty('--mk', SKIN_EDGE[skins2d[i]]);
             let h = '';
             for (let c = 0; c < 9; c++) h += '<i class="' + ((PIP_MAP[v] || []).indexOf(c) === -1 ? 'o' : (v === 1 ? 'r' : '')) + '"></i>';
-            if (held[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
-            btn.innerHTML = h + marksHtml(marks[i], i);
+            if (held[i] && !gone[i]) h += '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>';
+            btn.innerHTML = h + (gone[i] ? '' : marksHtml(marks[i], i));
             if (gh && gh.moved.indexOf(i) !== -1) { btn.insertAdjacentHTML('beforeend', ghostHtml(i)); btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + v + ' (기울이면 ' + gh.values[i] + ')'); }
             btn.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.slot-marks')) return; handleHoldInput(i); });
             diceGrid.appendChild(btn);
@@ -4831,11 +4862,11 @@
               sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null,
               hatch: p.hatch || 0, hatched: p.hatched || 0, rise: p.rise || 0, wake: p.wake || 0,
               glue: p.glue || 0, glueBy: p.glueBy != null ? p.glueBy : -1, bomb: p.bomb != null ? p.bomb : -1, bombT: p.bombT != null ? p.bombT : -1, mim: p.mim || null,
-              last: p.last || null, law: p.law || null, twinOff: p.twinOff ? 1 : 0
+              last: p.last || null, law: p.law || null, twinOff: p.twinOff ? 1 : 0, mine: p.mine || 0
             };
           }),
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
-          stuck: stuck, tstop: tsWire(), fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          stuck: stuck, gone: gone, tstop: tsWire(), fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: publicDice(), held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
           cup: cup ? { by: cup.by, phase: cup.phase, free: cup.free, box: cup.box, decl: cup.decl, ms: cup.ms, caller: cup.caller, pass: cup.pass } : undefined, // never a die value
@@ -4869,6 +4900,7 @@
         const yv = cleanYaw(extra.yaw); // absent = every die rests at 0; a guest never commits yaw from an fx, only STATE sets it
         const ck = extra.power ? null : cockOk(extra.cock, vals, hv); // 모서리 착지: the die that leans when this roll lands
         const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck, single: rerollIdx(extra, hv) >= 0, fuse: extra.power === 'fuse', ride: extra.power === 'ride', stopped: false, forced: false };
+        if (!extra.power && Number(extra.hawk) === 1) lr.hawk = { pin: -1, dead: false }; // 매의 눈: this roll is slow and the roller may pin a die
         const isFuse = extra.power === 'fuse';
         const era = fxEra, gmid = matchId;
         playRoll(vals, hv, function (finalV) {
@@ -4881,7 +4913,7 @@
           if (lr.forced && lr.cock) tsUncock(lr.cock.i, v[lr.cock.i], yv[lr.cock.i]); // the stop recorded this throw with no pick: the die on its edge lies down
           if (isFuse && fuseHits(v, hv).length) { lastDrama = null; revealPreviews(); } // a fuse bust: nothing to celebrate
           else if (!lr.cock) postRollFx(v); // a die on its edge: the payoff waits for the pick
-        }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv, cock: ck });
+        }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv, cock: ck, hawk: !!lr.hawk });
         renderPowers();
       }
       function applyFx(kind, extra) {
@@ -4902,7 +4934,7 @@
           if (diceOk(vals)) {
             const hv0 = liveRoll ? liveRoll.held : held;
             const ck = cockOk(extra.cock, vals, hv0); // 모서리 착지: the slam may have drawn a new cock for the roll in the air
-            if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; liveRoll.cock = ck; }
+            if (liveRoll) { liveRoll.slammed = true; liveRoll.values = vals; liveRoll.cock = ck; if (liveRoll.hawk) liveRoll.hawk.dead = true; }
             if (use3D()) {
               if (window.Dice3D.canSlam()) window.Dice3D.slam(vals, ck);
               else {
@@ -4971,6 +5003,7 @@
       function handleHoldInput(idx) {
         ensureAudio();
         if (!isMyTurn() || draft || !hasRolledThisTurn || isRolling || isScoring || tableHeld()) return;
+        if (gone[idx]) return; // a blown die cannot be held or aimed at
         if (armedPower && armedPower !== 'tilt') { // the tilt picker leaves the dice free to hold: hold first, then tilt
           const k = armedPower;
           if (k === 'psychic') { psychicDie = psychicDie === idx ? -1 : idx; sfxTick(); renderDice(); renderPowers(); return; }
@@ -4992,6 +5025,7 @@
       }
       function toggleHold(idx) {
         if (!gameActive || !hasRolledThisTurn || isRolling || isScoring || tableHeld()) return;
+        if (gone[idx]) return; // a blown die is not there to hold
         if (stuck[idx]) { fx('aug', { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
         held[idx] = !held[idx];
         fx('hold', { held: held[idx] });
@@ -5017,6 +5051,8 @@
       function playRoll(values, heldSnap, done, mode) {
         playSeq++;
         if (!(mode && mode.sound && sample(mode.sound))) sfxRattle();
+        const hawkMode = !!(mode && mode.hawk); // 매의 눈: no drama (the pin may change what lands), the table slows instead
+        if (hawkMode) hawkStartFx();
         // drama = suspense, not a spoiler: the slow-mo also runs for near misses (four of a kind going for an open
         // yacht). Decided only from values / held / scores, so host and online guests agree without extra payload.
         const cur = players[currentPlayerIdx];
@@ -5028,13 +5064,13 @@
         const held4 = rollN === 1 && Math.max.apply(null, hc) >= 4;
         const four = countsOf(values).indexOf(4) > 0;
         const near = yOpen && !willYacht && (held4 || (four && rollN >= 2));
-        const tag = near ? 'near' : null;
+        const tag = near && !hawkMode ? 'near' : null;
         // 도화선 roll: a short slow-mo on every throw, and the table reports what landed (fuseLitFx) - same on every screen
         const fuse = !!(mode && mode.fuse);
         fuseAir(false); // a new throw: the slot tags a blast put away are back (a guest's blast can still be playing)
         const done2 = function (v) { lastDrama = tag; if (fuse && !use3D()) fuseLitFx(fuseHits(v, heldSnap)); done(v); };
         if (use3D()) {
-          const opts = { drama: willYacht || near || fuse, onDrama: fuse ? fuseDramaFx : dramaFx, onImpact: diceImpact, onLand: sfxLand, onDone: done2, fuse: fuse, onFuse: fuse ? fuseLitFx : null, yaw: mode && mode.yaw ? mode.yaw : [0, 0, 0, 0, 0], cock: mode && mode.cock ? mode.cock : null };
+          const opts = { drama: (willYacht || near || fuse) && !hawkMode, onDrama: fuse ? fuseDramaFx : dramaFx, onImpact: diceImpact, onLand: sfxLand, onDone: done2, fuse: fuse, onFuse: fuse ? fuseLitFx : null, yaw: mode && mode.yaw ? mode.yaw : [0, 0, 0, 0, 0], cock: mode && mode.cock ? mode.cock : null, hawk: hawkMode };
           // one: a single die is picked up and thrown again · knock: the dice pop up from where they rest
           if (mode && mode.one >= 0 && window.Dice3D.reroll) window.Dice3D.reroll(values, mode.one, opts);
           else if (mode && mode.knock && window.Dice3D.knock) window.Dice3D.knock(values, heldSnap.map(function (h) { return !h; }), opts);
@@ -5065,7 +5101,8 @@
         if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld() || tstop) return; // 시간 정지: nobody throws while time is stopped
         if (cup && cup.phase === 'spent') { cupScrub(); cupDrop(); } // the table is thrown again: the old cups go
         const cupRoll = !!(opt && opt.bluff) && canUsePower('bluff'); // decided before anything is rolled: a cup throw never cocks
-        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn, stuck: stuck.slice() };
+        const hawkRoll = !!(opt && opt.hawk) && !cupRoll; // 매의 눈: a slow roll; it draws no 모서리 착지
+        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn, stuck: stuck.slice(), gone: gone.slice() };
         const first = rollsLeft === rollsMax;
         isRolling = true;
         hasRolledThisTurn = true;
@@ -5076,7 +5113,8 @@
         const luck = roller && roller.isAI && AI_LEVELS[roller.level] && AI_LEVELS[roller.level].luck;
         let next, notes = null;
         if (luck) {
-          next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, dice, heldSnap, rollsLeft, luck, aiTurnMods(roller), matchAug ? [0, 1, 2, 3, 4].map(function (i) { return faceList(roller, i); }) : null);
+          next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, aiDice(), heldSnap, rollsLeft, luck, aiTurnMods(roller), matchAug ? [0, 1, 2, 3, 4].map(function (i) { return faceList(roller, i); }) : null);
+          if (next && anyGone()) next = next.map(function (v, i) { return gone[i] ? dice[i] : v; });
           if (next && twinsOn(roller)) applyTwins(next, heldSnap);
         }
         if (!next) { next = rollValues(roller, dice, heldSnap, first); notes = lastRollNotes; }
@@ -5091,14 +5129,14 @@
         }
         // 모서리 착지: the values are rolled, then the cock is drawn (뻥카, later: a roll thrown under the cup draws none, decided before this line)
         const spentBefore = cockSpent;
-        cock = cupRoll ? null : drawCock(roller, next, heldSnap, spentBefore);
+        cock = cupRoll || hawkRoll ? null : drawCock(roller, next, heldSnap, spentBefore);
         if (cock) { cockSpent = true; cock.seq = rollSeq + 1; cock.t0 = Date.now(); } // tossDice bumps rollSeq once
         cockSpentBefore = spentBefore;
         if (cupRoll) { tossCup(next, heldSnap, onComplete); return; } // the free dice go under the cup: nothing flies, nothing carries a value
-        tossDice(next, heldSnap, null, onComplete, notes);
+        tossDice(next, heldSnap, null, onComplete, notes, hawkRoll);
       }
       // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
-      function tossDice(next, heldSnap, extra, onComplete, notes) {
+      function tossDice(next, heldSnap, extra, onComplete, notes, hawk) {
         if (cup && cup.phase === 'spent') { cupScrub(); cupDrop(); } // no path may leave stale cups behind
         yfxClear(true);
         tsEnd();
@@ -5117,8 +5155,9 @@
         const yawExtra = liveY ? { yaw: newYaw.slice() } : null; // never an undefined key; an old client ignores it
         const cockSpec = !extra && cock ? { i: cock.i, faces: cock.faces.slice() } : null; // only a normal roll can stand a die on its edge
         const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore, single: rerollIdx(extra, heldSnap) >= 0, fuse: isFuse, ride: !!(extra && extra.power === 'ride'), stopped: false, stopBy: -1 };
+        if (hawk) { roll.hawk = { pin: -1, dead: false }; roll.cockOk = false; } // 매의 눈: a slow roll that never stands a die on its edge
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra, yawExtra)); powerFx(extra); }
-        else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra, cockSpec ? { cock: cockSpec } : null));
+        else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra, cockSpec ? { cock: cockSpec } : null, hawk ? { hawk: 1 } : null));
         broadcastState();
         renderAll();
 
@@ -5127,11 +5166,13 @@
         const finish = function (finalV) {
           if (liveRoll === roll) liveRoll = null;
           if (matchId !== myMatch) { renderDice(); return; }
-          const v = finalV && finalV.length === 5 ? finalV : next;
+          let v = finalV && finalV.length === 5 ? finalV : next;
+          if (roll.hawk && roll.hawk.pin >= 0 && v[roll.hawk.pin] !== roll.values[roll.hawk.pin]) { v = v.slice(); v[roll.hawk.pin] = roll.values[roll.hawk.pin]; } // 매의 눈: the pin decided it, whatever this table showed
           dice = v;
           yaw = newYaw;
           isRolling = false;
           if (firstThrowPending) { firstThrowPending = false; applyGlue(); }
+          applyMines(cock ? cock.i : -1); // 지뢰: a die with a pending 모서리 착지 is checked after the pick
           // 시간 정지: the stop ended with a choice and the throw has landed as it was thrown: it is recorded into that box for the roller
           const force = tsForce;
           tsForce = null;
@@ -5149,7 +5190,7 @@
           // the host never depends on an animation: a throw that completes while the stop is live (a hidden tab, a slow frame) lands when the stop ends
           if (tstop && liveRoll === roll && matchId === myMatch) { tsHeld = function () { finish(finalV); }; return; }
           finish(finalV);
-        }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null, fuse: isFuse, yaw: newYaw.slice(), cock: cockSpec });
+        }, { knock: !!(extra && extra.knock), one: rerollIdx(extra, heldSnap), sound: extra && extra.sound ? extra.sound : null, fuse: isFuse, yaw: newYaw.slice(), cock: cockSpec, hawk: !!hawk });
         renderPowers(); // the slam window opens once the dice are actually moving
       }
 
@@ -5740,56 +5781,58 @@
       // art: a 3D dice portrait rendered by Dice3D (glyph: also pin the icon on it); otherwise the icon is the art
       const PROPHECY_PTS = 8; // 예언 bonus; a scratched (0) box gets nothing
       const AUG_LIST = [
-        { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1 면이 6으로 바뀝니다.', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
-        { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 4번까지 굴립니다.', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
-        { id: 'cocked', tier: 1, cat: 'dice', name: '모서리 착지', desc: '가끔 주사위 하나가 모서리로 섭니다. 걸친 눈 중 하나를 고릅니다.', ev: 10, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 3, y: 0.18, ry: 0.4, tx: 0.78 }] } },
-        { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈을 2배로 더합니다.', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
-        { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
-        { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
-        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 같은 눈으로 나옵니다. 내 턴에 켜고 끕니다.', ch: { twins: 1 }, ev: 24, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
-        { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, show: true, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
-        { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
-        { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
-        { id: 'tilt', tier: 2, cat: 'hand', name: '기울이기', desc: '책상을 기울입니다. 고정하지 않은 주사위가 한 면씩 넘어갑니다.', ch: { tilt: 1 }, ev: 14, show: true, art: { zoom: 0.9, glyph: 1, dice: [{ v: 3, x: -0.75, ry: 0.35 }, { v: 5, x: 0.75, y: 0.3, ry: 0.9, tz: -0.65 }] } },
-        { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다. 연속으로는 못 씁니다.', ch: { rewind: 2 }, ev: 12 },
+        { id: 'loaded', tier: 1, cat: 'dice', name: '무거운 주사위', desc: '1번 주사위의 1이 6이 됩니다.', ev: 9, art: { zoom: 0.78, glyph: 1, dice: [{ v: 6, skin: 'lead', ry: 0.55 }] } },
+        { id: 'fourth', tier: 2, cat: 'dice', name: '4번째 굴림', desc: '매 턴 한 번 더 굴립니다.', ev: 20, art: { zoom: 1.12, dice: [{ v: 4, x: -1.15, z: 0.35, ry: 0.3 }, { v: 4, x: 0.05, z: -0.55, ry: -0.6 }, { v: 4, x: 1.2, z: 0.35, ry: 0.9 }, { v: 4, x: 0.05, z: 1.15, y: 0.75, ry: 0.15, tx: 0.5, tz: 0.4 }] } },
+        { id: 'cocked', tier: 1, cat: 'dice', name: '모서리 착지', desc: '가끔 주사위가 모서리로 섭니다. 눈을 고릅니다.', ev: 10, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 3, y: 0.18, ry: 0.4, tx: 0.78 }] } },
+        { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위를 2배로 셉니다.', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
+        { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
+        { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1 셋을 기록하면 1이 만능이 됩니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
+        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 같은 눈으로 나옵니다.', ch: { twins: 1 }, ev: 24, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
+        { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다.', ch: { slam: 2 }, ev: 9, show: true, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
+        { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
+        { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
+        { id: 'tilt', tier: 2, cat: 'hand', name: '기울이기', desc: '책상을 기울입니다. 주사위가 한 면씩 넘어갑니다.', ch: { tilt: 1 }, ev: 14, show: true, art: { zoom: 0.9, glyph: 1, dice: [{ v: 3, x: -0.75, ry: 0.35 }, { v: 5, x: 0.75, y: 0.3, ry: 0.9, tz: -0.65 }] } },
+        { id: 'hawk', tier: 2, cat: 'hand', name: '매의 눈', desc: '굴림이 느려집니다. 주사위 하나를 눌러 멈춥니다.', ch: { hawk: 2 }, ev: 12, show: true, art: { zoom: 0.85, glyph: 1, dice: [{ v: 5, y: 0.45, ry: 0.5, tx: 0.55, tz: 0.15 }] } },
+        { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다.', ch: { rewind: 2 }, ev: 12 },
         { id: 'psychic', tier: 3, cat: 'hand', name: '염력', desc: '주사위 하나를 원하는 눈으로 바꿉니다.', ch: { psychic: 2 }, ev: 24, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 6, y: 0.8, ry: 0.8, tx: 0.35, tz: 0.25 }] } },
-        { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람이 기록한 주사위를 첫 굴림으로 씁니다.', ch: { ride: 2 }, ev: 22 },
-        { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1을 6점으로 셉니다.', ev: 10 },
-        { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '채운 칸을 더 높게 덮어씁니다. 빈칸 하나가 0점으로 남습니다.', ch: { overwrite: 1 }, ev: 10 },
+        { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람의 주사위로 시작합니다.', ch: { ride: 2 }, ev: 22 },
+        { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸의 1이 6점입니다.', ev: 10 },
+        { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '채운 칸을 덮어씁니다. 빈칸 하나가 0점이 됩니다.', ch: { overwrite: 1 }, ev: 10 },
         { id: 'yachtClub', tier: 2, cat: 'score', name: '황금 스니치', desc: '야트가 150점입니다.', ev: 33, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
-        { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '주사위 합이 21이면 어느 칸에 기록해도 +21점입니다.', ev: 13 },
-        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나를 예언합니다. 그 칸에 점수를 내면 +' + PROPHECY_PTS + '점입니다.', ev: 12 },
-        { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '켠 채 기록하면 족보 조건을 무시합니다.', ch: { joker: 1 }, ev: 30 },
-        { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스가 35점에서 70점으로 오릅니다.', ev: 24 },
-        { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '4개 이상 모은 상단 칸은 +10점입니다. 상단 보너스는 없습니다.', ev: 7 },
+        { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '합이 21이면 +21점입니다.', ev: 13 },
+        { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '예언한 칸에 점수를 내면 +' + PROPHECY_PTS + '점입니다.', ev: 12 },
+        { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '족보 조건 없이 기록합니다.', ch: { joker: 1 }, ev: 30 },
+        { id: 'bonusHunter', tier: 3, cat: 'score', name: '보너스 사냥꾼', desc: '상단 보너스가 70점입니다.', ev: 24 },
+        { id: 'deepWell', tier: 1, cat: 'score', name: '한 우물', desc: '상단 칸에 4개 이상이면 +10점입니다. 상단 보너스는 없습니다.', ev: 7 },
         { id: 'grandSlam', tier: 2, cat: 'score', name: '그랜드슬램', desc: '포카인드부터 야트까지 0점 없이 채우면 +40점입니다.', ev: 14 },
-        { id: 'shaky', tier: 1, cat: 'hex', name: '손 떨림', desc: '상대 전원의 다음 2턴 굴림을 1번씩 줄입니다.', ev: 9 },
-        { id: 'seal', tier: 1, cat: 'hex', name: '봉인', desc: '다음 상대 턴에 가장 높게 나오는 빈칸을 잠급니다.', ch: { seal: 2 }, ev: 9 },
+        { id: 'shaky', tier: 1, cat: 'hex', name: '손 떨림', desc: '상대의 다음 2턴 굴림이 1번 줄어듭니다.', ev: 9 },
+        { id: 'seal', tier: 1, cat: 'hex', name: '봉인', desc: '상대의 가장 좋은 빈칸을 한 턴 잠급니다.', ch: { seal: 2 }, ev: 9 },
         { id: 'pressure', tier: 1, cat: 'hex', name: '압박', desc: '상대가 굴림을 다 쓰면 3점을 잃습니다.', ev: 8 },
-        { id: 'curse', tier: 2, cat: 'hex', name: '저주 주사위', desc: '상대 5번 주사위의 6 면이 1로 바뀝니다.', ev: 10, art: { zoom: 0.78, glyph: 1, dice: [{ v: 1, skin: 'curse', ry: 0.9 }] } },
-        { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '같은 칸끼리 상대의 더 높은 점수와 맞바꿉니다.', ch: { swap: 1 }, ev: 16 },
-        { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임 끝에 1등 상대의 최고 점수 칸 절반을 훔칩니다.', ev: 24 },
-        { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '눈 하나를 찍습니다. 다음 상대 첫 굴림에 그 눈이 붙습니다.', ch: { glue: 2 }, ev: 8 },
-        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등 상대와 폭탄을 주고받습니다. 20점 못 쓰면 -20점입니다.', ch: { bomb: 1 }, ev: 12, show: true },
-        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '첫 굴림 전에 켭니다. 그 턴 기록이 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 20 },
-        { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에 바로 기록하면 +6점입니다.', ev: 6 },
-        { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '지금 30점을 빌립니다. 상단 보너스를 놓치면 -50점입니다.', ev: 8 },
-        { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '게임 끝에 1등 상대보다 30점 이상 뒤지면 +40점입니다.', ev: 10 },
-        { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 기록하면 다음 턴에 2번 더 굴립니다.', ev: 8 },
-        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '매 턴 다 굴린 뒤 3번 더 굴립니다. 1이 뜨면 터져서 0점입니다.', ch: { fuse: 3 }, ev: 13, show: true },
-        { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '도전한 칸을 따라잡으면 상대 칸 0점, 지면 내 칸 절반입니다.', ch: { gauntlet: 1 }, ev: 22 },
-        { id: 'bluff', tier: 2, cat: 'risk', name: '뻥카', desc: '마지막 굴림을 컵으로 덮습니다. 점수를 선언합니다. 거짓이 들키면 0점입니다.', ch: { bluff: 2 }, ev: 7, show: true },
+        { id: 'curse', tier: 2, cat: 'hex', name: '저주 주사위', desc: '상대 5번 주사위의 6이 1이 됩니다.', ev: 10, art: { zoom: 0.78, glyph: 1, dice: [{ v: 1, skin: 'curse', ry: 0.9 }] } },
+        { id: 'swap', tier: 2, cat: 'hex', name: '맞바꾸기', desc: '같은 칸의 점수를 상대와 맞바꿉니다.', ch: { swap: 1 }, ev: 16 },
+        { id: 'thief', tier: 3, cat: 'hex', name: '도둑', desc: '게임 끝에 1등의 최고 칸 절반을 훔칩니다.', ev: 24 },
+        { id: 'glue', tier: 1, cat: 'hex', name: '끈끈이', desc: '상대의 첫 굴림에 고른 눈이 붙습니다.', ch: { glue: 2 }, ev: 8 },
+        { id: 'mine', tier: 2, cat: 'hex', name: '지뢰', desc: '눈 하나를 정합니다. 상대 주사위에 그 눈이 나오면 터집니다.', ch: { mine: 1 }, ev: 10, show: true, art: { zoom: 0.8, glyph: 1, dice: [{ v: 3, y: 0.12, ry: 0.5, tx: 0.55, tz: 0.2 }] } },
+        { id: 'bomb', tier: 2, cat: 'hex', name: '시한폭탄', desc: '1등과 폭탄을 주고받습니다. 20점을 못 내면 -20점입니다.', ch: { bomb: 1 }, ev: 12, show: true },
+        { id: 'allin', tier: 1, cat: 'risk', name: '올인', desc: '그 턴 기록이 2배입니다. 0점이면 -20점입니다.', ch: { allin: 1 }, ev: 20 },
+        { id: 'speedrun', tier: 1, cat: 'risk', name: '스피드런', desc: '첫 굴림에 기록하면 +6점입니다.', ev: 6 },
+        { id: 'debt', tier: 1, cat: 'risk', name: '빚', desc: '30점을 빌립니다. 상단 보너스를 놓치면 -50점입니다.', ev: 8 },
+        { id: 'comeback', tier: 2, cat: 'risk', name: '역전의 명수', desc: '30점 넘게 뒤진 채 끝나면 +40점입니다.', ev: 10 },
+        { id: 'rise', tier: 1, cat: 'risk', name: '칠전팔기', desc: '0점을 내면 다음 턴에 2번 더 굴립니다.', ev: 8 },
+        { id: 'fuse', tier: 2, cat: 'risk', name: '도화선', desc: '3번 더 굴립니다. 1이 뜨면 0점입니다.', ch: { fuse: 3 }, ev: 13, show: true },
+        { id: 'gauntlet', tier: 3, cat: 'risk', name: '도전장', desc: '칸 하나로 겨룹니다. 진 쪽 점수가 깎입니다.', ch: { gauntlet: 1 }, ev: 22 },
+        { id: 'bluff', tier: 2, cat: 'risk', name: '뻥카', desc: '굴림을 덮고 점수를 선언합니다. 들키면 0점입니다.', ch: { bluff: 2 }, ev: 7, show: true },
         { id: 'lateBloom', tier: 2, cat: 'time', name: '늦게 핀 꽃', desc: '10라운드부터 기록마다 +8점입니다.', ev: 20, fixed: true },
-        { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다. 못 채운 칸은 0점입니다.', ev: 8 },
-        { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드마다 총점의 5%를 이자로 받습니다.', ev: 32 },
-        { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
-        { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
-        { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
-        { id: 'timeStop', tier: 3, cat: 'time', name: '시간 정지', desc: '상대가 굴릴 때 시간을 멈춥니다. 그 굴림을 기록할 칸을 내가 고릅니다.', ch: { timeStop: 1 }, ev: 41, show: true, art: { zoom: 0.95, glyph: 1, dice: [{ v: 6, x: -0.65, y: 0.9, ry: 0.5, tx: 0.3 }, { v: 1, x: 0.7, y: 0.45, ry: -0.4, tx: -0.25 }] } },
-        { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17, show: true },
-        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, show: true },
-        { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
-        { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
+        { id: 'earlyEnd', tier: 2, cat: 'time', name: '조기 종료', desc: '게임이 2라운드 일찍 끝납니다.', ev: 8 },
+        { id: 'compound', tier: 3, cat: 'time', name: '복리', desc: '라운드마다 총점의 5%를 받습니다.', ev: 32 },
+        { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다.', ev: 18 },
+        { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등의 다음 턴을 빼앗습니다.', ev: 18 },
+        { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸을 기록합니다.', ch: { twofer: 2 }, ev: 20 },
+        { id: 'timeStop', tier: 3, cat: 'time', name: '시간 정지', desc: '상대의 시간을 멈춥니다. 기록할 칸을 내가 고릅니다.', ch: { timeStop: 1 }, ev: 41, show: true, art: { zoom: 0.95, glyph: 1, dice: [{ v: 6, x: -0.65, y: 0.9, ry: 0.5, tx: 0.3 }, { v: 1, x: 0.7, y: 0.45, ry: -0.4, tx: -0.25 }] } },
+        { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '모두의 마지막 기록을 지웁니다.', ch: { tableFlip: 1 }, ev: 17, show: true },
+        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙을 통과시킵니다.', ev: 4, fixed: true, show: true },
+        { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 고른 증강을 베낍니다.', ev: 12 },
+        { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강의 등급이 오릅니다.', ev: 9 }
       ];
       const AUG = {};
       AUG_LIST.forEach(function (a) { AUG[a.id] = a; });
@@ -5802,6 +5845,7 @@
         slam: '<path d="M24 4l3.5 10.5L38 9l-4.5 10.5L44 24l-10.5 4.5L38 39l-10.5-5.5L24 44l-3.5-10.5L10 39l4.5-10.5L4 24l10.5-4.5L10 9l10.5 5.5z"/><circle class="a" cx="24" cy="24" r="5"/>',
         flip: '<path d="M10 18a15 15 0 0 1 26-6l3 3"/><path d="M40 7v8h-8"/><path d="M38 30a15 15 0 0 1-26 6l-3-3"/><path d="M8 41v-8h8"/>',
         reroll: '<rect x="6" y="16" width="22" height="22" rx="5"/><circle class="a" cx="17" cy="27" r="3"/><path d="M26 7a14 14 0 0 1 15 15"/><path d="M43 14v8h-8"/>',
+        hawk: '<circle cx="24" cy="24" r="14"/><circle class="a" cx="24" cy="24" r="4.5"/><path d="M24 4v9M24 35v9M4 24h9M35 24h9"/>',
         cocked: '<path d="M24 6l15 8.5v17L24 40 9 31.5v-17z"/><path d="M24 23v17M24 23L9 14.5M24 23l15-8.5"/><circle class="a" cx="24" cy="14.5" r="2.4"/><path d="M13 44h22"/>',
         tilt: '<path d="M5 38L43 30"/><rect class="a" x="13" y="9" width="17" height="17" rx="4" transform="rotate(-14 21.5 17.5)"/><path d="M34 14l6 3-3 6"/>',
         rewind: '<path d="M9 24A15 15 0 1 0 14 13"/><path d="M8 6v8h8"/><path d="M24 15v10l7 4"/>',
@@ -5834,6 +5878,7 @@
         grandSlam: '<path d="M24 7l17 17-17 17L7 24z"/><rect class="a" x="21" y="4" width="6" height="6" transform="rotate(45 24 7)"/><rect class="a" x="38" y="21" width="6" height="6" transform="rotate(45 41 24)"/><rect class="a" x="4" y="21" width="6" height="6" transform="rotate(45 7 24)"/><path class="a" d="M24.0 33.5L25.6 37.7L30.2 38.0L26.7 40.9L27.8 45.3L24.0 42.8L20.2 45.3L21.3 40.9L17.8 38.0L22.4 37.7z"/>',
         wildOne: '<rect x="7" y="7" width="34" height="34" rx="8"/><path class="a" d="M24.0 13.0L26.5 18.0L31.8 16.2L30.0 21.5L35.0 24.0L30.0 26.5L31.8 31.8L26.5 30.0L24.0 35.0L21.5 30.0L16.2 31.8L18.0 26.5L13.0 24.0L18.0 21.5L16.2 16.2L21.5 18.0z"/><circle cx="24" cy="24" r="3.6" fill="currentColor" stroke="none"/>',
         glue: '<rect x="11" y="5" width="26" height="24" rx="6"/><circle cx="24" cy="17" r="3"/><path class="a" d="M6 37c4-5 10-6 18-6s14 1 18 6c-2 5-10 7-18 7S8 42 6 37z"/><path class="a" d="M16 28h5v8a2.5 2.5 0 0 1-5 0zM28 28h5v5a2.5 2.5 0 0 1-5 0z"/>',
+        mine: '<path d="M24 16V9M24 40v7M12 28H5M43 28h-7M15 19l-5-5M33 19l5-5M15 37l-5 5M33 37l5 5"/><circle cx="24" cy="28" r="10"/><path d="M24 9c0-3 3-4 6-3"/><path class="a" d="M33.0 1.0L34.6 5.4L39.0 7.0L34.6 8.6L33.0 13.0L31.4 8.6L27.0 7.0L31.4 5.4z"/><path d="M19 24a6 6 0 0 1 4-3"/>',
         bomb: '<circle cx="20" cy="29" r="14"/><path d="M29 18l4-4"/><path d="M33 14c1-4 5-6 8-4"/><path d="M20 22v7l5 3"/><path class="a" d="M41.0 2.0L42.6 6.4L47.0 8.0L42.6 9.6L41.0 14.0L39.4 9.6L35.0 8.0L39.4 6.4z"/>',
         fuse: '<path d="M4 41c7 1 10-4 8-9s-7-3-6 1 7 6 12 1 5-12 11-16 9-5 10-9"/><path d="M43 15l3 2M36 3l1-2"/><path class="a" d="M40.0 3.5L41.6 8.4L46.5 10.0L41.6 11.6L40.0 16.5L38.4 11.6L33.5 10.0L38.4 8.4z"/>',
         ride: '<rect x="4" y="15" width="18" height="18" rx="4" stroke-dasharray="4 3"/><rect x="26" y="17" width="18" height="18" rx="4"/><path d="M12 12c3-7 15-9 21-3"/><path d="M34 4l-1 6-6-1"/><circle class="a" cx="35" cy="26" r="3.2"/>',
@@ -5907,10 +5952,10 @@
       // a law lives on the passer's p.law and never in a score cell; it applies to every record made after it passes
       const LAW_IDS = ['house', 'straight', 'bonus', 'quad', 'tax', 'cap'];
       const LAW = {
-        house: { name: '풀하우스 25점', desc: '풀하우스는 합계와 상관없이 25점입니다.', chg: [['F.HOUSE 합계', '25']] },
-        straight: { name: '스트레이트 +5', desc: '스몰 스트레이트는 20점입니다. 라지 스트레이트는 35점입니다.', chg: [['S.STR 15', '20'], ['L.STR 30', '35']] },
-        bonus: { name: '보너스 기준 58', desc: '상단 58점부터 보너스를 받습니다. 이미 넘긴 사람은 바로 받습니다.', chg: [['BONUS 63', '58']] },
-        quad: { name: '포카인드 ×2', desc: '같은 눈 4개의 합을 2배로 셉니다. 남는 주사위는 세지 않습니다.', chg: [['4 KIND 5개 합', '4개 합 ×2']] },
+        house: { name: '풀하우스 25점', desc: '풀하우스는 25점입니다.', chg: [['F.HOUSE 합계', '25']] },
+        straight: { name: '스트레이트 +5', desc: '스트레이트가 5점씩 오릅니다.', chg: [['S.STR 15', '20'], ['L.STR 30', '35']] },
+        bonus: { name: '보너스 기준 58', desc: '상단 58점부터 보너스를 받습니다.', chg: [['BONUS 63', '58']] },
+        quad: { name: '포카인드 ×2', desc: '같은 눈 4개의 합을 2배로 셉니다.', chg: [['4 KIND 5개 합', '4개 합 ×2']] },
         tax: { name: '야트 벌금', desc: '야트 칸에 0점을 쓰면 -10점입니다.', chg: [['YACHT 0', '-10']] },
         cap: { name: '초이스 상한', desc: '초이스는 최대 18점입니다.', chg: [['CHOICE 합계', '최대 18']] }
       };
@@ -5933,7 +5978,7 @@
         for (let f = 2; f <= 6; f++) { if (counts[f] > maxO) maxO = counts[f]; if (counts[f]) faces++; }
         if (catId === 'yacht') return maxO + w >= 5;
         if (catId === 'fourKind') return maxO + w >= 4;
-        if (catId === 'fullHouse') return faces <= 2;
+        if (catId === 'fullHouse') return counts[0] === 0 && faces <= 2; // a blown die leaves four live dice: no full house
         const runs = catId === 'smallStraight' ? [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]] : catId === 'largeStraight' ? [[1, 2, 3, 4, 5], [2, 3, 4, 5, 6]] : null;
         if (!runs) return false;
         // a wild can also be the run's own 1
@@ -5954,7 +5999,7 @@
       function cursedBy(p) { return matchAug && players.some(function (q) { return q !== p && augHas(q, 'curse'); }); }
       function freshAugState(p) {
         p.aug = []; p.ch = {}; p.extra = 0; p.shake = 0; p.boxUp = 0; p.sealed = 0; p.skip = 0; p.prophecy = null;
-        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null; p.last = null; p.law = null; p.twinOff = 0;
+        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null; p.last = null; p.law = null; p.twinOff = 0; p.mine = 0;
       }
       function charges(p, k) { return matchAug && p && p.ch ? (p.ch[k] || 0) : 0; }
       function signed(n) { return (n > 0 ? '+' : '') + n; }
@@ -6012,6 +6057,8 @@
           else st.tip = '켜져 있습니다.';
         } else if (id === 'bomb' && p.bomb >= 0) {
           st.cls = 'is-hot'; st.tip = '폭탄 든 사람 ' + who(p.bomb);
+        } else if (id === 'mine' && p.mine > 0) {
+          st.cls = 'is-hot'; st.n = String(p.mine); st.tip = '터지는 눈은 ' + b(p.mine) + '입니다.';
         } else if (id === 'tableFlip') {
           const n = charges(p, 'tableFlip');
           if (n <= 0) { st.cls = 'is-spent'; st.tip = '사용 완료'; }
@@ -6183,6 +6230,7 @@
       // opts: { roundNo, firstRoll, joker, allin, noGolden, noProphecy, noLaw, own (just the box's own score), trace: [] (receives the augments that applied) }
       function scoreFor(p, catId, d, opts) {
         opts = opts || {};
+        if (d === dice && anyGone()) d = maskGone(d);
         const base = calcCategoryScore(catId, d);
         if (!matchAug || !p) return base;
         const has = function (id) { return augHas(p, id); };
@@ -6255,8 +6303,8 @@
       // the card in force: held and not switched off (the holder flips p.twinOff on their own turn)
       function twinsOn(p) { return augHas(p, 'twins') && !p.twinOff; }
       function applyTwins(next, heldSnap) {
-        if (!heldSnap[1]) next[1] = next[0];
-        else if (!heldSnap[0]) next[0] = next[1];
+        if (!heldSnap[1]) { if (!gone[0]) next[1] = next[0]; } // a blown twin keeps no value for its partner to copy
+        else if (!heldSnap[0]) { if (!gone[1]) next[0] = next[1]; }
       }
       // fresh values for the free dice; lastRollNotes says which augments shaped them (for the effects)
       function rollValues(p, cur, heldSnap, first) {
@@ -6281,6 +6329,7 @@
         stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) viewDice().forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
         if (cockShown()) m[cock.i].push('cocked');
+        gone.forEach(function (g, i) { if (g) m[i] = []; }); // a blown die carries no badge
         return m;
       }
       // whose augment a die mark is (for its tooltip): the roller's own, or the opponent's who put it there
@@ -6319,6 +6368,8 @@
         if (a.id === 'tilt' && !newCardsOk(4)) return false; // protocol 4: an older client has no tilt picker and no cock chips
         if (a.id === 'cocked' && (!COCK_LIVE || !newCardsOk(4))) return false;
         if (a.id === 'bluff' && (!BLUFF_ENABLED || !bluffOk())) return false; // stage a: offline, one human against bots (also what 모방 and a reroll may offer)
+        if (a.id === 'hawk' && (!newCardsOk(8) || !use3D())) return false; // 매의 눈: a room that knows the slow roll and the pin (protocol 8)
+        if (a.id === 'mine' && (players.length < 2 || !newCardsOk(8))) return false; // 지뢰: needs an opponent and a room that knows gone dice (protocol 8)
         if (a.id === 'timeStop' && (players.length < 2 || !newCardsOk(7))) return false; // 시간 정지: needs an opponent and a room that knows the card (protocol 7: the stop state and the pick)
         if (a.id === 'amend') {
           // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
@@ -6568,6 +6619,7 @@
         armedPower = null; armedReset(); rewindSnap = null; turnLost = false;
         riseTurn = false;
         stuck = [false, false, false, false, false]; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
+        gone = [false, false, false, false, false]; goneShown = [false, false, false, false, false]; goneBlast = [false, false, false, false, false]; // the dice are back
         twoferPend = null; restTurn = false;
         tsReset(); // a turn change, a draft opening: no stop outlives the turn it was cast on
         clearTimeout(gagT);
@@ -6584,6 +6636,7 @@
         prepIdle();
         const resting = matchAug && cur && !encoreTurn && openCats(cur).length === 0;
         if (matchAug && cur && augHas(cur, 'fuse')) cur.ch.fuse = 3;
+        if (cur) cur.mine = 0; // 지뢰: it lasts until its owner's next turn begins
         sealTurn = false;
         players.forEach(function (q) { q.prophecy = null; });
         let shook = false;
@@ -7118,7 +7171,7 @@
             h += '<div class="pk-sec">걸린 효과</div><div class="pk-sts">' + sts.map(function (it) {
               const by = (it.by || []).filter(function (j) { return !!players[j]; });
               return '<div class="pk-st" data-row="st:' + it.k + '"><span class="st st-' + it.k + (it.on ? ' on' : '') + '" aria-hidden="true">' +
-                (it.k === 'glue' ? dieIcon(it.n) : glyphSvg(it.aug)) + '</span>' + // no count on the pill here: the sentence beside it has it
+                (it.k === 'glue' || it.k.indexOf('mine') === 0 ? dieIcon(it.n) : glyphSvg(it.aug)) + '</span>' + // no count on the pill here: the sentence beside it has it
                 '<div class="pk-st-t"><b>' + esc(AUG[it.aug].name) + '</b>' + esc(it.text) + '</div>' +
                 (by.length ? '<span class="pk-by"><small>건 사람</small>' + by.map(function (j) { return '<b style="color:' + pc(j) + '">' + esc(players[j].name) + '</b>'; }).join('') + '</span>' : '') + '</div>';
             }).join('') + '</div>';
@@ -7855,7 +7908,7 @@
           }
           case 'aceRebel': {
             const t = tilePt('ones');
-            for (let i = 0; i < 5; i++) if (dice[i] === 1) burst(diePt(i), { shape: 'star', count: 7, dist: 60, color: ['#ff5b72', '#ffd77a'], dur: 800 });
+            for (let i = 0; i < 5; i++) if (dice[i] === 1 && !gone[i]) burst(diePt(i), { shape: 'star', count: 7, dist: 60, color: ['#ff5b72', '#ffd77a'], dur: 800 });
             burst(t, { shape: 'star', count: 10, dist: 55, color: '#ff5b72', dur: 800 });
             if (!sample('sparkle')) [880, 1175, 1568].forEach(function (f, k) { tone(f, 0.14, 'square', 0.03, 0, k * 0.06); });
             augPop('aceRebel', t, '×6');
@@ -8001,7 +8054,7 @@
             const t = tilePt(e.cat);
             const face = UPPER_FACE[e.cat];
             dice.forEach(function (v, i) {
-              if (v !== face) return;
+              if (v !== face || gone[i]) return;
               setTimeout(function () { if (use3D()) window.Dice3D.aura(i, '#3fe0a9', 900); sfxTick(); }, i * 120);
             });
             setTimeout(function () {
@@ -8090,7 +8143,7 @@
           }
           case 'wildOne': {
             const ones = [];
-            dice.forEach(function (v, i) { if (v === 1) ones.push(i); });
+            dice.forEach(function (v, i) { if (v === 1 && !gone[i]) ones.push(i); });
             if (e.phase === 'wake') {
               const t = tilePt(e.cat);
               burst(t, { shape: 'star', count: 14, dist: 80, color: ['#ff6b6b', '#ffd93d', '#6bff95', '#4fd1ff', '#c77dff'], dur: 1100 });
@@ -8114,6 +8167,38 @@
             // landing glow
             ones.forEach(function (i) { if (use3D()) window.Dice3D.aura(i, '#d9b8ff', 900); burst(diePt(i), { shape: 'magic', count: 2, dist: 20, color: '#d6bcff', dur: 800, spin: 200 }); });
             if (ones.length) sample('sparkle', { vol: 0.25 });
+            break;
+          }
+          case 'hawk': {
+            // a guest gets this over the wire: seat, die and value are checked before anything plays
+            if (e.phase !== 'pin') break;
+            const hi = Math.floor(Number(e.i)), hv = Math.floor(Number(e.v));
+            if (seatIdx(e.p) < 0 || !(hi >= 0 && hi < 5) || !(hv >= 1 && hv <= 6)) break;
+            if (liveRoll && liveRoll.hawk && liveRoll.roller === e.p && liveRoll.hawk.pin < 0) { liveRoll.hawk.pin = hi; liveRoll.values[hi] = hv; }
+            if (use3D() && window.Dice3D.pin && window.Dice3D.pin(hi, hv)) hawkFeel(hi, hv);
+            break;
+          }
+          case 'mine': {
+            // a guest gets this over the wire: seat, face and dice are all checked before anything plays
+            if (e.phase === 'set') {
+              const face = Math.floor(Number(e.face)), pi = seatIdx(e.p);
+              if (!(face >= 1 && face <= 6) || pi < 0) break;
+              const a = seatPt(pi);
+              players.forEach(function (q, j) {
+                if (j === pi) return;
+                const b = seatPt(j);
+                if (a && b) stream(a, b, { shape: 'glow', count: 4, arc: 50, wobble: 16, dur: 700, stagger: 60, color: '#ffb347' });
+                setTimeout(function () { burst(seatPt(j), { shape: 'glow', count: 3, dist: 16, color: '#ffc46b', dur: 600 }); seatHit(j); }, 720);
+              });
+              showChip('지뢰 · ' + face, 'gold');
+              ensureAudio();
+              tone(150, 0.08, 'square', 0.05); tone(225, 0.1, 'square', 0.05, 0, 0.1);
+              break;
+            }
+            if (e.phase !== 'boom') break;
+            const idx = [];
+            toArr(e.idx).forEach(function (x) { const i = Math.floor(Number(x)); if (i >= 0 && i < 5 && idx.indexOf(i) === -1) idx.push(i); });
+            if (idx.length) mineBoomFx(idx);
             break;
           }
           case 'glue': {
@@ -8349,7 +8434,7 @@
                 const payoff = function () { // wait while this screen's own dice are still landing
                   if (matchId !== mid || era !== fxEra || !diceOk(nv)) return;
                   if (use3D() && window.Dice3D.isAnimating() && tries++ < 8) { setTimeout(payoff, 200); return; }
-                  postRollFx(nv);
+                  postRollFx(maskGone(nv));
                 };
                 setTimeout(payoff, COCK_MS);
               }
@@ -8552,6 +8637,7 @@
       const POWER_DEFS = {
         slam: { label: '샷건', chip: '샷건', kind: 'live' },
         timeStop: { label: '시간 정지', chip: '시간 정지', kind: 'live' },
+        hawk: { label: '매의 눈', chip: '매의 눈', kind: 'instant' },
         flip: { label: '뒤집기', chip: 'FLIP', kind: 'target' },
         reroll: { label: '다시', chip: 'REROLL', kind: 'target' },
         tilt: { label: '기울이기', chip: '기울이기', kind: 'dir' },
@@ -8560,6 +8646,7 @@
         seal: { label: '봉인', chip: '봉인', kind: 'instant' },
         swap: { label: '맞바꾸기', chip: 'SWAP', kind: 'tile' },
         glue: { label: '끈끈이', chip: '끈끈이', kind: 'face' },
+        mine: { label: '지뢰', chip: '지뢰', kind: 'face' },
         bomb: { label: '폭탄', chip: '시한폭탄', kind: 'instant' },
         fuse: { label: '도화선', chip: '도화선', kind: 'instant' },
         ride: { label: '편승', chip: '편승', kind: 'instant' },
@@ -8572,7 +8659,7 @@
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' },
         twins: { label: '쌍둥이', chip: '쌍둥이', kind: 'switch' } // 켜짐 / 꺼짐: never spent
       };
-      const POWER_KEYS = ['slam', 'timeStop', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'bluff', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
+      const POWER_KEYS = ['slam', 'timeStop', 'hawk', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'mine', 'bomb', 'swap', 'gauntlet', 'bluff', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0, lastStopTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
@@ -8630,6 +8717,8 @@
         if (kind === 'seal') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].sealed > 0) && !encoreTurn; }
         if (kind === 'swap') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return !!swapInfo(currentPlayerIdx, c.id); });
         if (kind === 'glue') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].glue > 0) && !encoreTurn; }
+        if (kind === 'mine') return players.length >= 2 && !(cur.mine > 0) && !encoreTurn; // before or after a roll, one at a time
+        if (kind === 'hawk') return use3D() && rollsLeft > 0 && hawkFree().length > 0; // exactly when a roll is allowed, and a die can be pinned (a flat table has nothing to slow)
         if (kind === 'bomb') return !encoreTurn && !(cur.bomb >= 0) && leaderOther(currentPlayerIdx) >= 0;
         if (kind === 'allin') return !hasRolledThisTurn && !allinLock; // before the first roll of the turn, never again
         if (kind === 'ride') return !hasRolledThisTurn && !encoreTurn && !!lastRec && lastRec.seq === turnNo - 1 && lastRec.p !== currentPlayerIdx && rollsMax >= 1;
@@ -8642,6 +8731,7 @@
         if (kind === 'fuse') return rollsLeft === 0 && held.some(function (h) { return !h; });
         if (kind === 'twofer') return !encoreTurn && !duel && twoferPairs(cur);
         if (kind === 'overwrite') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return cur.scores[c.id] !== null; });
+        if ((kind === 'reroll' || kind === 'flip' || kind === 'psychic') && gone.every(Boolean)) return false; // no live die is left to aim at
         return true;
       }
       // whose charges this screen spends: the local human (hot-seat: whoever's turn it is)
@@ -8676,7 +8766,8 @@
         if (isRolling) {
           // the moving dice get knocked and land on fresh values
           const roller = players[liveRoll.roller];
-          const forced = rollValues(roller, liveRoll.values, liveRoll.held, false);
+          const slamHeld = liveRoll.hawk && liveRoll.hawk.pin >= 0 ? liveRoll.held.map(function (h, i) { return h || i === liveRoll.hawk.pin; }) : liveRoll.held; // 매의 눈: a pinned die stays as it is
+          const forced = rollValues(roller, liveRoll.values, slamHeld, false);
           // 모서리 착지: a slam in the air replaces a normal roll, so its cock is drawn again (power throws never touch the cock)
           const redraw = !!liveRoll.cockOk;
           const nc = redraw ? drawCock(roller, forced, liveRoll.held, liveRoll.spentBefore) : null;
@@ -8687,6 +8778,7 @@
           p.ch.slam -= 1;
           liveRoll.slammed = true;
           liveRoll.values = vals.slice();
+          if (liveRoll.hawk) liveRoll.hawk.dead = true; // the slow motion is over
           liveRoll.notes = lastRollNotes;
           if (redraw) { cock = nc; if (nc) { nc.seq = rollSeq; nc.t0 = Date.now(); } cockSpent = !!liveRoll.spentBefore || !!nc; }
           slamFx(pIdx);
@@ -8929,13 +9021,15 @@
         if (kind === 'seal') return doSeal(onComplete);
         if (kind === 'swap') return doSwap(cat, onComplete);
         if (kind === 'glue') return doGlue(face, onComplete);
+        if (kind === 'mine') return doMine(face, onComplete);
+        if (kind === 'hawk') return doHawk(onComplete);
         if (kind === 'bomb') return doBomb(onComplete);
         if (kind === 'fuse') return doFuse(onComplete);
         if (kind === 'ride') return doRide(onComplete);
         if (kind === 'tableFlip') return doTableFlip(onComplete);
         if (kind === 'gauntlet') return doGauntlet(cat, onComplete);
         if (POWER_DEFS[kind].kind !== 'target') return false;
-        if (!(idx >= 0 && idx < 5)) return false;
+        if (!(idx >= 0 && idx < 5) || gone[idx]) return false;
         if (kind === 'psychic' && !(face >= 1 && face <= 6 && face === Math.floor(face))) return false;
         cur.ch[kind] -= 1;
         if (kind === 'reroll') {
@@ -8973,6 +9067,7 @@
         animateFlip(extra, function () {
           if (matchId !== myMatch) return;
           isRolling = false;
+          applyMines();
           broadcastState();
           renderAll();
           postRollFx(dice);
@@ -9002,6 +9097,8 @@
         if (rewindSnap.ride) { cur.ch.ride = (cur.ch.ride || 0) + 1; rideTurn = false; }
         if (!rewindSnap.hasRolled) stuck = [false, false, false, false, false]; // the first roll is undone: nothing stays glued
         else if (rewindSnap.stuck) stuck = rewindSnap.stuck.slice(); // what was glued before this throw
+        gone = rewindSnap.hasRolled && rewindSnap.gone ? rewindSnap.gone.slice() : [false, false, false, false, false]; // a die that blew up in the undone roll is back
+        goneShown = goneShown.map(function (s, i) { return s && gone[i]; });
         rewindSnap = null;
         rollSeq++;
         armedPower = null; psychicDie = -1; selectedTile = null;
@@ -9035,6 +9132,7 @@
         setTimeout(function () {
           if (matchId !== myMatch) return;
           isRolling = false;
+          applyMines();
           broadcastState(); renderAll();
           postRollFx(dice); // a pick into a yacht or a straight pays off like a roll
           if (typeof onComplete === 'function') onComplete();
@@ -9058,6 +9156,7 @@
         setTimeout(function () {
           if (matchId !== myMatch) return;
           isRolling = false;
+          applyMines();
           broadcastState(); renderAll();
           postRollFx(dice); // a tilt into a yacht or a straight pays off like a roll
           if (typeof onComplete === 'function') onComplete();
@@ -9090,7 +9189,7 @@
           if (matchId !== mid) return;
           sfxThud(); buzz(12);
           if (use3D() && p && p === players[currentPlayerIdx] && diceOk(prev) && tiltBest(p, vals) > tiltBest(p, prev)) moved.forEach(function (i) { window.Dice3D.pulse(i, '#ffd77a', 0.5); });
-          if (guestSide && era === fxEra) postRollFx(vals); // the host plays the payoff in doTilt; a guest has no roll callback
+          if (guestSide && era === fxEra) postRollFx(maskGone(vals)); // the host plays the payoff in doTilt; a guest has no roll callback
         }, Math.max(0, TILT_MS - 120));
         buzz(10);
       }
@@ -9159,6 +9258,141 @@
         dice.forEach(function (v, i) { if (v === face) { stuck[i] = true; held[i] = true; idx.push(i); } });
         fx('aug', { id: 'glue', p: by, q: currentPlayerIdx, face: face, idx: idx, phase: idx.length ? 'stick' : 'miss' });
       }
+      // ---------- 매의 눈 ----------
+      // A slow roll. It IS a roll (one roll and one charge, the values are drawn as always); while the dice tumble the roller taps
+      // one and the face on top at that moment, read through the die's own faces, becomes its value. The roller's screen reads the
+      // top face and sends { i, f }; the host checks the roll is live, writes the value and tells every screen with
+      // fx 'aug' { id: 'hawk', phase: 'pin', p, i, v }; each screen pins the die in its own physics. Nothing about positions travels.
+      function hawkPinnable(p, heldSnap) {
+        return [0, 1, 2, 3, 4].filter(function (i) { return !heldSnap[i] && !gone[i] && !(p && twinsOn(p) && i < 2); }); // a twin pair die has to match its partner
+      }
+      function hawkFree() { return hawkPinnable(players[currentPlayerIdx], held.map(function (h, i) { return h || stuck[i]; })); }
+      // the face on top (1..6) as the value die i of player p counts for
+      function hawkValue(p, i, f) {
+        f = Math.floor(Number(f));
+        if (!p || !(i >= 0 && i < 5) || !(f >= 1 && f <= 6)) return 0;
+        return faceList(p, i)[f - 1];
+      }
+      function hawkStartFx() {
+        ensureAudio();
+        const p = players[currentPlayerIdx];
+        if (p) { pingChip(currentPlayerIdx, 'hawk'); augPop('hawk', stagePt(), '', { label: (currentPlayerIdx === powerOwnerIdx() ? '' : p.name + ' · ') + AUG.hawk.name }); }
+        tone(392, 0.45, 'sine', 0.05, 98);
+      }
+      function hawkFeel(i, v) {
+        ensureAudio();
+        tone(1175, 0.09, 'triangle', 0.06); tone(1760, 0.2, 'triangle', 0.05, 0, 0.07);
+        buzz(12);
+      }
+      // this roll is a live 매의 눈 roll and nothing is pinned yet
+      function hawkLive() {
+        const lr = liveRoll;
+        return !!(lr && lr.hawk && !lr.hawk.dead && lr.hawk.pin < 0 && !lr.stopped && !tstop);
+      }
+      // a tap on this screen can pin: it is the roller's own screen and the table can still take a pin
+      function hawkMine() { return hawkLive() && liveRoll.roller === powerOwnerIdx() && use3D() && !!window.Dice3D.hawkOpen && window.Dice3D.hawkOpen(); }
+      function doHawk(onComplete) {
+        const cur = players[currentPlayerIdx];
+        if (!cur || charges(cur, 'hawk') <= 0 || !canUsePower('hawk')) return false;
+        const left = rollsLeft;
+        cur.ch.hawk -= 1;
+        rollDice(onComplete, { hawk: true });
+        if (rollsLeft === left) { cur.ch.hawk += 1; return false; } // the roll was refused: nothing is spent
+        if (cur.isAI && liveRoll && liveRoll.hawk) aiHawkTap(liveRoll);
+        return true;
+      }
+      // authoritative (local / host): die i of this roll is pinned on value v (already mapped through the die's faces)
+      function doHawkPin(pIdx, i, v) {
+        const lr = liveRoll, p = players[pIdx];
+        if (!hawkLive() || !p || lr.roller !== pIdx || !(i >= 0 && i < 5) || Math.floor(i) !== i) return false;
+        if (lr.held[i] || stuck[i] || (twinsOn(p) && i < 2) || faceList(p, i).indexOf(v) === -1) return false;
+        lr.hawk.pin = i;
+        lr.values[i] = v;
+        fx('aug', { id: 'hawk', phase: 'pin', p: pIdx, i: i, v: v });
+        return true;
+      }
+      // a guest's { i, f }
+      function hawkAction(cur, data) {
+        if (!Number.isInteger(data.i) || !Number.isInteger(data.f)) return;
+        const i = data.i, v = hawkValue(cur, i, data.f);
+        if (v) doHawkPin(currentPlayerIdx, i, v);
+      }
+      // a bot has no finger: at a random moment of the slow window it may take the face the solver likes best for any rolling die
+      function aiWantsHawk(p) {
+        if (!matchAug || charges(p, 'hawk') <= 0 || !YachtAI.ready() || anyGone() || rollsLeft <= 0 || aiWantsCup()) return false;
+        const free = held.filter(function (h) { return !h; }).length;
+        return free >= 1 && free <= 2 && canUsePower('hawk');
+      }
+      function aiHawkTap(roll) {
+        const p = players[roll.roller], myMatch = matchId;
+        if (!p || !p.isAI || Math.random() >= 0.6) return; // the other times the die just lands as rolled
+        const sc = aiScores(p), tm = aiTurnMods(p), base = roll.values.slice();
+        let bv = YachtAI.valueAt(sc, CAT_IDS, base, roll.rollsAfter, tm, false), best = null;
+        hawkPinnable(p, roll.held).forEach(function (i) {
+          faceList(p, i).forEach(function (v, k, fl) {
+            if (fl.indexOf(v) !== k) return;
+            const d = base.slice(); d[i] = v;
+            const val = YachtAI.valueAt(sc, CAT_IDS, d, roll.rollsAfter, tm, false);
+            if (val > bv + 1e-6) { bv = val; best = { i: i, v: v }; }
+          });
+        });
+        if (!best) return;
+        setTimeout(function () { if (matchId === myMatch && liveRoll === roll) doHawkPin(roll.roller, best.i, best.v); }, 450 + Math.random() * 1100);
+      }
+      // the tap on the stage: only while the roller's own 매의 눈 roll is live; a hit pins and nothing else on the stage hears it
+      let hawkSwallow = 0;
+      function hawkTap(e) {
+        if (!hawkMine() || e.button > 0) return;
+        if (e.target && e.target.closest && e.target.closest('#powers')) return;
+        const D3 = window.Dice3D, i = D3.pickAt(e.clientX, e.clientY);
+        if (i < 0) return;
+        const lr = liveRoll, p = players[lr.roller], f = D3.topFaces()[i], v = hawkValue(p, i, f);
+        if (!v || lr.held[i] || (twinsOn(p) && i < 2)) return;
+        e.stopPropagation(); e.preventDefault();
+        hawkSwallow = performance.now() + 500; // the click that follows a pointerdown must not reach a slot button either
+        if (isOnlineMatch && onlineRole === 'guest') {
+          if (!D3.pin(i, v)) return;
+          lr.hawk.pin = i; lr.values[i] = v;
+          hawkFeel(i, v);
+          sendAction({ action: 'hawk', i: i, f: f });
+          return;
+        }
+        doHawkPin(lr.roller, i, v);
+      }
+      $('diceStage').addEventListener('pointerdown', hawkTap, true);
+      $('diceStage').addEventListener('click', function (e) { if (performance.now() < hawkSwallow) { e.stopPropagation(); e.preventDefault(); } }, true);
+      // 지뢰: the owner names a face; it lasts until the owner's next turn begins (startTurn clears it)
+      function doMine(face, onComplete) {
+        const cur = players[currentPlayerIdx];
+        face = Math.floor(Number(face));
+        if (!cur || !(face >= 1 && face <= 6) || charges(cur, 'mine') <= 0 || cur.mine > 0 || players.length < 2) return false;
+        cur.ch.mine -= 1;
+        cur.mine = face;
+        armedPower = null;
+        fx('aug', { id: 'mine', p: currentPlayerIdx, face: face, phase: 'set' });
+        broadcastState();
+        renderAll();
+        if (typeof onComplete === 'function') setTimeout(onComplete, 650);
+        return true;
+      }
+      // 지뢰: after every landing on the roller's turn, each live die that shows a face the OTHER players have mined blows up (host / local).
+      // skipIdx = a die with a pending 모서리 착지 (checked after its pick). Returns the dice that blew up.
+      function applyMines(skipIdx) {
+        const cur = players[currentPlayerIdx];
+        if (!matchAug || !gameActive || !cur) return [];
+        const idx = [], owners = [];
+        for (let i = 0; i < 5; i++) {
+          if (gone[i] || i === skipIdx) continue;
+          players.forEach(function (q, j) {
+            if (j !== currentPlayerIdx && q.mine > 0 && q.mine === dice[i] && idx.indexOf(i) === -1) { idx.push(i); owners.push(j); }
+          });
+        }
+        if (!idx.length) return [];
+        idx.forEach(function (i) { gone[i] = true; held[i] = true; stuck[i] = false; });
+        const p = owners.every(function (o) { return o === owners[0]; }) ? owners[0] : -1;
+        fx('aug', { id: 'mine', p: p, q: currentPlayerIdx, idx: idx, phase: 'boom' });
+        return idx;
+      }
       function doBomb(onComplete) {
         const cur = players[currentPlayerIdx];
         const t = leaderOther(currentPlayerIdx);
@@ -9192,12 +9426,12 @@
         const free = [0, 1, 2, 3, 4].filter(function (i) { return !held[i]; });
         if (!free.length) return false;
         cur.ch.fuse -= 1;
-        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: 0, hasRolled: true, fuse: true, stuck: stuck.slice() };
+        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: 0, hasRolled: true, fuse: true, stuck: stuck.slice(), gone: gone.slice() };
         const next = rollValues(cur, dice, held, false);
         const myMatch = matchId;
         tossDice(next, held.slice(), { power: 'fuse', pIdx: currentPlayerIdx, sound: 'fire' }, function () {
           if (matchId !== myMatch) return;
-          const hit = free.filter(function (i) { return dice[i] === 1; });
+          const hit = free.filter(function (i) { return !gone[i] && dice[i] === 1; }); // a die a mine took is not a lit one
           if (hit.length) {
             fuseBust = true;
             rewindSnap = null;
@@ -9221,6 +9455,27 @@
       // that roll (Dice3D reports what landed: a fizzle, or a 1 lights up) and 'aug' { id: 'fuse', phase: 'bust' | 'safe' }.
       function fuseLater(fn, ms) { const mid = matchId; fuseTimers.push(setTimeout(function () { if (matchId === mid) fn(); }, ms)); }
       function fuseClear() { fuseTimers.forEach(clearTimeout); fuseTimers = []; }
+      // 지뢰: the blast of the dice that showed a mined face. Each screen plays it on its own dice once they are down; the truth is gone[] (STATE)
+      function mineBoomHit(i, k) {
+        ensureAudio();
+        if (k < 2 && !sample('boom', { vol: 0.5, rate: 1.1 })) { tone(80, 0.3, 'sine', 0.16, 40); noise(260, 0.8, 0.22, 0.2, 'lowpass'); }
+        if (!(use3D() && window.Dice3D.boomFx)) burst(diePt(i), { shape: 'ember', count: 6, dist: 56, gravity: 50, color: ['#ffd25a', '#ff7a2a'], dur: 700 });
+        shakeApp(use3D() ? 3 : 5); buzz([18, 20, 36]);
+      }
+      function mineBoomFx(idx) {
+        const mid = matchId, tn = turnNo;
+        idx.forEach(function (i) { goneBlast[i] = true; });
+        whenSettled(function () {
+          if (matchId !== mid) return;
+          const done = function () {
+            if (matchId !== mid) return;
+            idx.forEach(function (i) { goneBlast[i] = false; if (turnNo === tn) goneShown[i] = true; });
+            renderDice();
+          };
+          if (use3D() && window.Dice3D.mineBlast) window.Dice3D.mineBlast(idx, { onBoom: mineBoomHit, onDone: done });
+          else { idx.forEach(function (i, k) { mineBoomHit(i, k); }); setTimeout(done, REDUCED ? 60 : 420); }
+        });
+      }
       function fuseHits(v, h) { return [0, 1, 2, 3, 4].filter(function (i) { return !h[i] && v[i] === 1; }); }
       function ptsCenter(idx) {
         const ps = idx.map(diePt).filter(Boolean);
@@ -10473,12 +10728,13 @@
         b.addEventListener('click', function () { pickFace(v); });
         facePick.appendChild(b);
       });
-      function renderFacePick() { facePick.hidden = !(((armedPower === 'psychic' && psychicDie >= 0) || armedPower === 'glue') && isMyTurn() && !isRolling); }
+      function renderFacePick() { facePick.hidden = !(((armedPower === 'psychic' && psychicDie >= 0) || armedPower === 'glue' || armedPower === 'mine') && isMyTurn() && !isRolling); }
       function pickFace(v) {
-        if (armedPower === 'glue') {
+        if (armedPower === 'glue' || armedPower === 'mine') {
+          const fk = armedPower;
           armedPower = null;
-          if (isOnlineMatch && onlineRole === 'guest') sendAction({ action: 'power', kind: 'glue', face: v });
-          else usePower('glue', -1, v);
+          if (isOnlineMatch && onlineRole === 'guest') sendAction({ action: 'power', kind: fk, face: v });
+          else usePower(fk, -1, v);
           renderDice(); renderPowers();
           return;
         }
@@ -10950,7 +11206,19 @@
         if (duel && p === players[currentPlayerIdx]) m.block = 4095 & ~(1 << CAT_IDS.indexOf(duel.cat));
         return m;
       }
-      function aiExact(p) { const m = aiTurnMods(p); return m || sealCatFor(p) || duel ? withExact(m, p) : null; }
+      // 지뢰: the solver only knows five dice. A blown die is shown to it as a copy of the most common live face and kept held; the real box values
+      // come from the masked scoreFor (aiExact is always withExact while a die is gone), and with every die gone the solver is never asked to hold.
+      function aiProxy(d) {
+        if (!anyGone()) return d;
+        const c = [0, 0, 0, 0, 0, 0, 0];
+        d.forEach(function (v, i) { if (!gone[i]) c[v]++; });
+        let best = 1, bc = -1;
+        for (let f = 6; f >= 1; f--) if (c[f] > bc) { bc = c[f]; best = f; }
+        return d.map(function (v, i) { return gone[i] ? best : v; });
+      }
+      function aiDice() { return aiProxy(dice); }
+      function aiHeld() { return anyGone() ? held.map(function (h, i) { return h || gone[i]; }) : held; }
+      function aiExact(p) { const m = aiTurnMods(p); return m || sealCatFor(p) || duel || anyGone() ? withExact(m, p) : null; }
       function augValue(p, id) {
         const a = AUG[id];
         const left = Math.max(0, lastRound + 1 - round) / 12;
@@ -11060,16 +11328,21 @@
           return { cat: best.cat, flags: {} };
         }
         if (duel) return { cat: duel.cat, flags: {} };
+        if (gone.every(Boolean)) { // nothing is left to score: write the cheapest box off
+          let bc = null, bv = -1e9;
+          openCats(cur).forEach(function (id) { if (id === sealId) return; const v = scoreFor(cur, id, dice, previewOpts(false)) - baseEv(id); if (v > bv) { bv = v; bc = id; } });
+          return { cat: bc, flags: {} };
+        }
         const sc = aiScores(cur);
         const tm = aiTurnMods(cur);
-        if (fuseBust) return { cat: YachtAI.decide(sc, CAT_IDS, dice, 0, null, aiTemp(), withExact(tm, cur)).category, flags: {} };
+        if (fuseBust) return { cat: YachtAI.decide(sc, CAT_IDS, aiDice(), 0, null, aiTemp(), withExact(tm, cur)).category, flags: {} };
         let cat = planned;
-        if (!cat || cat === sealId || cur.scores[cat] !== null) cat = YachtAI.decide(sc, CAT_IDS, dice, 0, null, aiTemp(), withExact(tm, cur)).category;
+        if (!cat || cat === sealId || cur.scores[cat] !== null) cat = YachtAI.decide(sc, CAT_IDS, aiDice(), 0, null, aiTemp(), withExact(tm, cur)).category;
         if (!matchAug) return { cat: cat, flags: {} };
         const keep = Math.max(0, lastRound - round) / 11;
         const alF = allinOn() ? { allin: true } : {}; // a doubled record is the one being judged
         const bestOf = function (flags) {
-          const L = YachtAI.catValues(sc, CAT_IDS, dice, withExact(tm, cur, flags));
+          const L = YachtAI.catValues(sc, CAT_IDS, aiDice(), withExact(tm, cur, flags));
           let b = L[0];
           L.forEach(function (x) { if (x.val > b.val) b = x; });
           return b;
@@ -11078,7 +11351,7 @@
         if (charges(cur, 'twofer') > 0 && canUsePower('twofer')) {
           const ex1 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, Object.assign(previewOpts(false), alF)); });
           const ex2 = CAT_IDS.map(function (id) { return scoreFor(cur, id, dice, Object.assign(previewOpts(false), { second: true })); });
-          const L = YachtAI.catValues(sc, CAT_IDS, dice, withExact(tm, cur));
+          const L = YachtAI.catValues(sc, CAT_IDS, aiDice(), withExact(tm, cur));
           let single = -1e9;
           L.forEach(function (x) { if (x.val > single) single = x.val; });
           const t0 = getPlayerTotals(cur), bAmt = bonusRule(cur).amount;
@@ -11090,7 +11363,7 @@
             scA[A] = ex1[xa.ci];
             const crossA = xa.ci < 6 && t0.upper < t0.need && t0.upper + ex1[xa.ci] >= t0.need ? bAmt : 0;
             const m2 = withExact(tm, cur, { second: true });
-            YachtAI.catValues(scA, CAT_IDS, dice, m2).forEach(function (xb) {
+            YachtAI.catValues(scA, CAT_IDS, aiDice(), m2).forEach(function (xb) {
               if (xb.ci === xa.ci || ex2[xb.ci] <= 0) return;
               const v = ex1[xa.ci] + crossA + xb.val;
               if (!pair || v > pair.v) pair = { A: A, B: CAT_IDS[xb.ci], v: v };
@@ -11126,12 +11399,12 @@
       function aiFuseOption(cur) {
         const sc = aiScores(cur), tm = aiTurnMods(cur);
         const alF = allinOn() ? { allin: true } : {};
-        const exactFor = function (d) { return CAT_IDS.map(function (id) { return scoreFor(cur, id, d, Object.assign(previewOpts(false), alF)); }); };
+        const exactFor = function (d) { return CAT_IDS.map(function (id) { return scoreFor(cur, id, maskGone(d), Object.assign(previewOpts(false), alF)); }); };
         const bestFor = function (d, ex) {
           const m = Object.assign({}, tm || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: ex });
           const adj = aiRecordAdj(cur, ex);
           if (adj) m.adj = adj;
-          const L = YachtAI.catValues(sc, CAT_IDS, d, m);
+          const L = YachtAI.catValues(sc, CAT_IDS, aiProxy(d), m);
           let b = -1e9;
           L.forEach(function (x) { if (x.val > b) b = x.val; });
           return b;
@@ -11139,12 +11412,12 @@
         const stop = bestFor(dice, exactFor(dice));
         const bust = bestFor(dice, CAT_IDS.map(function (id) { return alF.allin ? -20 : lawBust(id); }));
         const cands = [];
-        const plan = YachtAI.decide(sc, CAT_IDS, dice, 1, held, 0, aiExact(cur));
+        const plan = YachtAI.decide(sc, CAT_IDS, aiDice(), 1, aiHeld(), 0, aiExact(cur));
         if (plan.hold) cands.push(plan.hold);
         for (let i = 0; i < 5; i++) { const h = [true, true, true, true, true]; h[i] = false; cands.push(h); }
         let best = null;
         cands.forEach(function (h0) {
-          const h = h0.map(function (x, i) { return x || stuck[i]; });
+          const h = h0.map(function (x, i) { return x || stuck[i] || gone[i]; });
           const free = [0, 1, 2, 3, 4].filter(function (i) { return !h[i]; });
           if (!free.length || free.length > 3) return;
           const n = Math.pow(6, free.length);
@@ -11175,18 +11448,18 @@
         if (!cands.length) return null;
         let none, vals;
         if (rollsLeft > 0) {
-          const list = [dice].concat(cands.map(function (c) { return c.dice; }));
+          const list = [aiDice()].concat(cands.map(function (c) { return aiProxy(c.dice); }));
           const E = YachtAI.evalDice ? YachtAI.evalDice(sc, CAT_IDS, list, rollsLeft, tm) : list.map(function (d) { return YachtAI.valueAt(sc, CAT_IDS, d, rollsLeft, tm, false); });
           none = E[0]; vals = cands.map(function (c, k) { return E[k + 1]; });
         } else { // the last roll: what the best record is worth with the exact scores, for THESE dice
           const flags = allinOn() ? { allin: true } : {};
           const best = function (d) {
-            const ex = CAT_IDS.map(function (id) { return scoreFor(cur, id, d, Object.assign(previewOpts(false), flags)); });
+            const ex = CAT_IDS.map(function (id) { return scoreFor(cur, id, maskGone(d), Object.assign(previewOpts(false), flags)); });
             const m = Object.assign({}, tm || { sc: null, boost: null, shift: 0, bonus: 35 }, { exact: ex });
             const adj = aiRecordAdj(cur, ex); if (adj) m.adj = adj;
             if (sealTurn) { let lk = -1, lv = -1e9; CAT_IDS.forEach(function (id, ci) { if (cur.scores[id] === null && ex[ci] > lv) { lv = ex[ci]; lk = ci; } }); if (lk >= 0 && openCats(cur).length >= 2) m.block = 1 << lk; }
             if (duel) m.block = 4095 & ~(1 << CAT_IDS.indexOf(duel.cat));
-            let b = -1e9; YachtAI.catValues(sc, CAT_IDS, d, m).forEach(function (x) { if (x.val > b) b = x.val; }); return b;
+            let b = -1e9; YachtAI.catValues(sc, CAT_IDS, aiProxy(d), m).forEach(function (x) { if (x.val > b) b = x.val; }); return b;
           };
           none = best(dice); vals = cands.map(function (c) { return best(c.dice); });
         }
@@ -11209,7 +11482,7 @@
       }
       function aiCockChoice(p) {
         if (!YachtAI.ready()) return cock.faces[0];
-        const vals = cock.faces.map(function (f) { const d = dice.slice(); d[cock.i] = f; return withDice(d, function () { return aiCockValue(p, d); }); });
+        const vals = cock.faces.map(function (f) { const d = dice.slice(); d[cock.i] = f; return withDice(d, function () { return aiCockValue(p, aiProxy(d)); }); });
         let best = 0;
         vals.forEach(function (v, k) { if (v > vals[best] + 1e-9) best = k; }); // a tie keeps the rolled face
         const temp = (AI_LEVELS[p.level || 'hard'] || {}).temp || 0;
@@ -11224,7 +11497,7 @@
         players.forEach(function (p, idx) {
           if (!p.isAI || idx === currentPlayerIdx || charges(p, 'slam') <= 0) return;
           let best = -1e9;
-          cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, YachtAI.valueAt(aiScores(roller), CAT_IDS, d, rollsLeft, aiTurnMods(roller))); });
+          cock.faces.forEach(function (f) { const d = dice.slice(); d[cock.i] = f; best = Math.max(best, YachtAI.valueAt(aiScores(roller), CAT_IDS, aiProxy(d), rollsLeft, aiTurnMods(roller))); });
           const mean = YachtAI.rollStats(aiScores(roller), CAT_IDS, dice, held, rollsLeft, aiTurnMods(roller)).mean;
           const scale = Math.max(0, lastRound - round) / 11;
           if (best - mean < 3 + 6 * scale) return;
@@ -11234,7 +11507,13 @@
           }, roller.isAI ? 500 + Math.random() * 450 : 1700 + Math.random() * 700); // before a bot's own pick; a person gets time to read the faces and pick first
         });
       }
+      // a power never aims at a blown die; with every die gone there is nothing to do but record
       function aiPowerPlan() {
+        if (gone.every(Boolean)) return null;
+        const r = aiPowerPlanRaw();
+        return r && (r.kind === 'reroll' || r.kind === 'flip' || r.kind === 'psychic') && gone[r.idx] ? null : r;
+      }
+      function aiPowerPlanRaw() {
         const cur = players[currentPlayerIdx];
         if (!matchAug || !cur || cock) return null; // a pending pick: the dice are not final yet
         const tp = aiTiltPlan(cur);
@@ -11242,7 +11521,7 @@
         if (!keys.length) return tp;
         const tm = aiTurnMods(cur), sc = aiScores(cur);
         const rl = rollsLeft;
-        const o = YachtAI.powerOptions(sc, CAT_IDS, dice, rl, held, tm);
+        const o = YachtAI.powerOptions(sc, CAT_IDS, aiDice(), rl, aiHeld(), tm);
         const scale = Math.max(0, lastRound - round) / 11;
         let best = null, gain = 0.3;
         keys.forEach(function (k) {
@@ -11356,6 +11635,16 @@
           const turnsLeft = lastRound - round + 1;
           if (t >= 0 && round >= 3 && (hiOpen(cur) - hiOpen(players[t]) >= 2 || turnsLeft <= 2)) {
             later(function () { doBomb(); later(function () { aiPreTurn(done); }, 900); }, 600);
+            return;
+          }
+        }
+        // 지뢰: name the face the leader still needs most (the highest face of their open upper boxes, else 6)
+        if (charges(cur, 'mine') > 0 && canUsePower('mine')) {
+          const t = leaderOther(currentPlayerIdx);
+          if (t >= 0) {
+            let bf = 6;
+            for (let f = 6; f >= 1; f--) if (players[t].scores[CAT_IDS[f - 1]] === null) { bf = f; break; }
+            later(function () { doMine(bf); later(function () { aiPreTurn(done); }, 800); }, 600);
             return;
           }
         }
@@ -12071,7 +12360,7 @@
               commitScore(f.cat, f.flags);
               // safety net: if that record was refused, record plainly so the turn can't stall
               if (!isScoring && !twoferPend && alive() && !isRolling && hasRolledThisTurn && players[currentPlayerIdx] === cur0) {
-                commitScore(YachtAI.decide(aiScores(cur0), CAT_IDS, dice, 0, null, 0, withExact(aiTurnMods(cur0), cur0)).category || aiAnyCat(cur0), {});
+                commitScore((gone.every(Boolean) ? null : YachtAI.decide(aiScores(cur0), CAT_IDS, aiDice(), 0, null, 0, withExact(aiTurnMods(cur0), cur0)).category) || aiAnyCat(cur0), {});
               }
             }, AI_AIM_MS);
           }, Math.max(150, ms - AI_AIM_MS));
@@ -12099,6 +12388,7 @@
         const step = function () {
           if (!alive()) return;
           aiTwinsPick(cur0);
+          if (aiWantsHawk(cur0) && doHawk(afterRoll)) return; // 매의 눈: one or two free dice and a charge
           rollDice(afterRoll, aiWantsCup() ? { bluff: true } : undefined);
         };
         aiResume = function () { clearTimeout(aiTimer); if (alive()) aiTimer = setTimeout(function () { afterRoll(); }, 600); };
@@ -12124,7 +12414,7 @@
               const next = function () { aiTimer = setTimeout(afterRoll, 650); };
               if (pw.kind === 'slam') {
                 const before = held.slice();
-                held = pw.hold.map(function (h, i) { return h || stuck[i]; });
+                held = pw.hold.map(function (h, i) { return h || stuck[i] || gone[i]; });
                 if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
                 renderDice();
                 aiTimer = setTimeout(function () { if (alive() && !doSlam(currentPlayerIdx, next)) afterRoll(true); }, 550);
@@ -12132,7 +12422,7 @@
               }
               if (pw.kind === 'tilt') { // the dice it does not want to move are held first
                 const before = held.slice();
-                held = pw.hold.map(function (h, i) { return h || stuck[i]; });
+                held = pw.hold.map(function (h, i) { return h || stuck[i] || gone[i]; });
                 if (held.some(function (h, i) { return h !== before[i]; })) sfxHold(true);
                 renderDice();
                 aiTimer = setTimeout(function () { if (alive() && !usePower('tilt', pw.idx, 0, next)) afterRoll(true); }, 550);
@@ -12143,11 +12433,12 @@
             return;
           }
           const cur = players[currentPlayerIdx];
+          if (gone.every(Boolean)) { scoreSoon(null, 800); return; } // every die blew up: the solver has nothing to hold
           if (rollsLeft > 0) {
-            const plan = YachtAI.decide(aiScores(cur), CAT_IDS, dice, rollsLeft, held, aiTemp(), aiExact(cur));
+            const plan = YachtAI.decide(aiScores(cur), CAT_IDS, aiDice(), rollsLeft, aiHeld(), aiTemp(), aiExact(cur));
             if (plan.category) { scoreSoon(plan.category, 850); return; }
             if (!plan.hold) { scoreSoon(null, 700); return; } // no open box (앙코르's extra turn on a full card): the solver has no plan, so record now (aiFinalScore picks the best upgrade)
-            const want = plan.hold.map(function (h, i) { return !!(h || stuck[i]); });
+            const want = plan.hold.map(function (h, i) { return !!(h || stuck[i] || gone[i]); });
             if (want.every(Boolean)) { held = want; scoreSoon(null, 700); return; }
             holdThenRoll(want);
           } else {
@@ -12554,7 +12845,7 @@
           q.prophecy = p.prophecy && CAT_IDS.indexOf(String(p.prophecy)) !== -1 ? String(p.prophecy) : null;
           const int = function (x, lo, hi, dflt) { x = Math.floor(Number(x)); return isFinite(x) && x >= lo && x <= hi ? x : dflt; };
           q.hatch = int(p.hatch, 0, 99, 0); q.hatched = p.hatched ? 1 : 0; q.rise = p.rise ? 1 : 0; q.wake = p.wake ? 1 : 0;
-          q.glue = int(p.glue, 0, 6, 0); q.glueBy = int(p.glueBy, -1, 3, -1); q.bomb = int(p.bomb, -1, 3, -1); q.bombT = int(p.bombT, -1, 3, -1);
+          q.mine = int(p.mine, 0, 6, 0); q.glue = int(p.glue, 0, 6, 0); q.glueBy = int(p.glueBy, -1, 3, -1); q.bomb = int(p.bomb, -1, 3, -1); q.bombT = int(p.bombT, -1, 3, -1);
           q.mim = p.mim && AUG[String(p.mim)] ? String(p.mim) : null;
           // 밥상 엎기: the newest record. Firebase drops null children, so a missing key is null; anything malformed becomes null
           q.last = null;
@@ -12588,6 +12879,12 @@
         riseTurn = !!d.riseTurn;
         const sv = toArr(d.stuck);
         stuck = [0, 1, 2, 3, 4].map(function (i) { return !!sv[i]; });
+        const gv = toArr(d.gone), goneNew = [0, 1, 2, 3, 4].map(function (i) { return !!gv[i]; });
+        goneNew.forEach(function (g, i) {
+          if (!g) { goneShown[i] = false; goneBlast[i] = false; }
+          else if (!gone[i] && !goneShown[i]) goneLate(i);
+        });
+        gone = goneNew;
         const tsNew = tsParse(d.tstop); // 시간 정지: a clean stop or none; the countdown restarts from `left` on this screen's clock
         if (tsNew && tstop && tstop.by === tsNew.by && tstop.q === tsNew.q && tstop.box === tsNew.box && Math.abs(tsLeftMs() - tsNew.left) < 400) tsNew.at = tstop.at, tsNew.left = tstop.left; // the same stop: keep its clock
         tstop = tsNew;
@@ -12682,8 +12979,9 @@
         if (data.action === 'roll') rollDice();
         else if (data.action === 'hold' && data.idx >= 0 && data.idx < 5) toggleHold(data.idx);
         else if (data.action === 'score' && CATEGORIES.some(function (c) { return c.id === data.catId; })) commitScore(data.catId, { joker: !!data.joker, allin: !!data.allin, overwrite: !!data.overwrite, twofer: !!data.twofer });
-        else if (data.action === 'power' && POWER_KEYS.indexOf(data.kind) !== -1 && (data.kind !== 'tilt' || typeof data.idx === 'number')) usePower(data.kind, Number(data.idx), Number(data.face), null, data.cat ? String(data.cat) : undefined);
+        else if (data.action === 'power' && POWER_KEYS.indexOf(data.kind) !== -1 && (data.kind !== 'tilt' || typeof data.idx === 'number') && (data.kind !== 'mine' || Number.isInteger(data.face))) usePower(data.kind, Number(data.idx), Number(data.face), null, data.cat ? String(data.cat) : undefined);
         else if (data.action === 'cockPick') doCockPick(typeof data.face === 'number' ? data.face : NaN); // the roller only (the check above); an offered face only (doCockPick checks)
+        else if (data.action === 'hawk') hawkAction(cur, data); // the roller only (the check above): { i, f } of a live 매의 눈 roll (doHawkPin checks)
       }
 
       function sendAction(msg) {
@@ -13103,7 +13401,7 @@
         clearTimeout(lawTimer); lawPendingSig = ''; lawRevealed = {}; lawBarSig = '';
         stageVignette(0, '', 0); // a flip's dark felt must not carry into the next match
         lastRound = 12; flipRound = -1; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
-        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
+        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; gone = [false, false, false, false, false]; goneShown = [false, false, false, false, false]; goneBlast = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false; cockSentSeq = -1;
         cupDrop(); cupClear(); cupPeek = false; bluffSel = null; clearTimeout(cupTimer); closeTries = 0; bluffLog = []; bluffAI.callM = {}; bluffAI.kappa = {};
@@ -14418,7 +14716,11 @@
           // 모서리 착지: the faces the die stands between (null = flat), its lift and step toward the camera, and the edge it rocks about
           cockFaces: null, cockKey: '', cockOn: false, cockT0: -9, cockQ: new THREE.Quaternion(), cockDir: 1, cockNb: -1, cockSep: 1.14, cockY: 0.64, cockCY: 0.7, cockPv: new THREE.Vector3(), nbX: 0, nbGoal: 0, nudgeT0: -9, nudgeDir: 1, nudgeAmp: 0,
           // 도화선: lit (swelling, blinking) since litT0, blown off the table (flight), sooty afterwards
-          flight: null, litT0: 0, swell: 0, blinkPh: 0, soot: 0, sootKeep: false
+          flight: null, litT0: 0, swell: 0, blinkPh: 0, soot: 0, sootKeep: false,
+          // 지뢰: mine = swelling toward its pop ({ t0, k, o }), gone = blown off for the rest of the turn (hidden every frame), mineWait = popped, its group's callback not yet run
+          mine: null, gone: false, mineWait: false,
+          // 매의 눈: pin = { t0, x, z, y0, q0, q1, mInv } while the die hovers (pinned by a tap), null otherwise
+          pin: null
         };
         group.quaternion.copy(d.baseQuat);
         D.push(d);
@@ -14446,7 +14748,7 @@
         const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ map: scorchTex, color: 0x0d0906, transparent: true, opacity: 0, depthWrite: false }));
         const g = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ map: glowTex, color: 0xff5a1a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
         [m, g].forEach((x) => { x.rotation.x = -Math.PI / 2; x.visible = false; scene.add(x); });
-        return { m, g, t0: -9, fade: -9, fd: 0.4 };
+        return { m, g, t0: -9, fade: -9, fd: 0.4, sz: 1 };
       });
 
       const fxGeo = new THREE.RingGeometry(0.42, 0.56, 40);
@@ -15731,11 +16033,14 @@
           // five 1s thrown on a fuse are a bust, not a yacht: no gold flood
           stops: pickStops(imps), yacht: values.every((v) => v === values[0]) && !(fuse && rollingIdx.some((i) => values[i] === 1)),
           revealStep, dramaFired: false, revealed: false, fuse, fuseFired: false,
-          cockSup: sim.cock && sim.cock.caught ? sim.cock.support : -1 // the die the cock die leans on (-1 = none)
+          cockSup: sim.cock && sim.cock.caught ? sim.cock.support : -1, // the die the cock die leans on (-1 = none)
+          // 매의 눈: slow motion until a die is pinned (on: still slowed, real: seconds of it so far, used: a die was pinned)
+          hawk: opts && opts.hawk ? { on: true, real: 0, used: false } : null,
+          pinOut: null // pinned dice that a 샷건 took out of the new throw (they still gather with the others)
         };
       }
       function startRolling(d) {
-        d.rolling = true; d.tween = null; d.hopT0 = -9; d.landAt = 0; d.hover = false;
+        d.rolling = true; d.tween = null; d.hopT0 = -9; d.landAt = 0; d.hover = false; d.pin = null;
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
         dropCock(d); // any throw ends a lean (and its settle and the neighbour's offset): the die tumbles out of its pose
         if (cockWant && cockWant.i === d.i) cockWant = null;
@@ -15772,7 +16077,8 @@
           if (apexAt) fireApex(); // no frames are coming: pay off now instead of over a later turn
           if (boomAt) fireBoom(); // same for a blast that was about to go off
           vfxOff(); // hidden: drop the particles instead of resuming them on return
-          D.forEach((d) => { if (d.flight) { const cb = d.flight.onDone; d.flight = null; d.group.visible = true; if (cb) setTimeout(cb, 0); } });
+          D.forEach((d) => { if (d.flight) { const cb = d.flight.onDone; d.flight = null; d.group.visible = !d.gone; if (cb) setTimeout(cb, 0); } });
+          D.forEach((d) => { if (d.mine) minePop(d); });
           tsUntil = 0; tsVis = 0;
           return;
         }
@@ -15784,19 +16090,25 @@
       function slam(forced, cockSpec) {
         const a = anim;
         if (!a || a.playhead >= a.steps - 3) return null;
-        a.opts = Object.assign({}, a.opts, { cock: cockSpec || null }); // the knocked roll may stand a die on its edge when it lands
+        // 매의 눈: a pinned die stays where it hovers (held for the new throw); the slow motion is over for good
+        const pinned = a.rolling.concat(a.pinOut || []).filter((i) => D[i].pin);
+        const aks = [];
+        a.rolling.forEach((i, k) => { if (!D[i].pin) aks.push(k); });
+        const act = aks.map((k) => a.rolling[k]);
+        if (!act.length) return null;
+        a.opts = Object.assign({}, a.opts, { cock: cockSpec || null, hawk: false }); // the knocked roll may stand a die on its edge when it lands
         const ph = Math.max(0, Math.min(a.playhead, a.steps - 1));
         const f0 = Math.floor(ph), f1 = Math.min(f0 + 1, a.steps - 1);
-        const init = a.rolling.map((i, k) => {
-          const F = a.frames[k], o0 = f0 * 7, o1 = f1 * 7, d = D[i];
+        const init = act.map((i, n) => {
+          const F = a.frames[aks[n]], o0 = f0 * 7, o1 = f1 * 7, d = D[i];
           return {
             p: d.group.position.clone(), q: d.group.quaternion.clone(),
             v: new THREE.Vector3((F[o1] - F[o0]) * 60, (F[o1 + 1] - F[o0 + 1]) * 60, (F[o1 + 2] - F[o0 + 2]) * 60)
           };
         });
-        const sim = simulate(D.map((d) => d.held), a.rolling, init, cockSpec);
+        const sim = simulate(D.map((d) => d.held || !!d.pin), act, init, cockSpec);
         const values = a.values.slice();
-        a.rolling.forEach((i, k) => {
+        act.forEach((i, k) => {
           const d = D[i];
           if (forced) {
             values[i] = forced[i];
@@ -15826,7 +16138,8 @@
           focusUntil = -9;
           try { if (a.opts.onFuse) a.opts.onFuse(null); } catch (e) {}
         }
-        anim = makeAnim(sim, a.rolling, values, a.opts, yacht || a.fuse);
+        anim = makeAnim(sim, act, values, a.opts, yacht || a.fuse);
+        anim.pinOut = pinned.length ? pinned : null;
         // the whole table takes the hit: the dice hang for a beat, a shockwave crosses the felt, held dice jump
         spawnRing(0, slots[2].z, 14, 0xfff1c9, { size: 3.2, life: 0.5, alpha: 0.6 });
         if (!REDUCED) {
@@ -15851,8 +16164,10 @@
         // lead: the die is lifted to the launch point first (the playhead counts up from -lead)
         const blend = a.lead ? Math.min(1, (a.playhead + a.lead) / (a.lead + 6)) : Math.min(1, a.playhead / 7);
         a.centroid.set(0, 0, 0);
+        if (a.pinOut) a.pinOut.forEach((i) => pinPose(D[i]));
         a.rolling.forEach((i, k) => {
           const d = D[i], F = a.frames[k];
+          if (d.pin) { pinPose(d); a.centroid.add(d.group.position); return; } // 매의 눈: a pinned die hovers on its own
           const o0 = f0 * 7, o1 = f1 * 7;
           _p.set(F[o0] + (F[o1] - F[o0]) * t, F[o0 + 1] + (F[o1 + 1] - F[o0 + 1]) * t, F[o0 + 2] + (F[o1 + 2] - F[o0 + 2]) * t);
           _q.set(F[o0 + 3], F[o0 + 4], F[o0 + 5], F[o0 + 6]);
@@ -15870,6 +16185,92 @@
         });
         a.centroid.divideScalar(a.rolling.length);
       }
+      // ---------- 매의 눈 ----------
+      // The roll plays at HAWK_SLOW of its speed from the launch until a die is pinned, the dice are about to rest (HAWK_TAIL steps
+      // before the end) or HAWK_SECS of real time have passed. pickAt finds the rolling die under a screen point, pin takes it out of
+      // the playback: it lifts to a hover, turns the shortest way to show v and gathers with the others at the end.
+      const HAWK_SLOW = 0.28, HAWK_TAIL = 18, HAWK_SECS = 3.2, PIN_Y = 2.4, PIN_LIFT = 0.2, PIN_COL = 0xffe08a;
+      const _pv = new THREE.Vector3(), _pr = new THREE.Vector3();
+      function hawkOpen() { const a = anim; return !!(a && a.hawk && !a.hawk.used && a.playhead < a.steps - 3); }
+      // the rolling die nearest to a screen point (client pixels) within about 1.2 die radii on screen, or -1
+      function pickAt(cx, cy) {
+        if (!hawkOpen()) return -1;
+        const a = anim, r = canvas.getBoundingClientRect();
+        if (!(r.width > 0 && r.height > 0) || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) return -1; // the stage clips what leaves it: a point outside is no tap on a die
+        camera.updateMatrixWorld();
+        _pr.setFromMatrixColumn(camera.matrixWorld, 0);
+        let best = -1, bd = 1e9;
+        a.rolling.forEach((i) => {
+          const d = D[i];
+          if (d.pin || !d.group.visible) return;
+          _pv.copy(d.group.position).project(camera);
+          const px = r.left + (_pv.x + 1) / 2 * r.width, py = r.top + (1 - _pv.y) / 2 * r.height;
+          _pv.copy(d.group.position).addScaledVector(_pr, 0.5).project(camera);
+          const rad = Math.abs(r.left + (_pv.x + 1) / 2 * r.width - px);
+          const dist = Math.hypot(cx - px, cy - py);
+          if (dist <= rad * 1.2 && dist < bd) { bd = dist; best = i; }
+        });
+        return best;
+      }
+      // where a pinned die hovers: straight up from where it was tapped, but never so high that it leaves the picture (far edge of the table):
+      // lower first, then slide toward the camera, until the top far corner stays inside ndc y 0.8
+      function pinHover(x, y0, z) {
+        camera.updateMatrixWorld();
+        const cp = camera.position, dx = x - cp.x, dz = z - cp.z, dl = Math.hypot(dx, dz) || 1, ax = dx / dl, az = dz / dl;
+        const top = (px, py, pz) => _pv.set(px + ax * 0.6, py + 0.6, pz + az * 0.6).project(camera).y;
+        let hy = PIN_Y, hx = x, hz = z;
+        while (hy > Math.max(y0, 1.7) && top(hx, hy, hz) > 0.8) hy -= 0.2;
+        for (let k = 0; k < 40 && top(hx, hy, hz) > 0.8; k++) { hx -= ax * 0.25; hz -= az * 0.25; }
+        return { hx, hy, hz };
+      }
+      function pinPose(d) {
+        const pn = d.pin, t = clock - pn.t0;
+        const e = REDUCED ? 1 : easeOutCubic(clamp01(t / PIN_LIFT));
+        const bob = REDUCED ? 0 : Math.sin(Math.max(0, t) * 3.2) * 0.07 * e;
+        d.group.position.set(pn.x + (pn.hx - pn.x) * e, pn.y0 + (pn.hy - pn.y0) * e + bob, pn.z + (pn.hz - pn.z) * e);
+        _qs.slerpQuaternions(pn.q0, pn.q1, e);
+        if (!REDUCED && t > PIN_LIFT) { _qw.setFromAxisAngle(UP, (t - PIN_LIFT) * 0.9); _qs.premultiply(_qw); } // a slow turn about the vertical: the face stays on top
+        d.group.quaternion.copy(_qs).multiply(pn.mInv); // group * mesh = the pose above
+        d.hl = true; d.hlColor.set(PIN_COL);
+      }
+      // true when the die was pinned (the roll is live, the die is rolling, nothing pinned yet)
+      function pin(i, v) {
+        const a = anim, d = D[i];
+        v = Math.floor(Number(v));
+        if (!a || !a.hawk || a.hawk.used || !d || !d.rolling || d.pin || !(v >= 1 && v <= 6) || a.rolling.indexOf(i) < 0 || a.playhead >= a.steps - 3) return false;
+        const wq = d.group.quaternion.clone().multiply(d.mesh.quaternion); // the pose the die shows now
+        const n = FACE_N[faceIdx(v)].clone().applyQuaternion(wq);
+        const q1 = new THREE.Quaternion().setFromUnitVectors(n, UP).multiply(wq); // the shortest turn that puts v on top
+        const pos = d.group.position;
+        d.pin = Object.assign({ t0: clock, x: pos.x, z: pos.z, y0: pos.y, q0: wq, q1, mInv: d.mesh.quaternion.clone().invert() }, pinHover(pos.x, pos.y, pos.z));
+        a.values[i] = v;
+        a.hawk.used = true; a.hawk.on = false; // the others finish at normal speed
+        // the pinned die no longer rolls, so the throw ends when the OTHER dice have stopped, not when its own unused tumble would have
+        {
+          let end = 0;
+          a.rolling.forEach((di, k) => {
+            if (di === i) return;
+            const F = a.frames[k], lo = (a.steps - 1) * 7;
+            let rest = a.steps - 1;
+            while (rest > 0) {
+              const o = (rest - 1) * 7;
+              const dp = Math.abs(F[o] - F[lo]) + Math.abs(F[o + 1] - F[lo + 1]) + Math.abs(F[o + 2] - F[lo + 2]);
+              const dq = 1 - Math.abs(F[o + 3] * F[lo + 3] + F[o + 4] * F[lo + 4] + F[o + 5] * F[lo + 5] + F[o + 6] * F[lo + 6]);
+              if (dp > 0.004 || dq > 0.00002) break;
+              rest--;
+            }
+            if (rest > end) end = rest;
+          });
+          a.steps = Math.max(Math.ceil(a.playhead) + 8, Math.min(a.steps, end + 12));
+        }
+        flashDie(d, 1, PIN_COL);
+        spawnRing(pos.x, pos.z, 13, PIN_COL, { size: 2.4, life: 0.55 });
+        spawnGlint(pos.x, 1.2, pos.z, 8);
+        puffCircle(pos.x, pos.z, 6, 0.5, 1.2, KNOCK_PUFF);
+        hitstop(0.05);
+        kick({ y: -1, trauma: 0.2, fov: -0.8 });
+        return true;
+      }
       function updatePlayback(dt) {
         const a = anim;
         if (!a) return;
@@ -15879,7 +16280,12 @@
           if (anim !== a) return;
         }
         // slow-mo while the last die is still deciding, then fast-forward through the still frames after the reveal
-        const want = a.dramaFired ? (a.revealed ? 1.8 : a.fuse ? 0.35 : 0.3) : 1;
+        let want = a.dramaFired ? (a.revealed ? 1.8 : a.fuse ? 0.35 : 0.3) : 1;
+        if (a.hawk && a.hawk.on) { // 매의 눈: its own factor (not the drama one)
+          a.hawk.real += dt;
+          if (a.hawk.used || a.playhead >= a.steps - HAWK_TAIL || a.hawk.real > HAWK_SECS) a.hawk.on = false;
+          else want = Math.min(want, HAWK_SLOW);
+        }
         a.timeScale += (want - a.timeScale) * (1 - Math.exp(-dt * 6));
         a.playhead += dt * 60 * SPEED * a.timeScale;
         const last = a.steps - 1;
@@ -15887,6 +16293,7 @@
         applyFrame(a, ph);
         while (a.ii < a.impacts.length && a.impacts[a.ii].step <= ph) {
           const k = a.ii++, im = a.impacts[k];
+          if (D[im.i].pin || (im.j >= 0 && D[im.j].pin)) continue; // 매의 눈: the pinned die no longer touches anything
           if (a.opts.onImpact) a.opts.onImpact(im.v, im.kind, im);
           if (anim !== a) return; // the callback slammed / finished this roll
           impactFx(a, k, im);
@@ -15962,7 +16369,7 @@
         hitstop(0.09);
         puffCircle(b.cx, b.cz, 8, 0.5, 2.6, BLAST_SMOKE);
         kick({ x: b.cx > 0 ? -0.5 : 0.5, y: 2.6, z: 1.6, trauma: 0.75, fov: 2.5, roll: b.cx >= 0 ? 0.9 : -0.9 });
-        const inn = [0, 1, 2, 3, 4].filter((i) => b.hot.indexOf(i) === -1), order = inn.concat(b.hot);
+        const inn = [0, 1, 2, 3, 4].filter((i) => b.hot.indexOf(i) === -1 && !D[i].gone), order = inn.concat(b.hot);
         order.forEach((i, k) => {
           const d = D[i], isHot = b.hot.indexOf(i) !== -1;
           const nx = _v3.copy(slots[i]).project(camera).x;
@@ -16011,7 +16418,53 @@
         try { if (f.onLand) f.onLand(d.i, f.k, f.hot); } catch (e) {}
         if (f.onDone) setTimeout(f.onDone, 0);
       }
-      function scorchAt(i) { const S = scorch[i]; if (!S) return; S.t0 = clock; S.fade = -9; S.m.visible = S.g.visible = true; }
+      // 지뢰: the dice that showed a mined face swell for MINE_PRE, then pop (ring, puff, glint, a jolt) and stay gone. They never fly back.
+      const MINE_PRE = 0.36, MINE_RING1 = { size: 2.4, life: 0.5, alpha: 0.9 }, MINE_RING2 = { size: 1.3, life: 0.25, alpha: 1 };
+      const MINE_SMOKE = { color: 0x2a231e, a: 0.5, s0: 0.35, s1: 1.5, life: 0.8, vy: 0.5 };
+      function minePop(d) {
+        const m = d.mine;
+        d.mine = null;
+        if (!m) return;
+        const ctx = m.o, x = d.group.position.x, z = d.group.position.z;
+        d.gone = true; d.mineWait = true; d.group.visible = false; d.swell = 0; d.flash = 0;
+        scorchAt(d.i, 0.6);
+        if (!REDUCED && !document.hidden) {
+          if (!ctx.vfxDone) { ctx.vfxDone = true; vfxDrawn = vfxBlast(ctx.idx, 0.5); }
+          spawnRing(x, z, 14, 0xffb04d, MINE_RING1);
+          spawnRing(x, z, 14, 0xffffff, MINE_RING2);
+          puffCircle(x, z, 5, 0.3, 2.2, MINE_SMOKE);
+          spawnGlint(x, 0.9, z, 10);
+          if (!ctx.jolted) { ctx.jolted = true; hitstop(0.05); kick({ y: 1.6, trauma: 0.3, fov: 1.2 }); }
+        } else vfxDrawn = false;
+        try { if (ctx.onBoom) ctx.onBoom(d.i, m.k); } catch (e) {}
+        if (--ctx.left <= 0) {
+          ctx.idx.forEach((i) => { D[i].mineWait = false; });
+          try { if (ctx.onDone) ctx.onDone(); } catch (e) {}
+        }
+      }
+      function mineBlast(idxs, o) {
+        o = o || NO_OPTS;
+        const list = (idxs || []).filter((i) => D[i] && !D[i].gone && !D[i].mine);
+        if (!list.length) { if (o.onDone) setTimeout(o.onDone, 0); return; }
+        const ctx = { onBoom: o.onBoom, onDone: o.onDone, left: list.length, idx: list.slice(), vfxDone: false, jolted: false };
+        list.forEach((i, k) => { D[i].mine = { t0: clock + (REDUCED ? 0 : k * 0.06), k, o: ctx }; });
+        if (document.hidden) list.forEach((i) => { if (D[i].mine) minePop(D[i]); });
+      }
+      // the table's blown dice for this screen (true = hidden): quiet, no effects. A die with a blast on its way is left to the blast.
+      function setGone(mask) {
+        for (let i = 0; i < 5; i++) {
+          const d = D[i], g = !!(mask && mask[i]);
+          if (d.mine || d.mineWait) continue;
+          if (g && !d.gone) { d.gone = true; d.group.visible = false; scorchAt(i, 0.6); }
+          else if (!g && d.gone) {
+            d.gone = false; d.group.visible = true; d.flight = null;
+            const S = scorch[i];
+            if (S.m.visible && S.fade < 0) { S.fade = clock; S.fd = 0.5; }
+            if (!REDUCED) { flashDie(d, 0.6, 0xffffff); squash(d, -3); }
+          }
+        }
+      }
+      function scorchAt(i, sz) { const S = scorch[i]; if (!S) return; S.t0 = clock; S.fade = -9; S.sz = sz || 1; S.m.visible = S.g.visible = true; }
 
       // ---------- 도화선 burst: wawa-vfx-vanilla (MIT), GPU-instanced particle pools drawn inside the scene ----------
       // Loaded on the side once the table is up. If the library or a texture is missing (offline first visit, a local file)
@@ -16103,7 +16556,8 @@
         vfxQueue.push({ at: clock + 0.15, run: () => vfx && vfxEmit('smoke', n(14), o, () => ({ dir: vfxDome(0.1), speed: vfxRnd(0.8, 2.6) * k, scale: cube(4.0, 6.4), life: vfxRnd(0.65, 1.05), c0: vfxPick(['#6a584c', '#544840']), c1: '#231d19', spin: [0, 0, vfxRnd(-0.7, 0.7)], off: [vfxRnd(-0.5, 0.5), vfxRnd(0.2, 0.8), vfxRnd(-0.5, 0.5)] })) });
       }
       // the blast at the guilty dice: one at their centre, or two smaller ones when two dice sit far apart. false = not drawn here.
-      function vfxBlast(hot) {
+      function vfxBlast(hot, km) {
+        km = km || 1;
         if (!vfx || !hot.length || renderer.getContext().isContextLost()) return false;
         try {
           vfxQueue.length = 0;
@@ -16112,8 +16566,8 @@
           const x0 = Math.min.apply(null, ps.map((p) => p.x)), x1 = Math.max.apply(null, ps.map((p) => p.x));
           const lim = Math.max(0.5, bounds.halfX - 1.8), cx = (x0 + x1) / 2, cz = ps.reduce((s, p) => s + p.z, 0) / ps.length;
           // blastFit (layout): the puffs are billboards, so on a shallow table (desktop, landscape) the same world size would swallow the felt
-          if (ps.length === 2 && x1 - x0 > 1.7) ps.forEach((p) => vfxOne({ x: Math.max(-lim, Math.min(lim, p.x)), y: 0.65, z: p.z }, 0.62 * blastFit));
-          else vfxOne({ x: Math.max(-lim, Math.min(lim, cx)), y: 0.65, z: cz }, (ps.length > 2 ? 0.9 : 0.82) * blastFit);
+          if (ps.length === 2 && x1 - x0 > 1.7) ps.forEach((p) => vfxOne({ x: Math.max(-lim, Math.min(lim, p.x)), y: 0.65, z: p.z }, 0.62 * blastFit * km));
+          else vfxOne({ x: Math.max(-lim, Math.min(lim, cx)), y: 0.65, z: cz }, (ps.length > 2 ? 0.9 : 0.82) * blastFit * km);
           vfxHide = 0; vfxUntil = clock + 1.4;
           return true;
         } catch (e) { vfxOff(); vfx = null; return false; }
@@ -16146,7 +16600,7 @@
       }
       // the charred felt fades (a new throw, or the turn is over); dice that kept their soot lose it too
       function clearScorch(sec) {
-        scorch.forEach((S) => { if (S.m.visible && S.fade < 0) { S.fade = clock; S.fd = sec || 0.4; } });
+        scorch.forEach((S, i) => { if (S.m.visible && S.fade < 0 && !(sec >= 0.05 && D[i] && D[i].gone)) { S.fade = clock; S.fd = sec || 0.4; } }); // 지뢰: a blown die's blot stays until it is back
         D.forEach((d) => { d.sootKeep = false; if (sec < 0.05) d.soot = 0; }); // (a new match: clean dice at once)
         if (sec < 0.05) { vfxKill(); yachtEnd(true); }
       }
@@ -16158,8 +16612,8 @@
           let a = 0.85 * pop;
           if (S.fade >= 0) { const f = (clock - S.fade) / S.fd; if (f >= 1) { S.m.visible = S.g.visible = false; continue; } a *= 1 - f; }
           S.m.position.set(slots[i].x, 0.006, slots[i].z); S.g.position.set(slots[i].x, 0.007, slots[i].z);
-          S.m.scale.setScalar(0.3 + 1.3 * easeOutCubic(pop)); S.m.material.opacity = a;
-          S.g.scale.setScalar(0.7);
+          S.m.scale.setScalar((0.3 + 1.3 * easeOutCubic(pop)) * S.sz); S.m.material.opacity = a;
+          S.g.scale.setScalar(0.7 * S.sz);
           S.g.material.opacity = S.fade >= 0 || t > 1.4 ? 0 : 0.9 * (1 - t / 1.4) * (REDUCED ? 0.85 : 0.75 + 0.25 * Math.sin(clock * 31 + i));
         }
       }
@@ -16195,8 +16649,9 @@
         anim = null;
         if (a.fuse && !a.fuseFired) fireFuse(a); // the roll was cut short (finishNow, a hidden tab): the result still shows
         let maxEnd = 0, othersEnd = 0, cockD = null;
-        a.rolling.forEach((i, k) => {
+        (a.pinOut ? a.rolling.concat(a.pinOut) : a.rolling).forEach((i, k) => {
           const d = D[i];
+          if (d.pin) { d.pin = null; d.hl = false; } // 매의 눈: the hovering die flies to its slot with the rest
           const worldQ = d.group.quaternion.clone().multiply(d.mesh.quaternion);
           d.mesh.quaternion.identity();
           d.group.quaternion.copy(worldQ);
@@ -16251,7 +16706,8 @@
         tsUntil = 0; // a throw that is cut short ends the stop with it
         if (anim) { anim.playhead = anim.steps - 1; applyFrame(anim, anim.steps - 1); beginGather(); }
         boomAt = null;
-        D.forEach((d) => { if (d.flight) { d.flight = null; d.group.visible = true; } });
+        D.forEach((d) => { if (d.flight) { d.flight = null; d.group.visible = !d.gone; } });
+        D.forEach((d) => { if (d.mine) minePop(d); });
         D.forEach((d) => { if (d.tween) d.tween = null; });
         // a leaning die goes straight into its rest pose against its neighbour: no flight, no settle
         D.forEach((d) => {
@@ -16316,6 +16772,12 @@
             flashDie(d, REDUCED ? 0.5 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(d.blinkPh)), 0xff3b30);
           } else if (d.swell < 0.002) d.swell = 0;
           sw = d.swell;
+        }
+        if (d.mine && clock >= d.mine.t0 && !REDUCED) { // 지뢰: it balloons, trembles and blinks red for a beat, then pops
+          const mp = clamp01((clock - d.mine.t0) / MINE_PRE);
+          sw = Math.max(sw, 0.3 * mp * mp);
+          jx += Math.sin(clock * 90 + d.i * 2) * 0.25 * mp;
+          flashDie(d, 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(clock * (30 + 100 * mp))), 0xff3b30);
         }
         const ys = yf ? 1 + 0.03 * Math.min(1, yachtY(clock - yf.t0) / Y_H) : 1; // rising toward a top-down camera reads as growing
         const sy = (1 + d.sq) * kf * (1 + sw) * ys, sxz = (1 - 0.5 * d.sq) * kf * (1 + sw) * ys;
@@ -16460,6 +16922,8 @@
             d.mark.material.color.copy(d.markCol);
             d.mark.material.opacity = d.flight ? 0 : d.markVis * 0.62 * pulse * (d.rolling ? 0.45 : 1);
           } else if (d.hull.visible) { d.hull.visible = false; d.mark.visible = false; }
+          if (d.mine && clock >= d.mine.t0 + (REDUCED ? 0.05 : MINE_PRE)) minePop(d);
+          if (d.gone) { d.group.visible = false; d.ring.material.opacity = 0; d.hull.visible = false; d.mark.visible = false; }
         }
         if (gather && clock >= gather.at) { const g = gather; gather = null; if (g.cb) g.cb(g.values); }
       }
@@ -16978,6 +17442,10 @@
         roll,
         slam,
         canSlam: () => !!anim && anim.playhead < anim.steps - 3,
+        // 매의 눈: pickAt(clientX, clientY) = the rolling die under that point or -1, pin(i, v) = freeze it on v, hawkOpen() = a tap can still pin
+        pickAt,
+        pin,
+        hawkOpen,
         setState,
         // 모서리 착지: the last catch search ({ caught, tries, ms, support, ... }) and a test hook that runs only the search
         get cockStat() { return cockStat ? Object.assign({}, cockStat) : null; },
@@ -17030,7 +17498,10 @@
         // true when the last blast was drawn here as particles (the main script then skips its DOM burst)
         get boomFx() { return vfxDrawn; },
         clearScorch,
-        isAnimating: () => !!(anim || gather || boomAt || D.some((d) => d.flight)),
+        isAnimating: () => !!(anim || gather || boomAt || D.some((d) => d.flight || d.mine)),
+        setGone,
+        // 지뢰: the dice at idx swell and pop (onBoom(i, k) per die, onDone once at the end); they stay hidden until setGone says otherwise
+        mineBlast,
         slotRects: () => rects,
         setDim: (b) => D.forEach((d) => { d.dim = !!b; }),
         setHover: (i) => D.forEach((d) => { d.hover = d.i === i; }),
