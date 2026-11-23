@@ -242,6 +242,28 @@
   }
   .seat.slam-live { box-shadow: inset 0 0 0 1.5px #ff6478, inset 3px 0 0 var(--pc), 0 0 12px rgba(224, 49, 75, 0.35); }
   @keyframes slamIn { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: none; opacity: 1; } }
+  /* 시간 정지: the cold pill beside 샷건 (updateSeatSlams builds both). Same sizes, same fitting, steel blue instead of ruby.
+     Behind 샷건 in the row, so it never needs its own auto margin when both are there. */
+  .seat-stop {
+    position: relative; z-index: 2; flex: none; height: 22px; padding: 0 8px; border-radius: 11px;
+    display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer;
+    color: #fff; font: 400 13px/22px var(--f-display);
+    background: linear-gradient(180deg, #8fc4ff, #2e6fc9);
+    box-shadow: 0 2px 0 #12356b, 0 0 0 1.5px rgba(0, 0, 0, 0.5);
+    animation: slamIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .seat-stop::before { content: ""; position: absolute; inset: -6px -6px -8px -2px; }
+  .seat-stop b { display: none; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: #fff; color: #12356b; font: 700 10px/14px var(--f-ui); text-align: center; }
+  .seat-stop.tight { padding: 0 5px; }
+  .seat-stop.tight b { display: none; }
+  .seat-st:empty + .seat-stop, .seat.st-off .seat-stop { margin-left: auto; }
+  .seat .seat-slam ~ .seat-stop { margin-left: 0; }
+  .seat.stop-clip .seat-augs [data-aug="timeStop"] { display: none; }
+  .seat-stop.is-live {
+    box-shadow: 0 2px 0 #12356b, 0 0 0 1.5px rgba(255, 255, 255, 0.6), 0 0 16px rgba(95, 160, 255, 0.75);
+    animation: slamIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), pwLive 0.45s ease-in-out 0.28s infinite alternate;
+  }
+  .seat.stop-live { box-shadow: inset 0 0 0 1.5px #7fb6ff, inset 3px 0 0 var(--pc), 0 0 12px rgba(80, 150, 255, 0.35); }
 
   .seat.is-turn {
     background-color: color-mix(in srgb, var(--pc) 15%, transparent);
@@ -292,7 +314,7 @@
     .seats.quad .seat-meta { column-gap: 4px; }
     .seats.quad .seat-me { height: 10px; padding: 0 3px; font-size: 8px; line-height: 10px; }
     .seat-gap { padding: 0 4px; font-size: 9px; }
-    .seat-slam { height: 20px; border-radius: 10px; font-size: 12px; line-height: 20px; }
+    .seat-slam, .seat-stop { height: 20px; border-radius: 10px; font-size: 12px; line-height: 20px; }
     .seats.duo .seat-coin { width: 30px; height: 30px; font-size: 12px; }
     .seats.duo .seat-score { font-size: 24px; line-height: 21px; }
     .seats.duo .seat-name { font-size: 10.5px; }
@@ -305,7 +327,7 @@
     .seats.quad .seat-coin { width: 22px; height: 22px; }
     .seats.quad .seat-score { font-size: 17px; }
     .seat-gap { font-size: 8.5px; }
-    .seat-slam { height: 18px; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 18px; }
+    .seat-slam, .seat-stop { height: 18px; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 18px; }
     .seats.duo .seat-coin { width: 24px; height: 24px; font-size: 10px; }
     .seats.duo .seat-coin::after { inset: 3px; }
     .seats.duo .seat-score { font-size: 20px; line-height: 18px; }
@@ -314,11 +336,11 @@
   }
   /* a roomy card (tablet, desktop): the button also carries the uses left */
   @container (min-width: 170px) {
-    .seat-slam { padding: 0 5px 0 8px; }
-    .seat-slam b { display: block; }
+    .seat-slam, .seat-stop { padding: 0 5px 0 8px; }
+    .seat-slam b, .seat-stop b { display: block; }
   }
   @supports not (container-type: inline-size) {
-    .seats[data-size="sm"] .seat-slam, .seats.duo[data-size="md"] .seat-slam { height: 19px; padding: 0 6px; font-size: 11.5px; line-height: 19px; }
+    .seats[data-size="sm"] .seat-slam, .seats.duo[data-size="md"] .seat-slam, .seats[data-size="sm"] .seat-stop, .seats.duo[data-size="md"] .seat-stop { height: 19px; padding: 0 6px; font-size: 11.5px; line-height: 19px; }
     .seats.quad[data-size="sm"] .seat-coin { width: 24px; height: 24px; font-size: 10px; }
     .seats.quad[data-size="sm"] .seat-score { font-size: 19px; }
     .seats.duo[data-size="md"] .seat-coin, .seats.duo[data-size="sm"] .seat-coin { width: 28px; height: 28px; font-size: 11px; }
@@ -368,10 +390,10 @@
     .seats.quad:not(.no-aug) .seat-augs .ab-n.tick::before { width: 2px; height: 5px; border-width: 0 1.5px 1.5px 0; }
     .seats.quad:not(.no-aug) .seat-augs .aug-badge.is-hot::before { inset: -2px; border-radius: 7px; filter: none; } /* the chip box clips: a plain frame instead of a blur */
     .seats.quad:not(.no-aug) .seat-me { height: 10px; padding: 0 3px; font-size: 8px; line-height: 10px; }
-    .seats.quad:not(.no-aug) .seat-slam { height: 18px; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 18px; }
-    .seats.quad:not(.no-aug) .seat-slam::before { inset: -5px -6px -5px -2px; }
-    .seats.quad:not(.no-aug) .seat-slam.min { padding: 0 3px; }
-    .seats.quad:not(.no-aug) .seat-slam b { display: none; }
+    .seats.quad:not(.no-aug) .seat-slam, .seats.quad:not(.no-aug) .seat-stop { height: 18px; padding: 0 6px; border-radius: 9px; font-size: 11.5px; line-height: 18px; }
+    .seats.quad:not(.no-aug) .seat-slam::before, .seats.quad:not(.no-aug) .seat-stop::before { inset: -5px -6px -5px -2px; }
+    .seats.quad:not(.no-aug) .seat-slam.min, .seats.quad:not(.no-aug) .seat-stop.min { padding: 0 3px; }
+    .seats.quad:not(.no-aug) .seat-slam b, .seats.quad:not(.no-aug) .seat-stop b { display: none; }
     /* the draft status has no gap slot here: a small badge on the coin's lower left (picked, or choosing right now),
        clear of the total. grid-area: auto anchors it to the score block instead of the empty gap column. */
     .seats.quad:not(.no-aug) .seat-gap.is-draft { display: block; grid-area: auto; position: absolute; left: -29px; left: calc(-7px - clamp(18px, 15.5cqw, 22px)); bottom: -4px; z-index: 3; height: 11px; padding: 0 3px; border-radius: 6px; line-height: 11px; background: #23262d; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55); }
@@ -439,10 +461,15 @@
     .seat.gap-off .seat-gap.is-draft { display: block; }
     .seats[class] .seat.gap-off .seat-gap.is-draft .dg-t { display: none; }
     /* the 쾅 button hangs on the card's bottom edge, clear of the chips' tags (the status pills keep the top edge) */
-    .seats[class] .seat-slam { position: absolute; right: 28px; bottom: -13px; height: 22px; margin: 0; padding: 0 5px 0 9px; border-radius: 11px; font-size: 13px; line-height: 22px; }
-    .seats[class] .seat-slam::before { inset: -6px -8px -8px; }
-    .seats[class] .seat-slam b { display: block; }
+    .seats[class] .seat-slam, .seats[class] .seat-stop { position: absolute; right: 28px; bottom: -13px; height: 22px; margin: 0; padding: 0 5px 0 9px; border-radius: 11px; font-size: 13px; line-height: 22px; }
+    .seats[class] .seat-slam::before, .seats[class] .seat-stop::before { inset: -6px -8px -8px; }
+    .seats[class] .seat-slam:has(~ .seat-stop)::before { right: 0; }
+    .seats[class] .seat-slam ~ .seat-stop::before { left: 0; }
+    .seats[class] .seat-slam b, .seats[class] .seat-stop b { display: block; }
+    /* both on the same edge: 정지 hangs to the left of 샷건 */
+    .seats[class] .seat-slam ~ .seat-stop { right: 100px; }
     .seat.slam-live { box-shadow: inset 0 0 0 1.5px #ff6478, 0 0 16px rgba(224, 49, 75, 0.4); }
+    .seat.stop-live { box-shadow: inset 0 0 0 1.5px #7fb6ff, 0 0 16px rgba(80, 150, 255, 0.45); }
     .seats.quad:not(.no-aug) ~ .hud-btns { flex-direction: row; gap: 8px; }
     /* four pills on a narrower rail: the gap moves up beside the name, then everything steps down */
     @container (max-width: 250px) {
@@ -634,6 +661,9 @@
   .pw-btn.is-live { color: #fff; background: linear-gradient(180deg, #ff6478, var(--ruby)); box-shadow: 0 3px 0 #7d0f24, 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 24px rgba(224, 49, 75, 0.85); animation: pwLive 0.45s ease-in-out infinite alternate; }
   .pw-btn.is-live .pw-ico { background: #fff; color: var(--ruby); }
   .pw-btn.is-live .pw-n { background: #fff; color: var(--ruby-lo); }
+  .pw-btn[data-pw="timeStop"].is-live { background: linear-gradient(180deg, #8fc4ff, #2e6fc9); box-shadow: 0 3px 0 #12356b, 0 0 0 2px rgba(255, 255, 255, 0.55), 0 0 24px rgba(80, 150, 255, 0.85); }
+  .pw-btn[data-pw="timeStop"].is-live .pw-ico { color: #2e6fc9; }
+  .pw-btn[data-pw="timeStop"].is-live .pw-n { color: #12356b; }
   @keyframes pwLive { from { transform: scale(1); } to { transform: scale(1.08); } }
   .pw-btn.is-arm { color: #2a1a04; background: linear-gradient(180deg, #fff1c2, var(--brass-hi)); box-shadow: 0 3px 0 #8a5a12, 0 0 0 2px #fff, 0 0 22px rgba(255, 215, 122, 0.9); animation: pwArm 0.7s ease-in-out infinite alternate; }
   /* 올인 after the first roll: still on, no longer a choice - the gold stays, the pulse and the glow go */
@@ -1768,6 +1798,7 @@
   .fx-ring { width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 3px solid var(--c, #fff); box-shadow: 0 0 14px var(--c, #fff), inset 0 0 10px var(--c, #fff); }
   .fx-beam { height: 6px; margin-top: -3px; border-radius: 3px; transform-origin: 0 50%; background: linear-gradient(90deg, transparent, var(--c, #8fe3ff) 20%, #fff 50%, var(--c, #8fe3ff) 80%, transparent); box-shadow: 0 0 18px var(--c, #8fe3ff); }
   .fx-word { white-space: nowrap; font: 400 clamp(54px, 12vw, 96px) var(--f-game); line-height: 1; color: #fff6dc; -webkit-text-stroke: 3px #3a1a04; text-shadow: 0 6px 0 #3a1a04, 0 0 30px rgba(255, 170, 60, 0.75); }
+  .fx-word.cold { color: #eef7ff; -webkit-text-stroke: 3px #0c2444; text-shadow: 0 6px 0 #0c2444, 0 0 30px rgba(110, 185, 255, 0.85); }
   .fx-glyph { color: var(--c, #fff); filter: drop-shadow(0 0 18px var(--c, #fff)); }
   .fx-glyph svg { display: block; width: 100%; height: 100%; }
   .fx-tile { border-radius: 12px; overflow: hidden; }
@@ -1783,6 +1814,28 @@
   .fx-tile.zap { background: linear-gradient(105deg, transparent 30%, rgba(255, 240, 120, 0.95) 45%, #fff 50%, rgba(255, 240, 120, 0.95) 55%, transparent 70%); background-size: 250% 100%; animation: zap 0.6s ease-out both; }
   @keyframes zap { 0% { background-position: 120% 0; opacity: 1; } 100% { background-position: -40% 0; opacity: 0; } }
   .fx-screen { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; }
+  /* ===== 시간 정지 =====
+     The disc is a white layer that blends with "difference" over the whole page, so every colour under it (the WebGL
+     canvas too) comes out inverted. A blend mode composites in the browser, so it sees the canvas the same way in
+     Chromium and Safari; backdrop-filter does not sample a WebGL canvas reliably and needs a prefix in Safari. The disc
+     and its rim live on <body>, outside #fxLayer: that layer is its own stacking context and would isolate the blend. */
+  .ts-disc { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 63; pointer-events: none; background: #fff; mix-blend-mode: difference; clip-path: circle(0px at 50% 50%); -webkit-clip-path: circle(0px at 50% 50%); transition: opacity 0.3s ease-out; }
+  .ts-disc.veil { mix-blend-mode: normal; background: rgba(150, 175, 205, 0.38); }
+  .ts-rim { position: fixed; z-index: 64; pointer-events: none; box-sizing: border-box; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.96); box-shadow: 0 0 18px rgba(190, 225, 255, 0.9), inset 0 0 14px rgba(190, 225, 255, 0.7); }
+  /* the cold world: the app goes grey and blue-ish, except the stopper's own card (.ts-by) */
+  body.ts-grey #app > :not(.hud), body.ts-grey .hud-btns, body.ts-grey .seats > .seat:not(.ts-by) { filter: grayscale(0.92) sepia(0.28) hue-rotate(176deg) saturate(1.15) contrast(1.07); transition: filter 0.28s ease-out; }
+  .fx.ts-clock { width: var(--s, 220px); height: var(--s, 220px); margin: calc(var(--s, 220px) / -2) 0 0 calc(var(--s, 220px) / -2); opacity: 0; }
+  .ts-clock svg { display: block; width: 100%; height: 100%; fill: none; stroke: #dff0ff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(150, 200, 255, 0.6)); }
+  .ts-clock .a { fill: #bfe0ff; stroke: none; }
+  .ts-clock .ts-hand { transform-origin: 50px 50px; }
+  .fx-screen.fx-tsflash { background: rgba(150, 175, 205, 0.4); animation: tsFlash 0.25s ease-out both; }
+  @keyframes tsFlash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+  /* the clock tags pop in one after another (50 ms apart) when the throw lands */
+  .slot-marks .aug-badge[data-aug="timeStop"].pop { animation-fill-mode: backwards; }
+  .slot-btn:nth-child(2) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(2) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.05s; }
+  .slot-btn:nth-child(3) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(3) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.1s; }
+  .slot-btn:nth-child(4) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(4) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.15s; }
+  .slot-btn:nth-child(5) .aug-badge[data-aug="timeStop"].pop, .die2d:nth-child(5) .aug-badge[data-aug="timeStop"].pop { animation-delay: 0.2s; }
   .fx-screen.fx-rewind { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 5px), rgba(30, 60, 90, 0.2); animation: scanRoll 0.95s linear both; }
   @keyframes scanRoll { 0% { opacity: 0; background-position: 0 0, 0 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; background-position: 0 -120px, 0 0; } }
   .fx-rewind .rw { position: absolute; left: 50%; top: 42%; width: 110px; height: 110px; margin: -55px 0 0 -55px; color: #cfe8ff; filter: drop-shadow(0 0 20px #7fc4ff); animation: rwSpin 0.95s cubic-bezier(0.3, 0, 0.2, 1) both; }
@@ -1891,6 +1944,7 @@
   .die2d.skin-wing { background: linear-gradient(145deg, #dff6ff, #6cc8f5); box-shadow: 0 0 14px rgba(108, 200, 245, 0.55), 0 9px 16px rgba(0, 0, 0, 0.45); }
   .die2d.skin-wild { background: linear-gradient(145deg, #f6eeff, #c9a6ff); box-shadow: 0 0 14px rgba(201, 166, 255, 0.6), 0 9px 16px rgba(0, 0, 0, 0.45); }
   .die2d.skin-glue { background: linear-gradient(145deg, #d9ffe0, #6fe58a); box-shadow: 0 0 14px rgba(111, 229, 138, 0.6), 0 9px 16px rgba(0, 0, 0, 0.45); animation: glueWob 2.4s ease-in-out infinite; }
+  .die2d.skin-stop { background: linear-gradient(145deg, #e6f2ff, #7fb2ee); box-shadow: 0 0 14px rgba(159, 208, 255, 0.55), 0 9px 16px rgba(0, 0, 0, 0.45); }
   @keyframes glueWob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 0.96); } }
   /* What was done to a player: round pills at the right end of their card's chip row (.seat-st, with the seat
      cards). Squares are what you own, circles are what is on you. Own-augment progress lives on the chips. */
@@ -1920,6 +1974,10 @@
   .slot-btn.stuck::before {
     content: ""; position: absolute; left: 50%; bottom: 14%; width: 46%; height: 9px; transform: translateX(-50%);
     border-radius: 50%; background: radial-gradient(ellipse, rgba(125, 255, 154, 0.75), rgba(125, 255, 154, 0)); pointer-events: none;
+  }
+  .slot-btn.stopped::before {
+    content: ""; position: absolute; left: 50%; bottom: 14%; width: 46%; height: 9px; transform: translateX(-50%);
+    border-radius: 50%; background: radial-gradient(ellipse, rgba(159, 208, 255, 0.75), rgba(159, 208, 255, 0)); pointer-events: none;
   }
   .tile.is-bust { background: linear-gradient(180deg, #4a4038, #2c2621); color: #c9b9a6; }
   .tile.is-bust .t-val { color: #ff9a7a; }
@@ -2159,6 +2217,7 @@
   @keyframes billUnroll { from { transform: scaleY(0.05); } to { transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     .fx-screen.fx-bill { animation: rmFade 1.2s linear both !important; }
+    .fx-screen.fx-tsflash { animation: rmFade 0.25s linear both !important; }
     .fx-bill .bill-in { animation: none !important; }
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     /* these play forwards to opacity 0, so a jump to their end would hide them: fade them in place instead */
@@ -2489,7 +2548,7 @@
       ];
       const UPPER_FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
       // signature color of each augment skin: the die's edge glow in 3D, its outline in 2D
-      const SKIN_EDGE = { gold: '#ffc233', lead: '#dfe6f5', curse: '#ff3b57', twin: '#5fd4ff', cocoon: '#e9d9a6', wing: '#7fe9ff', wild: '#b98cff', glue: '#6dff8a' };
+      const SKIN_EDGE = { gold: '#ffc233', lead: '#dfe6f5', curse: '#ff3b57', twin: '#5fd4ff', cocoon: '#e9d9a6', wing: '#7fe9ff', wild: '#b98cff', glue: '#6dff8a', stop: '#9fd0ff' };
       window.SKIN_EDGE = SKIN_EDGE;
       const PLAYER_COLORS = ['#4fd1ff', '#ff6b8b', '#ffc94d', '#7cf29c'];
 
@@ -2633,6 +2692,7 @@
       // ================= Audio (Web Audio synth) =================
       // every sound -> bus -> deaf (a low-pass that only closes for the 도화선 blast) -> master (mute) -> compressor
       let audioCtx = null, bus = null, deaf = null, master = null, noiseBuf = null, isMuted = false, lastClack = 0;
+      let sfxDry = false; // 시간 정지: while set, tone() and noise() skip the "deaf" low-pass (the stop's own ticks stay clear while the rest goes dull)
 
       let gestured = false;
       function ensureAudio() {
@@ -2725,7 +2785,7 @@
           g.gain.setValueAtTime(0.0001, t);
           g.gain.exponentialRampToValueAtTime(vol || 0.08, t + 0.006);
           g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-          osc.connect(g); g.connect(bus);
+          osc.connect(g); g.connect(sfxDry && master ? master : bus);
           osc.start(t); osc.stop(t + dur + 0.03);
         } catch (e) {}
       }
@@ -2743,7 +2803,7 @@
           const g = audioCtx.createGain();
           g.gain.setValueAtTime(vol, t);
           g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-          src.connect(f); f.connect(g); g.connect(bus);
+          src.connect(f); f.connect(g); g.connect(sfxDry && master ? master : bus);
           src.start(t, Math.random() * 0.4, dur + 0.05);
         } catch (e) {}
       }
@@ -2908,7 +2968,7 @@
       let roomCode = '';
       let lobbyMembers = [];
       // version guard: a client without `v` counts as 0 and keeps the newer cards out of its room
-      const NET_V = 4; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 뻥카
+      const NET_V = 5; // 3 = 밥상 엎기 + 개헌, 4 = 기울이기 + 모서리 착지, 5 = 시간 정지, 6 = 뻥카
       function memberV(m) { return Number(m && m.v) || 0; }
       // the lowest member version seen in this match: a member who leaves later never lets the answer turn back to true
       let roomV = 99, roomSeen = {};
@@ -3422,7 +3482,7 @@
         const l = $('yland');
         if (l) yHide(l, fast);
       }
-      function yfxReset() { yfxClear(false); yrSeq++; const r = $('yrec'); if (r) { r._k = (r._k || 0) + 1; r.hidden = true; } }
+      function yfxReset() { yfxClear(false); tsEnd(); yrSeq++; const r = $('yrec'); if (r) { r._k = (r._k || 0) + 1; r.hidden = true; } }
       function yachtLanding(all, values) {
         yfxClear(false);
         const seq = yfxSeq, mid = matchId;
@@ -3882,9 +3942,10 @@
         const augs = s.querySelector('.seat-augs');
         const keys = list.map(function (it) { return it.k; });
         // a 쾅 button in the row (shared device, updateSeatSlams): the pills get the room it leaves
-        const slam = s.querySelector('.seat-slam');
+        const slam = s.querySelector('.seat-slam'), stopB = s.querySelector('.seat-stop');
         const sig = list.map(function (it) { return it.k + (it.n || '') + (it.on ? '!' : ''); }).join(',') + '|' + seatFitGen + '|' + (augs ? augs.dataset.sig || '' : '') +
-          '|' + (slam ? 'S' + (slam.classList.contains('tight') ? 't' : '') + (s.classList.contains('slam-clip') ? 'c' : '') : '');
+          '|' + (slam ? 'S' + (slam.classList.contains('tight') ? 't' : '') + (s.classList.contains('slam-clip') ? 'c' : '') : '') +
+          (stopB ? 'T' + (stopB.classList.contains('tight') ? 't' : '') + (s.classList.contains('stop-clip') ? 'c' : '') : '');
         if (box.dataset.sig === sig) return;
         const had = box.dataset.keys === undefined ? null : box.dataset.keys.split(',');
         box.dataset.sig = sig;
@@ -3915,7 +3976,7 @@
         // not even one pill and a "+N": the most urgent pill alone
         level(pinned ? 0 : 2);
         box.innerHTML = seatStatusHtml(list.slice(0, 1), idx, 1, fresh);
-        if (slam && !pinned && !statusFits(box, false)) s.classList.add('st-off'); // no room beside the 쾅 button: the pills step aside while it is there
+        if ((slam || stopB) && !pinned && !statusFits(box, false)) s.classList.add('st-off'); // no room beside the 쾅 button: the pills step aside while it is there
       }
       const CROWN_SVG = '<svg viewBox="0 0 24 18" aria-hidden="true"><path d="M2 16h20l1-11-6 5-5-8-5 8-6-5z" fill="currentColor"/></svg>';
       // the seat this screen belongs to: my online seat, or the only human against bots. -1 on a shared device.
@@ -4140,6 +4201,7 @@
         players.forEach(function (p, idx) {
           const s = seatsEl.children[idx];
           if (!s) return;
+          s.classList.toggle('ts-by', !!tsRun && tsRun.p === idx); // 시간 정지: the stopper's card keeps its colour in the cold world
           s.classList.toggle('is-turn', idx === currentPlayerIdx && gameActive);
           s.classList.toggle('is-sooty', sootP === idx);
           s.classList.toggle('is-me', idx === me);
@@ -4239,7 +4301,7 @@
           for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
+            btn.className = 'slot-btn' + (canClick ? ' can' : '') + (stopTurn >= 0 ? ' stopped' : stuck[i] ? ' stuck' : '') + (canClick && armedPower && armedPower !== 'tilt' ? ' target' : '') + (canClick && armedPower === 'psychic' && psychicDie === i ? ' target-sel' : '');
             btn.setAttribute('aria-label', '주사위 ' + (i + 1) + ': ' + dice[i] + (held[i] ? ' (고정됨)' : '') + cockTxt(i));
             btn.setAttribute('aria-pressed', held[i] ? 'true' : 'false');
             btn.innerHTML = (held[i] ? '<span class="slot-hold' + (!prevHeld[i] ? ' pop' : '') + '">HOLD</span>' : '') + marksHtml(marks[i], i);
@@ -4435,7 +4497,7 @@
       function renderAction() {
         const cur = players[currentPlayerIdx];
         const mine = isMyTurn();
-        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft && !twoferPend && !restTurn && !tableHeld();
+        const canRoll = gameActive && rollsLeft > 0 && !isRolling && !isScoring && mine && !draft && !twoferPend && !restTurn && !tableHeld() && stopTurn < 0;
         rollBtn.disabled = gameActive ? !canRoll : false;
         rollBtn.classList.toggle('is-ready', canRoll && !hasRolledThisTurn);
 
@@ -4451,6 +4513,7 @@
         else if (isRolling) main = 'ROLLING';
         else if (cockShown()) main = 'PICK FACE';
         else if (isScoring) main = 'NICE';
+        else if (stopTurn >= 0) main = 'PICK';
         else if (rollsLeft === 1 && hasRolledThisTurn) main = 'LAST ROLL';
         else if (rollsLeft > 0 && hasRolledThisTurn) main = 'REROLL';
         else if (rollsLeft === 0) main = 'PICK';
@@ -4631,7 +4694,7 @@
             };
           }),
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
-          stuck: stuck, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
+          stuck: stuck, stopTurn: stopTurn, fuseBust: fuseBust, duel: duel, turnNo: turnNo, lastRec: lastRec, rideTurn: rideTurn, twoferPend: twoferPend, restTurn: restTurn, lastRound: lastRound, flipRound: flipRound, encoreTurn: encoreTurn, sealTurn: sealTurn, turnLost: turnLost,
           currentPlayerIdx: currentPlayerIdx, round: round,
           dice: dice, held: held, yaw: yawLive() ? yaw : undefined, cock: cock && !isRolling ? { i: cock.i, faces: cock.faces } : undefined, rollsLeft: rollsLeft, hasRolledThisTurn: hasRolledThisTurn, allinTurn: allinTurn, allinLock: allinLock,
           isRolling: isRolling, isScoring: isScoring, gameActive: gameActive, at: Date.now()
@@ -4662,7 +4725,7 @@
         hv.length = 5;
         const yv = cleanYaw(extra.yaw); // absent = every die rests at 0; a guest never commits yaw from an fx, only STATE sets it
         const ck = extra.power ? null : cockOk(extra.cock, vals, hv); // 모서리 착지: the die that leans when this roll lands
-        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck };
+        const lr = liveRoll = { roller: currentPlayerIdx, held: hv, values: vals.slice(), rollsAfter: rollsLeft, slammed: false, yaw: yv, cock: ck, single: rerollIdx(extra, hv) >= 0, stopped: false };
         const isFuse = extra.power === 'fuse';
         const era = fxEra, gmid = matchId;
         playRoll(vals, hv, function (finalV) {
@@ -4672,6 +4735,7 @@
           renderCockPick();
           const v = finalV && finalV.length === 5 ? finalV : vals;
           if (era !== fxEra || gmid !== matchId) return; // the host has already moved on: no celebration over the next turn
+          if (lr.stopped) tsLandFx();
           if (isFuse && fuseHits(v, hv).length) { lastDrama = null; revealPreviews(); } // a fuse bust: nothing to celebrate
           else if (!lr.cock) postRollFx(v); // a die on its edge: the payoff waits for the pick
         }, { knock: !!extra.knock, one: rerollIdx(extra, hv), sound: extra.power === 'reroll' ? 'reroll' : isFuse ? 'fire' : null, fuse: isFuse, yaw: yv, cock: ck });
@@ -4681,6 +4745,7 @@
         if (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end') fxEra++;
         if (kind === 'roll' || kind === 'power' || kind === 'end') { yrSeq++; const yr = $('yrec'); if (yr) { yr._k = (yr._k || 0) + 1; yr.hidden = true; } }
         if (yfxState && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end')) yfxClear(true);
+        if (tsRun && (kind === 'roll' || kind === 'power' || kind === 'score' || kind === 'turn' || kind === 'end')) tsEnd(); // the stop ends with its throw
         if (kind === 'roll') {
           guestRoll(extra);
         } else if (kind === 'power') {
@@ -4704,6 +4769,8 @@
             }
             else if (fbRoll) { fbRoll.values = vals.slice(); fbRoll.ticks = 0; }
           }
+        } else if (kind === 'timeStop') {
+          timeStopFx(extra);
         } else if (kind === 'hold') {
           sfxHold(extra.held);
         } else if (kind === 'score') {
@@ -4742,7 +4809,7 @@
       function handleRollInput() {
         ensureAudio();
         if (!gameActive) { openTitle(); return; }
-        if (!isMyTurn() || draft || rollsLeft <= 0 || isRolling || isScoring || tableHeld()) return;
+        if (!isMyTurn() || draft || rollsLeft <= 0 || isRolling || isScoring || tableHeld() || stopTurn >= 0) return;
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'roll' }); return; }
         rollDice();
       }
@@ -4770,7 +4837,7 @@
       }
       function toggleHold(idx) {
         if (!gameActive || !hasRolledThisTurn || isRolling || isScoring || tableHeld()) return;
-        if (stuck[idx]) { fx('aug', { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
+        if (stuck[idx]) { fx('aug', stopTurn >= 0 ? { id: 'timeStop', q: currentPlayerIdx, idx: [idx], phase: 'poke' } : { id: 'glue', q: currentPlayerIdx, idx: [idx], phase: 'poke' }); return; }
         held[idx] = !held[idx];
         fx('hold', { held: held[idx] });
         buzz(6);
@@ -4823,6 +4890,7 @@
         displayDice = dice.slice();
         fallbackRolling = true;
         const iv = setInterval(function () {
+          if (tsRun && performance.now() < tsRun.until) return; // 시간 정지: the dice hang
           for (let i = 0; i < 5; i++) if (!heldSnap[i]) displayDice[i] = 1 + Math.floor(Math.random() * 6);
           renderDice();
           sfxClack(4 + Math.random() * 4, 'die');
@@ -4839,8 +4907,8 @@
       }
 
       function rollDice(onComplete) {
-        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld()) return;
-        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn };
+        if (!gameActive || draft || rollsLeft <= 0 || isRolling || isScoring || twoferPend || restTurn || tableHeld() || stopTurn >= 0) return; // 시간 정지: the rolls stay, but no die can be thrown
+        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: rollsLeft, hasRolled: hasRolledThisTurn, stuck: stuck.slice() };
         const first = rollsLeft === rollsMax;
         isRolling = true;
         hasRolledThisTurn = true;
@@ -4873,6 +4941,7 @@
       // shared by normal rolls and powers (extra = power info, broadcast as a 'power' fx)
       function tossDice(next, heldSnap, extra, onComplete, notes) {
         yfxClear(true);
+        tsEnd();
         isRolling = true;
         lockAllin();
         selectedTile = null;
@@ -4887,13 +4956,14 @@
         const liveY = yawLive(), newYaw = drawYaw(heldSnap);
         const yawExtra = liveY ? { yaw: newYaw.slice() } : null; // never an undefined key; an old client ignores it
         const cockSpec = !extra && cock ? { i: cock.i, faces: cock.faces.slice() } : null; // only a normal roll can stand a die on its edge
-        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore };
+        const roll = liveRoll = { roller: currentPlayerIdx, held: heldSnap.slice(), values: next.slice(), rollsAfter: rollsLeft, slammed: false, notes: notes || null, yaw: newYaw.slice(), cockOk: !extra, spentBefore: !extra && cockSpentBefore, single: rerollIdx(extra, heldSnap) >= 0, fuse: isFuse, stopped: false, stopBy: -1 };
         if (extra) { broadcastFx('power', Object.assign({ values: next, held: heldSnap }, extra, yawExtra)); powerFx(extra); }
         else broadcastFx('roll', Object.assign({ values: next, held: heldSnap }, yawExtra, cockSpec ? { cock: cockSpec } : null));
         broadcastState();
         renderAll();
 
         aiConsiderSlam();
+        aiConsiderStop();
         playRoll(next, heldSnap, function (finalV) {
           if (liveRoll === roll) liveRoll = null;
           if (matchId !== myMatch) { renderDice(); return; }
@@ -4902,8 +4972,10 @@
           yaw = newYaw;
           isRolling = false;
           if (firstThrowPending) { firstThrowPending = false; applyGlue(); }
+          const stopped = landStop(roll); // 시간 정지: the stopped throw lands with every die held and stuck
           broadcastState();
           renderAll();
+          if (stopped) tsLandFx();
           // a fuse roll that shows a 1 is a zero: no combo is celebrated over it
           if (cock) cockLanded(); // a die stands on its edge: the payoff waits for the pick
           else if (isFuse && fuseHits(v, heldSnap).length) { lastDrama = null; revealPreviews(); }
@@ -5068,6 +5140,7 @@
         { id: 'encore', tier: 3, cat: 'time', name: '앙코르', desc: '게임 끝에 한 턴 더 받습니다. 채운 칸도 더 높게 덮어씁니다.', ev: 18 },
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
         { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
+        { id: 'timeStop', tier: 2, cat: 'time', name: '시간 정지', desc: '상대가 굴릴 때 시간을 멈춥니다. 그 주사위가 모두 고정됩니다.', ch: { timeStop: 2 }, ev: 16, show: true, art: { zoom: 0.85, glyph: 1, dice: [{ v: 6, skin: 'stop', y: 0.9, ry: 0.5, tx: 0.3 }] } },
         { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17, show: true },
         { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, show: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
@@ -5121,6 +5194,7 @@
         ride: '<rect x="4" y="15" width="18" height="18" rx="4" stroke-dasharray="4 3"/><rect x="26" y="17" width="18" height="18" rx="4"/><path d="M12 12c3-7 15-9 21-3"/><path d="M34 4l-1 6-6-1"/><circle class="a" cx="35" cy="26" r="3.2"/>',
         gauntlet: '<rect x="4" y="14" width="22" height="17" rx="5"/><path d="M10 14v6M15 14v6M20 14v6"/><path d="M6 31h18v10H6z"/><rect x="33" y="20" width="11" height="11" rx="2"/><path class="a" d="M27 9l4 5-6 1zM28 33l6 2-4 4z"/>',
         twofer: '<rect x="4" y="17" width="14" height="14" rx="3"/><circle class="a" cx="11" cy="24" r="2"/><path d="M18 24h7c4 0 6-4 8-9M25 24c4 0 6 4 8 9"/><rect class="a" x="34" y="7" width="10" height="10" rx="2"/><rect class="a" x="34" y="31" width="10" height="10" rx="2"/>',
+        timeStop: '<circle cx="24" cy="24" r="17"/><path d="M24 13v11l7 4"/><rect class="a" x="12" y="6" width="6" height="36" rx="2"/><rect class="a" x="30" y="6" width="6" height="36" rx="2"/>',
         tableFlip: '<path d="M5 31l27-13 5 10L10 41z"/><path d="M13 38l-3 6M30 26l5 14"/><path class="a" d="M30 6h14c0 5-3 8-7 8s-7-3-7-8z"/><path class="a" d="M17 6l-5 9M21 5l-4 10"/>',
         amend: '<rect x="6" y="9" width="22" height="12" rx="3" transform="rotate(35 17 15)"/><path d="M26 22l15 15"/><path class="a" d="M4 43h24"/><circle class="a" cx="38" cy="38" r="3"/>',
         mimic: '<circle cx="27" cy="19" r="13"/><path d="M18 28L7 42"/><path d="M21 13a8 8 0 0 1 8-3"/><path class="a" d="M40.0 2.5L41.4 6.6L45.5 8.0L41.4 9.4L40.0 13.5L38.6 9.4L34.5 8.0L38.6 6.6z"/>',
@@ -5145,6 +5219,8 @@
       let turnLost = false;    // this turn was taken by 시간 도둑
       let riseTurn = false;    // 칠전팔기: this turn has two extra rolls
       let stuck = [false, false, false, false, false]; // 끈끈이: dice glued for the rest of this turn
+      let stopTurn = -1;       // 시간 정지: the seat that stopped time on this turn's last throw (-1 = none); then every die is held and stuck
+      let tsRun = null;        // 시간 정지, this screen only: the stop that is playing { p, q, ms, mid, until, timers, nodes, anims, raf }
       let firstThrowPending = false; // host: this turn's first dice haven't landed yet (끈끈이 checks them)
       let fuseBust = false;    // 도화선 went off: this turn's record is a zero
       // 도화선 effect state (local to each screen, never broadcast): the burning cord, when a die lit up, pending beats,
@@ -5542,13 +5618,15 @@
         if (augHas(p, 'golden')) m[2].push('golden');
         if (augHas(p, 'pupa')) m[4].push('pupa');
         if (cursedBy(p)) m[4].push('curse');
-        stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
+        if (stopTurn >= 0) m.forEach(function (x) { x.push('timeStop'); }); // 시간 정지: the clock tag on every die, never the glue's
+        else stuck.forEach(function (st, i) { if (st) m[i].push('glue'); });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1) m[i].push('wildOne'); });
         if (cockShown()) m[cock.i].push('cocked');
         return m;
       }
       // whose augment a die mark is (for its tooltip): the roller's own, or the opponent's who put it there
       function markOwner(id) {
+        if (id === 'timeStop') return players[stopTurn] ? stopTurn : -1;
         if (id !== 'curse' && id !== 'glue') return currentPlayerIdx;
         for (let j = 0; j < players.length; j++) if (j !== currentPlayerIdx && augHas(players[j], id)) return j;
         return -1;
@@ -5567,7 +5645,8 @@
         if (augHas(p, 'golden')) s[2] = 'gold';
         if (augHas(p, 'pupa')) s[4] = round >= (p.hatch || 99) ? 'wing' : 'cocoon';
         if (cursedBy(p)) s[4] = 'curse';
-        stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
+        if (stopTurn >= 0) { for (let i = 0; i < 5; i++) s[i] = 'stop'; } // 시간 정지: cold steel on all five
+        else stuck.forEach(function (st, i) { if (st) s[i] = 'glue'; });
         if (augHas(p, 'wildOne') && p.wake && !isRolling) dice.forEach(function (v, i) { if (v === 1 && !s[i]) s[i] = 'wild'; });
         return s;
       }
@@ -5582,6 +5661,7 @@
         if (a.id === 'tableFlip' && (players.length < 2 || roundNo >= 9 || !newCardsOk(3))) return false;
         if (a.id === 'tilt' && !newCardsOk(4)) return false; // protocol 4: an older client has no tilt picker and no cock chips
         if (a.id === 'cocked' && (!COCK_LIVE || !newCardsOk(4))) return false;
+        if (a.id === 'timeStop' && (players.length < 2 || !newCardsOk(5))) return false; // 시간 정지: needs an opponent and a room that knows the card
         if (a.id === 'amend') {
           // never at the round 1 draft (both cards are empty, so every law is worth 0), and only while a law is left, 2+ players and 3 rounds of use
           if (roundNo < 5 || players.length < 2 || lastRound - roundNo < 3) return false;
@@ -5797,7 +5877,7 @@
         rollsMax = 3; rollsLeft = 3; prevRollsLeft = 3;
         armedPower = null; armedReset(); rewindSnap = null; turnLost = false;
         riseTurn = false;
-        stuck = [false, false, false, false, false]; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
+        stuck = [false, false, false, false, false]; stopTurn = -1; firstThrowPending = true; fuseBust = false; duel = null; rideTurn = false;
         twoferPend = null; restTurn = false;
         clearTimeout(gagT);
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false;
@@ -6785,9 +6865,9 @@
           { transform: 'rotate(' + ang + 'rad) scaleX(1)', opacity: 0 }
         ], { duration: 1100, easing: 'ease-out' });
       }
-      function wordFx(pt, text) {
+      function wordFx(pt, text, cls) {
         if (!pt) return;
-        const e = addFx('fx-word', pt.x, pt.y, esc(text));
+        const e = addFx('fx-word' + (cls ? ' ' + cls : ''), pt.x, pt.y, esc(text));
         // from a seat card: whole on screen and under the rail, not half out of the corner over the cards
         if (pt.seat) {
           const hud = hudEl.getBoundingClientRect(), hw = e.offsetWidth / 2 + 12, hh = e.offsetHeight / 2;
@@ -7326,6 +7406,14 @@
             if (ones.length) sample('sparkle', { vol: 0.25 });
             break;
           }
+          case 'timeStop': {
+            // a poke at a stopped die: a cold ring and a tick (the slot already says it is held)
+            const i = Number(toArr(e.idx)[0]);
+            if (use3D() && i >= 0 && i < 5) window.Dice3D.ring(i, '#9fd0ff', 8);
+            burst(diePt(i), { shape: 'glow', count: 2, dist: 12, color: '#bfe0ff', dur: 500 });
+            tone(520, 0.05, 'triangle', 0.05, 380);
+            break;
+          }
           case 'glue': {
             const qp = players[e.q];
             if (e.phase === 'set') {
@@ -7762,6 +7850,7 @@
       // overwrite / joker: toggles that change the next record (올인 is a turn field: toggleAllin, locked at the first roll)
       const POWER_DEFS = {
         slam: { label: '샷건', chip: '샷건', kind: 'live' },
+        timeStop: { label: '시간 정지', chip: '시간 정지', kind: 'live' },
         flip: { label: '뒤집기', chip: 'FLIP', kind: 'target' },
         reroll: { label: '다시', chip: 'REROLL', kind: 'target' },
         tilt: { label: '기울이기', chip: '기울이기', kind: 'dir' },
@@ -7781,9 +7870,9 @@
         allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' },
         twins: { label: '쌍둥이', chip: '쌍둥이', kind: 'switch' } // 켜짐 / 꺼짐: never spent
       };
-      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
+      const POWER_KEYS = ['slam', 'timeStop', 'ride', 'tableFlip', 'flip', 'reroll', 'tilt', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
       let armedPower = null; // a die-target / tile power waiting for a tap
-      let lastSlamTap = 0;
+      let lastSlamTap = 0, lastStopTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
       let flipIdx = -1;      // 2D fallback: die doing a flip
       function armedReset() { armed.joker = false; armed.overwrite = false; armed.twofer = false; psychicDie = -1; }
@@ -7825,6 +7914,7 @@
         const cur = players[currentPlayerIdx];
         const def = POWER_DEFS[kind];
         if (!matchAug || !def || def.kind === 'live' || !gameActive || draft || !cur || charges(cur, kind) <= 0) return false;
+        if (stopTurn >= 0 && (kind === 'reroll' || kind === 'fuse' || kind === 'twins')) return false; // 시간 정지: every die is stuck, nothing is thrown again (flip / psychic turn a die in place and still work)
         if (tableHeld()) return false; // a pending pick or a live cup holds the table
         if (isRolling || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
         if (kind === 'twins') return augHas(cur, 'twins') && rollsLeft > 0; // before or between rolls, on the holder's own turn; no roll left = nothing to switch
@@ -7856,6 +7946,7 @@
       function canSlam(pIdx) {
         const p = players[pIdx];
         if (!matchAug || !gameActive || draft || charges(p, 'slam') <= 0 || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
+        if (tsRun || (liveRoll && liveRoll.stopped)) return false; // 시간 정지: nothing knocks the dice while time is stopped
         if (isRolling) return (isOnlineMatch && onlineRole === 'guest') || slamOpen() || slamSettling();
         return hasRolledThisTurn && held.some(function (h) { return !h; });
       }
@@ -7919,6 +8010,44 @@
         const p = players[pIdx];
         if (p && pIdx !== powerOwnerIdx()) showChip(p.name + ' 샷건', 'gold');
         if (p) pingChip(pIdx, augIdForPower(p, 'slam'));
+      }
+      // ---------- 시간 정지 ----------
+      // Anyone but the roller may stop a throw that is in the air: once per throw, and only while it takes something away
+      // (the roller could still throw again afterwards: a roll left, or a 도화선 throw). The values in the air are not touched.
+      // The dice hang for TS_HOLD_MS, the throw lands as it would have, and at the landing all five dice are held and stuck
+      // until the record (landStop). The host decides; the effect on every screen is the one fx 'timeStop'.
+      const TS_HOLD_MS = 1900;
+      function stopWindow() { return !!liveRoll && (use3D() ? window.Dice3D.isAnimating() : !!fbRoll); }
+      function canTimeStop(pIdx) {
+        const p = players[pIdx];
+        if (!matchAug || !gameActive || draft || !p || charges(p, 'timeStop') <= 0 || !isRolling || tsRun || stopTurn >= 0) return false;
+        if (isScoring || turnLost || restTurn || fuseBust || twoferPend) return false;
+        const guest = isOnlineMatch && onlineRole === 'guest';
+        const roll = liveRoll; // a guest asks while its own replay of the throw is in the air (a tilt or a pick also sets isRolling, with no throw); the host decides
+        if (!roll || roll.stopped || roll.single || roll.roller === pIdx || roll.roller !== currentPlayerIdx) return false; // one stop per throw, never on a single die, never on your own throw
+        const roller = players[roll.roller];
+        if (!roller || !(rollsLeft > 0 || charges(roller, 'fuse') > 0)) return false;
+        return guest || stopWindow();
+      }
+      // authoritative (local / host)
+      function doTimeStop(pIdx) {
+        if (!canTimeStop(pIdx) || !liveRoll) return false;
+        const roll = liveRoll;
+        players[pIdx].ch.timeStop -= 1; // spent at once, and never refunded (a rewind does not give it back)
+        roll.stopped = true; roll.stopBy = pIdx;
+        fx('timeStop', { p: pIdx, q: roll.roller, ms: TS_HOLD_MS });
+        broadcastState();
+        renderAll();
+        return true;
+      }
+      // the stopped throw has landed (called from its completion on the host): returns true when this throw was stopped
+      function landStop(roll) {
+        if (!roll || !(roll.stopBy >= 0)) return false;
+        stopTurn = roll.stopBy;
+        stuck = [true, true, true, true, true];
+        held = [true, true, true, true, true];
+        armedPower = null; psychicDie = -1;
+        return true;
       }
       // ---------- 밥상 엎기 ----------
       // p.last = the newest record { cat, prev, val }: prev = what the box held before (null = empty), val = what the record wrote.
@@ -8062,6 +8191,8 @@
         if (rewindSnap.fuse) cur.ch.fuse = (cur.ch.fuse || 0) + 1;
         if (rewindSnap.ride) { cur.ch.ride = (cur.ch.ride || 0) + 1; rideTurn = false; }
         if (!rewindSnap.hasRolled) stuck = [false, false, false, false, false]; // the first roll is undone: nothing stays glued
+        else if (rewindSnap.stuck) stuck = rewindSnap.stuck.slice(); // what was glued before this throw (a stopped throw had stuck all five)
+        stopTurn = -1; // 시간 정지: the stopped throw is undone with its stop (the charge is not refunded)
         rewindSnap = null;
         rollSeq++;
         armedPower = null; psychicDie = -1; selectedTile = null;
@@ -8252,7 +8383,7 @@
         const free = [0, 1, 2, 3, 4].filter(function (i) { return !held[i]; });
         if (!free.length) return false;
         cur.ch.fuse -= 1;
-        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: 0, hasRolled: true, fuse: true };
+        rewindSnap = { dice: dice.slice(), held: held.slice(), yaw: yaw.slice(), rollsLeft: 0, hasRolled: true, fuse: true, stuck: stuck.slice() };
         const next = rollValues(cur, dice, held, false);
         const myMatch = matchId;
         tossDice(next, held.slice(), { power: 'fuse', pIdx: currentPlayerIdx, sound: 'fire' }, function () {
@@ -8611,6 +8742,206 @@
         if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'power', kind: 'swap', cat: cat }); renderTiles(); renderPowers(); return; }
         doSwap(cat);
       }
+      // ================= 시간 정지: effect and sound =================
+      // One fx 'timeStop' { p: the stopper's seat, q: the roller's seat, ms } plays this on every screen. The rule is not here:
+      // the throw lands through its normal completion and landStop does the rest. Everything below can fail without
+      // harm: timeStopFx cleans up after itself, and tsEnd is called wherever a screen effect is cleared.
+      let tsDeaf = false, tsHum = null;
+      const TS_CLOCK = (function () {
+        let t = '';
+        for (let k = 0; k < 12; k++) {
+          const a = k * Math.PI / 6, sn = Math.sin(a), cs = Math.cos(a), r1 = k % 3 ? 40 : 36, r2 = 44;
+          t += 'M' + (50 + sn * r1).toFixed(1) + ' ' + (50 - cs * r1).toFixed(1) + 'L' + (50 + sn * r2).toFixed(1) + ' ' + (50 - cs * r2).toFixed(1);
+        }
+        return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47"/><path d="' + t + '"/>' +
+          '<g class="ts-hand ts-hh"><path d="M50 50V30"/></g><g class="ts-hand ts-mh"><path d="M50 50V17"/></g><circle class="a" cx="50" cy="50" r="3.4"/></svg>';
+      })();
+      function tsHumOff() {
+        const h = tsHum;
+        tsHum = null;
+        if (!h || !audioCtx) return;
+        try { const n = audioCtx.currentTime; h.g.gain.cancelScheduledValues(n); h.g.gain.setTargetAtTime(0.0001, n, 0.03); h.o.stop(n + 0.2); } catch (e) {}
+      }
+      // everything this stop put on the screen and in the air goes: the cold world, the disc, the clock, the low-pass, the hum, the freeze
+      function tsEnd() {
+        const r = tsRun;
+        tsRun = null;
+        if (tsDeaf) { deafReset(); tsDeaf = false; } // the low-pass is always opened again
+        tsHumOff();
+        if (!r) return;
+        r.timers.forEach(clearTimeout);
+        if (r.raf) cancelAnimationFrame(r.raf);
+        r.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
+        r.nodes.forEach(dropFx);
+        document.body.classList.remove('ts-grey');
+        Array.prototype.forEach.call(seatsEl.children, function (s) { s.classList.remove('ts-by'); });
+        if (use3D() && window.Dice3D.timeGo) window.Dice3D.timeGo();
+      }
+      document.addEventListener('visibilitychange', function () { if (document.hidden && tsRun) tsEnd(); }); // nothing animated in a hidden tab
+      function timeStopFx(e) {
+        if (!e || !gameActive) return;
+        const p = seatIdx(e.p), q = seatIdx(e.q);
+        if (p < 0 || q < 0) return;
+        const ms = typeof e.ms === 'number' && isFinite(e.ms) ? Math.max(0, Math.min(2500, Math.round(e.ms))) : TS_HOLD_MS;
+        tsEnd();
+        const late = !liveRoll; // the throw already landed on this screen: the short form plus the lock line, no freeze to give
+        if (liveRoll) liveRoll.stopped = true; // this screen's throw is the stopped one: it lands with the lock beat
+        if (document.hidden) return;
+        const mid = matchId;
+        const r = tsRun = { p: p, q: q, ms: late ? 0 : ms, mid: mid, until: performance.now() + (REDUCED ? 0 : ms), timers: [], nodes: [], anims: [], raf: 0 };
+        try { tsPlay(r); } catch (err) { if (tsRun === r) tsEnd(); } // a broken effect never keeps the table stuck
+        if (late) tsLandFx();
+      }
+      function tsPlay(r) {
+        const mid = r.mid, long = !REDUCED && r.ms >= 1000;
+        const T = function (ms, fn) { r.timers.push(setTimeout(function () { if (tsRun === r && matchId === mid) fn(); }, ms)); };
+        const by = players[r.p];
+        ensureAudio();
+        const seat = seatsEl.children[r.p];
+        if (seat) seat.classList.add('ts-by');
+        if (use3D() && window.Dice3D.timeStop && liveRoll && r.ms > 0) window.Dice3D.timeStop(r.ms); // the dice hang where they are (a no-op for reduced motion)
+        if (by && r.p !== powerOwnerIdx()) showChip(by.name + ' 님이 시간을 멈췄습니다.', 'cool');
+        buzz(20);
+        const st = stagePt() || { x: window.innerWidth / 2, y: window.innerHeight / 2, r: { width: 300, height: 300 } };
+        sfxTimeStop(r.ms, !long);
+        if (!long) {
+          // reduced motion or a very short stop: a grey flash, the word, the chip
+          screenFx('tsflash', 250);
+          wordFx(st, '시간 정지', 'cold');
+          T(REDUCED ? 450 : Math.max(450, r.ms + 120), tsEnd);
+          return;
+        }
+        const c = seatPt(r.p) || st, W = window.innerWidth, H = window.innerHeight;
+        const R = Math.ceil(Math.max(Math.hypot(c.x, c.y), Math.hypot(W - c.x, c.y), Math.hypot(c.x, H - c.y), Math.hypot(W - c.x, H - c.y))) + 6;
+        const disc = document.createElement('div'), rim = document.createElement('div');
+        disc.className = 'ts-disc'; rim.className = 'ts-rim';
+        rim.style.opacity = '0'; // sized and shown by the first frame of the sweep
+        disc.setAttribute('aria-hidden', 'true'); rim.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(disc); document.body.appendChild(rim);
+        r.nodes.push(disc, rim);
+        // the disc is a clip-path circle on a full-screen layer; the rim is a ring at its edge. One loop drives both, so they never drift apart.
+        const sweep = function (from, to, dur, ease) {
+          const t0 = performance.now();
+          const step = function () {
+            if (tsRun !== r) return;
+            const k = Math.min(1, Math.max(0, (performance.now() - t0) / dur)), v = from + (to - from) * ease(k);
+            const cp = 'circle(' + v.toFixed(1) + 'px at ' + c.x.toFixed(1) + 'px ' + c.y.toFixed(1) + 'px)';
+            disc.style.clipPath = cp; disc.style.webkitClipPath = cp;
+            rim.style.left = (c.x - v).toFixed(1) + 'px'; rim.style.top = (c.y - v).toFixed(1) + 'px';
+            rim.style.width = rim.style.height = (2 * v).toFixed(1) + 'px';
+            rim.style.opacity = v < 4 || v > R - 3 ? '0' : '1';
+            r.raf = k < 1 ? requestAnimationFrame(step) : 0;
+          };
+          if (r.raf) cancelAnimationFrame(r.raf);
+          r.raf = requestAnimationFrame(step);
+        };
+        // 0 ms: the disc grows from the stopper's coin until it covers the screen (colours inverted inside it)
+        sweep(0, R, 420, function (k) { return 1 - Math.pow(1 - k, 3); });
+        // as it fills the screen the inversion gives way to the cold world, which holds until the resume
+        T(400, function () { document.body.classList.add('ts-grey'); disc.style.opacity = '0'; });
+        // the clock at the centre of the table: it fades in, the hands spin and slow to a dead stop (500 ms), then it stays, faint
+        const size = Math.max(130, Math.min(300, Math.min(st.r ? st.r.width : 300, st.r ? st.r.height : 300) * 0.8));
+        const clock = addFx('ts-clock', st.x, st.y, TS_CLOCK);
+        clock.style.setProperty('--s', size + 'px');
+        r.nodes.push(clock);
+        const hm = clock.querySelector('.ts-mh'), hh = clock.querySelector('.ts-hh');
+        T(260, function () {
+          if (clock.animate) r.anims.push(clock.animate([{ opacity: 0 }, { opacity: 0.95, offset: 0.4 }, { opacity: 0.38 }], { duration: 760, fill: 'forwards' }));
+          if (hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(2160deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
+          if (hh && hh.animate) r.anims.push(hh.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(300deg)' }], { duration: 500, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' }));
+        });
+        T(760, function () { wordFx(stagePt() || st, '시간 정지', 'cold'); buzz(15); flashTo(0.08, '#bfe0ff'); }); // no shake: the world is still // the word lands as the hands stop
+        // resume (320 ms before the dice fall): a disc closes back to the stopper's coin over the grey world, colours return
+        const tc = Math.max(700, r.ms - 380);
+        T(tc, function () {
+          sfxTimeGo();
+          if (hm && hm.animate) r.anims.push(hm.animate([{ transform: 'rotate(2160deg)' }, { transform: 'rotate(2166deg)' }], { duration: 90, easing: 'steps(1, end)', fill: 'forwards' })); // one tick forward
+          if (clock.animate) r.anims.push(clock.animate([{ opacity: 0.38 }, { opacity: 0 }], { duration: 260, delay: 90, fill: 'forwards' }));
+        });
+        T(tc + 80, function () {
+          document.body.classList.remove('ts-grey');
+          disc.className = 'ts-disc veil'; disc.style.transition = 'none'; disc.style.opacity = '1'; // a cold veil, not the inverting disc: no second white flash
+          sweep(R, 0, 320, function (k) { return 1 - (1 - k) * (1 - k); }); // closes back to the stopper's coin, the real colours outside it
+        });
+        T(Math.max(tc + 520, r.ms + 60), tsEnd);
+      }
+      // the stopped throw has landed on this screen: a ring and a click on each die, 50 ms apart (the clock tags pop in on the same
+      // beat, see the CSS), and the line for everyone. Never in a hidden tab.
+      function tsLandFx() {
+        if (document.hidden) return;
+        const mid = matchId;
+        showChip('주사위가 모두 고정됐습니다.', 'cool');
+        buzz(12);
+        for (let i = 0; i < 5; i++) {
+          setTimeout(function () {
+            if (matchId !== mid || !gameActive) return;
+            if (!REDUCED) { ringFx(diePt(i), '#bfe0ff', 1.8); if (use3D()) window.Dice3D.ring(i, '#9fd0ff', 10); }
+            tone(760 - i * 55, 0.05, 'triangle', 0.045, 520 - i * 40);
+          }, i * 50);
+        }
+      }
+      // The stop: a reversed-cymbal swell (band-passed noise sweeping up, 350 ms) into a deep impact, then five clock ticks whose
+      // gaps grow (120, 190, 300, 460 ms) while pitch and level fall until they stop. The bus low-pass closes to ~500 Hz, so
+      // everything else sounds far away (the stop's own sounds skip it, sfxDry), and a very quiet high sine holds. short = no swell, no low-pass.
+      function sfxTimeStop(ms, short) {
+        ensureAudio();
+        if (isMuted || !audioCtx || !noiseBuf || !master) return;
+        sfxDry = true;
+        try {
+          const ctx = audioCtx, t = ctx.currentTime, at = short ? 0 : 0.35;
+          if (!short) {
+            const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+            src.buffer = noiseBuf;
+            f.type = 'bandpass'; f.Q.value = 1.3;
+            f.frequency.setValueAtTime(600, t); f.frequency.exponentialRampToValueAtTime(8000, t + 0.35);
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.34); g.gain.linearRampToValueAtTime(0.0001, t + 0.36);
+            src.connect(f); f.connect(g); g.connect(master);
+            src.start(t, Math.random() * 0.2, 0.4);
+          }
+          tone(90, 0.7, 'sine', 0.42, 35, at);
+          tone(210, 0.3, 'triangle', 0.2, 70, at);
+          noise(180, 0.8, 0.25, 0.3, 'lowpass', at);
+          noise(1100, 0.7, 0.14, 0.2, 'lowpass', at);
+          const gaps = [0, 0.12, 0.19, 0.3, 0.46], n = short ? 2 : 5;
+          let tk = at + 0.1;
+          for (let k = 0; k < n; k++) {
+            tk += gaps[k];
+            const fq = 1700 * Math.pow(0.84, k), v = 0.24 * Math.pow(0.8, k);
+            tone(fq, 0.05, 'square', v * 0.45, fq * 0.7, tk);
+            noise(fq * 1.8, 3, 0.03, v * 0.8, 'bandpass', tk);
+          }
+          if (!short && deaf) {
+            deaf.frequency.cancelScheduledValues(t);
+            deaf.frequency.setTargetAtTime(500, t + at, 0.07);
+            tsDeaf = true;
+            const o = ctx.createOscillator(), hg = ctx.createGain();
+            o.type = 'sine'; o.frequency.value = 2960;
+            hg.gain.setValueAtTime(0.0001, t + 0.45); hg.gain.exponentialRampToValueAtTime(0.011, t + 0.9);
+            o.connect(hg); hg.connect(master);
+            o.start(t + 0.45); o.stop(t + 3.2);
+            tsHum = { o: o, g: hg };
+          }
+        } catch (e) {} finally { sfxDry = false; }
+      }
+      // The resume: two quick ticks speeding up, a downward noise sweep, a short bright two-note chime, and the low-pass opens again.
+      function sfxTimeGo() {
+        ensureAudio();
+        tsHumOff();
+        if (!audioCtx) return;
+        try {
+          if (tsDeaf && deaf) { const t = audioCtx.currentTime; deaf.frequency.cancelScheduledValues(t); deaf.frequency.setTargetAtTime(20000, t, 0.05); }
+        } catch (e) {}
+        tsDeaf = false;
+        if (isMuted || !noiseBuf || !master) return;
+        sfxDry = true;
+        try {
+          tone(900, 0.04, 'square', 0.1, 700, 0);
+          tone(1250, 0.04, 'square', 0.1, 900, 0.08);
+          noise(7000, 1.2, 0.3, 0.12, 'bandpass', 0.12, 600);
+          tone(1318, 0.22, 'sine', 0.07, 0, 0.36);
+          tone(1760, 0.34, 'sine', 0.06, 0, 0.44);
+        } catch (e) {} finally { sfxDry = false; }
+      }
       function sfxSlam() {
         ensureAudio();
         // the recorded bang plus a sub-bass punch and a wooden knock under it
@@ -8721,7 +9052,7 @@
         }
         bar.querySelectorAll('.pw-btn').forEach(function (b) {
           const k = b.dataset.pw, n = charges(owner, k);
-          const ok = k === 'slam' ? canSlam(me) : (mine && canUsePower(k));
+          const ok = k === 'slam' ? canSlam(me) : k === 'timeStop' ? canTimeStop(me) : (mine && canUsePower(k));
           if (b.disabled && ok && b.dataset.seen) restartAnim(b, 'pw-wake'); // it just became usable: one pop
           b.dataset.seen = '1';
           b.disabled = !ok;
@@ -8734,7 +9065,7 @@
             b.setAttribute('aria-label', POWER_DEFS[k].label);
             return;
           }
-          b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
+          b.classList.toggle('is-live', (k === 'slam' || k === 'timeStop') && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || (k === 'allin' ? allinTurn && me === currentPlayerIdx : !!armed[k]));
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
           if (POWER_DEFS[k].kind === 'dir') b.setAttribute('aria-pressed', armedPower === k ? 'true' : 'false');
@@ -8785,41 +9116,57 @@
       // what is left (renderStatus). Runs from renderPowers, which already follows the window opening and closing.
       function updateSeatSlams() {
         const hs = hotSeat(), owner = hs ? powerOwnerIdx() : -1;
+        // the two pills of a card: 샷건 (ruby) and 정지 (steel blue, 시간 정지). 정지 always sits behind 샷건 in the row.
+        const KINDS = [
+          { cls: 'seat-slam', key: 'slam', text: '샷건', label: '샷건', live: 'slam-live', clip: 'slam-clip', can: canSlam },
+          { cls: 'seat-stop', key: 'timeStop', text: '정지', label: '시간 정지', live: 'stop-live', clip: 'stop-clip', can: canTimeStop }
+        ];
         players.forEach(function (p, idx) {
           const s = seatsEl.children[idx], row = s && s.querySelector('.seat-row2');
           if (!row) return;
-          let b = row.querySelector('.seat-slam');
-          if (!(hs && idx !== owner && canSlam(idx))) {
-            if (!b) return;
-            b.remove();
-            s.classList.remove('slam-live', 'slam-clip');
-            renderStatus(s, p, idx, true); // the pills take their room back
-            return;
-          }
-          if (!b) {
-            // Not a <button>, and focusable only where a mouse is the main pointer: Chrome on a touch screen hands
-            // a tap to the nearest focusable / listening / :active-styled element inside the finger's area, in
-            // preference to the card around it, so a real button would swallow taps meant for the card (and burn
-            // a charge). As a plain element it is hit only when the tap itself lands on it.
-            b = document.createElement('span');
-            b.className = 'seat-slam';
-            b.setAttribute('role', 'button');
-            if (FINE_POINTER) b.tabIndex = 0;
-            b.dataset.idx = String(idx);
-            b.innerHTML = '샷건<b></b>';
-            row.appendChild(b);
-          }
-          const n = String(charges(p, 'slam')), label = p.name + ' 샷건 ' + n + '회';
-          if (b.lastChild.textContent !== n) b.lastChild.textContent = n;
-          if (b.getAttribute('aria-label') !== label) b.setAttribute('aria-label', label);
-          b.classList.toggle('is-live', isRolling);
-          s.classList.toggle('slam-live', isRolling);
+          let touched = false;
+          // first build or remove the pills, then fit them: each one is fitted against the chips and the other pill
+          KINDS.forEach(function (K) {
+            let b = row.querySelector('.' + K.cls);
+            if (!(hs && idx !== owner && K.can(idx))) {
+              if (!b) return;
+              b.remove();
+              s.classList.remove(K.live, K.clip);
+              touched = true;
+              return;
+            }
+            touched = true;
+            if (!b) {
+              // Not a <button>, and focusable only where a mouse is the main pointer: Chrome on a touch screen hands
+              // a tap to the nearest focusable / listening / :active-styled element inside the finger's area, in
+              // preference to the card around it, so a real button would swallow taps meant for the card (and burn
+              // a charge). As a plain element it is hit only when the tap itself lands on it.
+              b = document.createElement('span');
+              b.className = K.cls;
+              b.setAttribute('role', 'button');
+              if (FINE_POINTER) b.tabIndex = 0;
+              b.dataset.idx = String(idx);
+              b.innerHTML = K.text + '<b></b>';
+              if (K.cls === 'seat-slam') row.insertBefore(b, row.querySelector('.seat-stop') || null);
+              else row.appendChild(b);
+            }
+            const n = String(charges(p, K.key)), label = p.name + ' ' + K.label + ' ' + n + '회';
+            if (b.lastChild.textContent !== n) b.lastChild.textContent = n;
+            if (b.getAttribute('aria-label') !== label) b.setAttribute('aria-label', label);
+            b.classList.toggle('is-live', isRolling);
+            s.classList.toggle(K.live, isRolling);
+          });
+          if (!touched) return;
           const augs = s.querySelector('.seat-augs');
-          const fit = seatFitGen + '|' + (augs ? augs.dataset.sig || '' : '');
-          if (b.dataset.fit !== fit) {
+          const pills = Array.prototype.slice.call(row.querySelectorAll('.seat-slam, .seat-stop'));
+          KINDS.forEach(function (K) {
+            const b = row.querySelector('.' + K.cls);
+            if (!b) return;
+            const fit = seatFitGen + '|' + (augs ? augs.dataset.sig || '' : '') + '|' + pills.length;
+            if (b.dataset.fit === fit) return;
             b.dataset.fit = fit;
             b.classList.remove('tight', 'min');
-            s.classList.remove('slam-clip');
+            s.classList.remove(K.clip);
             if (augs && getComputedStyle(b).position !== 'absolute') { // in the chip row (on desktop it hangs on the card's edge)
               const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
               // the one-line cards of a short screen never overflow: a chip with no room wraps out of sight instead
@@ -8827,12 +9174,13 @@
                 const on = Array.prototype.filter.call(augs.children, function (c) { return c.offsetWidth > 0; });
                 return on.length > 1 && on[on.length - 1].offsetTop > on[0].offsetTop + 2;
               };
-              const over = function () { return augs.offsetWidth + gap + b.offsetWidth > row.clientWidth + 1 || wraps(); };
+              // every pill in the row counts: with both there, the second one is the first to give up its padding
+              const over = function () { return augs.offsetWidth + pills.reduce(function (a, x) { return a + gap + x.offsetWidth; }, 0) > row.clientWidth + 1 || wraps(); };
               if (over()) b.classList.add('tight');
-              if (over()) s.classList.add('slam-clip');
+              if (over()) s.classList.add(K.clip);
               if (wraps()) b.classList.add('min'); // a long total beside it: the button gives up its padding too
             }
-          }
+          });
           renderStatus(s, p, idx, true);
         });
       }
@@ -8845,17 +9193,26 @@
         closePeek(); // an open sheet would hide the dice it knocks over
         doSlam(idx);
       }
+      // the 정지 pill on a seat card: the same guard as the key in the power bar
+      function seatStopTap(idx) {
+        ensureAudio();
+        if (!hotSeat() || !players[idx] || idx === powerOwnerIdx() || !canTimeStop(idx)) return;
+        if (performance.now() - lastStopTap < 600) return;
+        lastStopTap = performance.now();
+        closePeek();
+        doTimeStop(idx);
+      }
       function handlePowerInput(kind) {
         ensureAudio();
         const def = POWER_DEFS[kind];
         if (!def) return;
         if (def.kind === 'live') {
-          const me = powerOwnerIdx();
-          if (me < 0 || !canSlam(me)) return;
-          if (performance.now() - lastSlamTap < 600) return;
-          lastSlamTap = performance.now();
-          if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: 'slam' }); return; }
-          doSlam(me);
+          const me = powerOwnerIdx(), stop = kind === 'timeStop';
+          if (me < 0 || !(stop ? canTimeStop(me) : canSlam(me))) return;
+          if (performance.now() - (stop ? lastStopTap : lastSlamTap) < 600) return;
+          if (stop) lastStopTap = performance.now(); else lastSlamTap = performance.now();
+          if (isOnlineMatch && onlineRole === 'guest') { sendAction({ action: stop ? 'timeStop' : 'slam' }); return; }
+          if (stop) doTimeStop(me); else doSlam(me);
           return;
         }
         if (!isMyTurn() || !canUsePower(kind)) return;
@@ -9483,10 +9840,11 @@
         const cur = players[currentPlayerIdx];
         if (!matchAug || !cur || cock) return null; // a pending pick: the dice are not final yet
         const tp = aiTiltPlan(cur);
-        const keys = ['reroll', 'flip', 'psychic', 'rewind', 'slam'].filter(function (k) { return charges(cur, k) > 0; });
+        const keys = ['reroll', 'flip', 'psychic', 'rewind', 'slam'].filter(function (k) { return charges(cur, k) > 0 && !(stopTurn >= 0 && (k === 'reroll' || k === 'slam')); });
         if (!keys.length) return tp;
         const tm = aiTurnMods(cur), sc = aiScores(cur);
-        const o = YachtAI.powerOptions(sc, CAT_IDS, dice, rollsLeft, held, tm);
+        const rl = stopTurn >= 0 ? 0 : rollsLeft; // a stopped table has throws left on paper but every die is stuck: value it as record-now
+        const o = YachtAI.powerOptions(sc, CAT_IDS, dice, rl, held, tm);
         const scale = Math.max(0, lastRound - round) / 11;
         let best = null, gain = 0.3;
         keys.forEach(function (k) {
@@ -9636,6 +9994,37 @@
           }
         }
         done();
+      }
+      // A bot holding 시간 정지 reads only what the table shows: the held dice, the throws left and the roller's card, never the
+      // values in the air. What it takes away = what the roller's turn is worth with the throws they still have, minus what it
+      // is worth when this throw is the last. It presses once that clears a bar that falls as the game runs out; with 3-4
+      // players it keeps the charge for the leader. Easy bots misjudge the loss by more (the same noise as their other choices).
+      const AI_STOP_BAR = 3, AI_STOP_SLOPE = 7; // the loss is about 8-9 on a first throw and 4-5 on a second one, whatever the round
+      function aiStopLoss(roller, heldSnap, rollsAfter) {
+        const sc = aiScores(roller), tm = aiTurnMods(roller);
+        const seen = heldSnap.map(function (h, i) { return h ? dice[i] : 1; }); // the dice on the table before the throw: free ones are placeholders
+        return YachtAI.rollStats(sc, CAT_IDS, seen, heldSnap, rollsAfter, tm).mean - YachtAI.rollStats(sc, CAT_IDS, seen, heldSnap, 0, tm).mean;
+      }
+      function aiConsiderStop() {
+        const roll = liveRoll;
+        if (!matchAug || !roll || isOnlineMatch || roll.single || roll.fuse || !(roll.rollsAfter > 0) || roll.held.every(Boolean)) return;
+        const roller = players[roll.roller];
+        if (!roller) return;
+        const myMatch = matchId;
+        players.forEach(function (p, idx) {
+          if (!p.isAI || idx === roll.roller || charges(p, 'timeStop') <= 0) return;
+          if (augHas(roller, 'speedrun') && roll.rollsAfter === rollsMax - 1) return; // a stopped first throw is recorded at once: +6 for them
+          const lv = AI_LEVELS[p.level] || AI_LEVELS.hard;
+          const loss = aiStopLoss(roller, roll.held, roll.rollsAfter) + (Math.random() - 0.5) * lv.temp * 2;
+          const scale = Math.max(0, lastRound - round) / 11;
+          let bar = AI_STOP_BAR + AI_STOP_SLOPE * scale;
+          if (players.length > 2 && leaderOther(idx) !== roll.roller) bar *= 1.7;
+          if (loss < bar) return;
+          setTimeout(function () {
+            if (matchId !== myMatch || liveRoll !== roll || roll.stopped) return;
+            if (doTimeStop(idx)) renderAll();
+          }, 250 + Math.random() * 300); // a human-like beat after the throw leaves the hand
+        });
       }
       // AI peeks at where the dice will land and slams when that is unusually good for an opponent
       // (or unusually bad for itself)
@@ -10312,7 +10701,7 @@
             return;
           }
           const cur = players[currentPlayerIdx];
-          if (rollsLeft > 0) {
+          if (rollsLeft > 0 && stopTurn < 0) { // a stopped throw leaves no roll to use: record what landed
             const plan = YachtAI.decide(aiScores(cur), CAT_IDS, dice, rollsLeft, held, aiTemp(), aiExact(cur));
             if (plan.category) { scoreSoon(plan.category, 850); return; }
             const want = plan.hold.map(function (h, i) { return !!(h || stuck[i]); });
@@ -10511,6 +10900,7 @@
       function endGame() {
         const wait = 900 + (matchAug ? settleAugments() : 0);
         gameActive = false;
+        tsEnd();
         draft = null;
         encoreTurn = false;
         clearCock();
@@ -10724,6 +11114,8 @@
         riseTurn = !!d.riseTurn;
         const sv = toArr(d.stuck);
         stuck = [0, 1, 2, 3, 4].map(function (i) { return !!sv[i]; });
+        const stp = d.stopTurn;
+        stopTurn = typeof stp === 'number' && Math.floor(stp) === stp && stp >= -1 && stp <= 3 ? stp : -1; // a seat 0..3; a string, 1.5, 4 or a missing key is none
         fuseBust = !!d.fuseBust;
         rideTurn = !!d.rideTurn;
         restTurn = !!d.restTurn;
@@ -10756,7 +11148,7 @@
         gameActive = !!d.gameActive;
         // 모서리 착지: a pending cock only for the holder of the card, on landed dice; anything else is no cock (Firebase drops a null: missing = none)
         const cu = players[currentPlayerIdx];
-        cock = matchAug && gameActive && hasRolledThisTurn && !isRolling && cu && augHas(cu, 'cocked') ? cockOk(d.cock, dice, held) : null;
+        cock = matchAug && gameActive && hasRolledThisTurn && !isRolling && cu && augHas(cu, 'cocked') ? cockOk(d.cock, dice, stopTurn >= 0 ? [false, false, false, false, false] : held) : null; // 시간 정지 holds every die: the die on its edge is still picked
         if (!cock || cockSentSeq !== rollSeq) cockSentSeq = -1; // a state for another roll opens the chips again
         if (!gameActive || !(draft && draft.law)) { lawRevealed = {}; lawPendingSig = ''; } // a new match may pass the same law again
         if (!wasActive && gameActive) { resetTotalAnims(); matchId++; yfxReset(); OVERLAYS.forEach(closeOv); }
@@ -10796,7 +11188,7 @@
       function handleRemoteAction(data, from) {
         if (!gameActive || !isOnlineMatch) return;
         const who = players.findIndex(function (p) { return p.peerId === from; });
-        // block order: augPick, augReroll, (amend) -> slam, (bluffCall, bluffPass, cupSync) -> stale check -> turn gate
+        // block order: augPick, augReroll, (amend) -> slam, timeStop, (bluffCall, bluffPass, cupSync) -> stale check -> turn gate
         // -> roll, hold, score, power, (cockPick, bluffDecl, bluffLift)
         if (data.action === 'augPick') { if (who >= 0) draftPick(who, String(data.id)); return; }
         if (data.action === 'augReroll') { if (who >= 0) draftReroll(who); return; }
@@ -10804,6 +11196,7 @@
         // an action aimed at dice that have changed since the guest saw them is dropped
         const stale = data.seq != null && Number(data.seq) !== rollSeq;
         if (data.action === 'slam') { if (who >= 0 && !stale && doSlam(who)) renderAll(); return; }
+        if (data.action === 'timeStop') { if (who >= 0 && !stale) doTimeStop(who); return; } // any holder but the roller; canTimeStop decides
         if (stale && (data.action === 'score' || data.action === 'hold' || data.action === 'power' || data.action === 'cockPick')) return;
         const cur = players[currentPlayerIdx];
         if (!cur || cur.peerId !== from || draft) return;
@@ -11230,7 +11623,7 @@
         clearTimeout(lawTimer); lawPendingSig = ''; lawRevealed = {}; lawBarSig = '';
         stageVignette(0, '', 0); // a flip's dark felt must not carry into the next match
         lastRound = 12; flipRound = -1; encoreTurn = false; encoreQueue = null; sealTurn = false; turnLost = false;
-        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
+        turnNo = 0; lastRec = null; stuck = [false, false, false, false, false]; stopTurn = -1; fuseBust = false; duel = null; rideTurn = false; riseTurn = false;
         twoferPend = null; restTurn = false;
         clearCock(); cockSpent = false; cockSpentBefore = false; cockHl = false; cockSentSeq = -1;
         matchId++;
@@ -11739,7 +12132,7 @@
       // The same card again puts the sheet away. (A 쾅 pill on a card is its own button.)
       function seatTap(e, viaKey) {
         const t = e.target;
-        if (!t || !t.closest || t.closest('.seat-slam')) return false;
+        if (!t || !t.closest || t.closest('.seat-slam, .seat-stop')) return false;
         const s = t.closest('.seat');
         const idx = s ? Array.prototype.indexOf.call(seatsEl.children, s) : -1;
         if (idx < 0 || !players[idx] || !gameActive) return false;
@@ -11759,12 +12152,15 @@
       seatsEl.addEventListener('click', function (e) {
         const slam = e.target.closest ? e.target.closest('.seat-slam') : null;
         if (slam) { e.stopPropagation(); if (e.detail) slam.blur(); seatSlamTap(Number(slam.dataset.idx)); return; }
+        const stopB = e.target.closest ? e.target.closest('.seat-stop') : null;
+        if (stopB) { e.stopPropagation(); if (e.detail) stopB.blur(); seatStopTap(Number(stopB.dataset.idx)); return; }
         // a pointer tap must not leave the card focused, or the next Space would open it again instead of rolling
         if (seatTap(e)) { const s = e.target.closest('.seat'); if (s) s.blur(); }
       });
       seatsEl.addEventListener('keydown', function (e) {
         if ((e.key !== 'Enter' && e.key !== ' ') || !e.target.classList) return;
         if (e.target.classList.contains('seat-slam')) { e.preventDefault(); e.stopPropagation(); seatSlamTap(Number(e.target.dataset.idx)); return; } // Space here must not also roll
+        if (e.target.classList.contains('seat-stop')) { e.preventDefault(); e.stopPropagation(); seatStopTap(Number(e.target.dataset.idx)); return; }
         if (!e.target.classList.contains('seat')) return;
         if (seatTap(e, true)) { e.preventDefault(); e.stopPropagation(); } // Space on a card must not also roll
       });
@@ -11815,7 +12211,7 @@
             closePeek();
             // the tap that puts the sheet away still counts on a live 쾅 under it: a slam can't wait for a second tap
             const under = document.elementFromPoint(e.clientX, e.clientY);
-            const slam = under && under.closest ? under.closest('.pw-btn[data-pw="slam"]') : null;
+            const slam = under && under.closest ? under.closest('.pw-btn[data-pw="slam"], .pw-btn[data-pw="timeStop"]') : null;
             if (slam && !slam.disabled) slam.click();
           } else closeOv(ov);
         });
@@ -12416,7 +12812,8 @@
         cocoon: { color: new THREE.Color('#f6f1e6'), metal: 0, rough: 0.92, emi: null },
         wing: { color: new THREE.Color('#8fdcff'), metal: 0.45, rough: 0.25, emi: new THREE.Color('#002a3a') },
         wild: { color: new THREE.Color('#e6d2ff'), metal: 0.2, rough: 0.22, emi: new THREE.Color('#2a0c4a') },
-        glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') }
+        glue: { color: new THREE.Color('#8dff9f'), metal: 0.1, rough: 0.12, emi: new THREE.Color('#063a12') },
+        stop: { color: new THREE.Color('#8fc0ff'), metal: 0.45, rough: 0.24, emi: new THREE.Color('#0b2c52') } // 시간 정지: ice blue
       };
       // every augment skin also has a signature edge color (shared with the 2D fallback through window.SKIN_EDGE)
       Object.keys(SKINS).forEach((k) => { SKINS[k].edge = new THREE.Color((window.SKIN_EDGE || {})[k] || '#ffffff'); });
@@ -12816,6 +13213,9 @@
 
       // hitstop: the dice (and every clock-based tween / ring / puff) freeze while the camera keeps moving
       let freeze = 0, apexAt = null;
+      // 시간 정지: the sim clock stands still until tsUntil (a real timestamp, so a slow frame cannot stretch it); tsVis eases the cold tint in and out
+      let tsUntil = 0, tsVis = 0;
+      const TS_EMI = new THREE.Color('#0a1c30'), _tsc = new THREE.Color();
       // 도화선 gag state: the pending blast, the die the camera stares at, a camera roll spring (the Dutch tilt of the blast)
       let boomAt = null, focusI = -1, focusUntil = -9, camRoll = 0, camRollV = 0;
       const BLAST_UP = 0.22, BLAST_DOWN = 0.3, SOOT = new THREE.Color('#3a2e26'), HOT = new THREE.Color('#ff5a3c'), _v3 = new THREE.Vector3();
@@ -12846,6 +13246,14 @@
         fovKick = Math.max(-4, Math.min(4, fovKick + (o.fov || 0)));
       }
       const KICK_STOP = { fov: -0.7 };
+      // ms is capped at 2500. A no-op (false) for reduced motion and a hidden tab: the caller keeps the rule, only the freeze is skipped.
+      function timeStop(ms) {
+        ms = Math.min(2500, Math.max(0, Number(ms) || 0));
+        if (REDUCED || document.hidden || !(ms > 0)) return false;
+        tsUntil = performance.now() + ms;
+        return true;
+      }
+      function timeGo() { tsUntil = 0; }
 
       // [index of the hardest floor hit above 14, index of the hardest die-die hit above 7] (-1 = none)
       function pickStops(imps) {
@@ -12881,6 +13289,7 @@
         d.flight = null; d.group.visible = true; d.litT0 = 0; d.soot = 0; d.sootKeep = false;
         d.cockFaces = null; d.cockKey = ''; d.cockVis = 0; // any throw ends a lean: the die tumbles out of its pose
         if (cockWant && cockWant.i === d.i) cockWant = null;
+        tsUntil = 0; // a new throw starts: no stop outlives it
       }
       // a new throw: a blast that hasn't gone off yet is dropped, and the charred felt fades
       function cancelBlast() { yachtEnd(true); boomAt = null; focusUntil = -9; clearScorch(0.4); if (vfxUntil && clock > vfxUntil - 0.9) vfxOff(); } // a new throw: no smoke lingering over it
@@ -12914,6 +13323,7 @@
           if (boomAt) fireBoom(); // same for a blast that was about to go off
           vfxOff(); // hidden: drop the particles instead of resuming them on return
           D.forEach((d) => { if (d.flight) { const cb = d.flight.onDone; d.flight = null; d.group.visible = true; if (cb) setTimeout(cb, 0); } });
+          tsUntil = 0; tsVis = 0;
           return;
         }
         trauma = 0; fovKick = 0; freeze = 0; camVel.set(0, 0, 0); camOff.set(0, 0, 0); camRoll = 0; camRollV = 0;
@@ -13366,6 +13776,7 @@
         }
       }
       function finishNow() {
+        tsUntil = 0; // a throw that is cut short ends the stop with it
         if (anim) { anim.playhead = anim.steps - 1; applyFrame(anim, anim.steps - 1); beginGather(); }
         boomAt = null;
         D.forEach((d) => { if (d.flight) { d.flight = null; d.group.visible = true; } });
@@ -13508,7 +13919,7 @@
 
           const hv = clamp01(d.heldVis);
           const SK = SKINS[d.skin];
-          _col.copy(SK ? SK.color : WHITE).lerp(GOLD, hv * 0.7).multiplyScalar(1 - d.dimVis * 0.38);
+          _col.copy(SK ? SK.color : WHITE).lerp(GOLD, hv * (d.skin === 'stop' ? 0 : 0.7)).multiplyScalar(1 - d.dimVis * 0.38); // a stopped table stays steel, not gold
           if (d.yGlow > 0.004 || d.yGoal > 0) {
             d.yGlow += (d.yGoal - d.yGlow) * (1 - Math.exp(-dt * (d.yGoal > d.yGlow ? 14 : 3)));
             if (d.yGoal <= 0 && d.yGlow < 0.004) d.yGlow = 0;
@@ -13531,6 +13942,12 @@
             _emi.r += d.hlColor.r * pulse; _emi.g += d.hlColor.g * pulse; _emi.b += d.hlColor.b * pulse;
           }
           const am = d.active || d.mats;
+          // 시간 정지: cold and desaturated (the tint is a colour lerp, no new texture)
+          if (tsVis > 0.002) {
+            const gr = _col.r * 0.3 + _col.g * 0.59 + _col.b * 0.11;
+            _col.lerp(_tsc.setRGB(gr * 0.78, gr * 0.9, gr * 1.06), 0.72 * tsVis);
+            _emi.lerp(TS_EMI, 0.55 * tsVis);
+          }
           // glow designs: their emissive map only lets the pips through, which would hide the highlight / aura tint
           const unmask = d.glow > 0 && d.hlVis > 0.05;
           if (unmask) { const pl = (0.22 + 0.1 * Math.sin(clock * 9)) * d.hlVis; _emi.copy(d.hlColor).multiplyScalar(pl).lerp(GOLD, hv * 0.1); }
@@ -13626,14 +14043,15 @@
         key.intensity = 2.5 * (1 - 0.35 * dramaVis);
         warm.intensity = 14 + 12 * dramaVis;
         warm.position.lerpVectors(warmHome, warmAim, dramaVis);
-        const s = trauma * trauma * 0.5 * ks;
+        const s = trauma * trauma * 0.5 * ks * (1 - tsVis); // 시간 정지: no shake
         camera.position.set(
           camPos.x + camOff.x + s * (Math.sin(camT * 31 + 1.7) + 0.6 * Math.sin(camT * 53 + 0.4)),
           camPos.y + camOff.y + 0.5 * s * (Math.sin(camT * 37 + 4.1) + 0.6 * Math.sin(camT * 59 + 2.2)),
           camPos.z + camOff.z + s * (Math.sin(camT * 29 + 0.3) + 0.6 * Math.sin(camT * 47 + 5))
         );
+        if (tsVis > 0.002) camera.position.add(_v3.set(Math.sin(camT * 0.37) * 0.16, Math.sin(camT * 0.29 + 1) * 0.05, -0.1 - 0.12 * Math.sin(camT * 0.21)).multiplyScalar(tsVis));
         camera.lookAt(lookAt);
-        if (trauma > 0.01) camera.rotateZ(trauma * trauma * 0.02 * Math.sin(camT * 23));
+        if (trauma > 0.01 && tsVis < 0.5) camera.rotateZ(trauma * trauma * 0.02 * Math.sin(camT * 23));
         // roll spring (kick({ roll })): the blast tilts the horizon and it swings back
         if (camRoll !== 0 || camRollV !== 0) {
           camRollV += -170 * camRoll * dt; camRollV *= Math.exp(-9 * dt); camRoll += camRollV * dt;
@@ -13650,9 +14068,14 @@
         if (document.hidden) return;
         if (apexAt && clock >= apexAt.t) fireApex();
         if (boomAt && clock >= boomAt.t) fireBoom();
+        // 시간 정지: the dice hang, the cold tint eases in over ~150 ms and out at the end
+        const tsOn = now < tsUntil;
+        tsVis += ((tsOn ? 1 : 0) - tsVis) * (1 - Math.exp(-dt * 20));
+        if (!tsOn && tsVis < 0.004) tsVis = 0;
         // hitstop: the sim clock stands still while the camera (real dt) keeps shaking
         let sdt = dt;
-        if (freeze > 0) { const f = Math.min(freeze, dt); freeze -= f; sdt = dt - f; }
+        if (tsOn) sdt = 0;
+        else if (freeze > 0) { const f = Math.min(freeze, dt); freeze -= f; sdt = dt - f; }
         clock += sdt;
         updatePlayback(sdt);
         updateYacht();
@@ -13666,6 +14089,7 @@
 
       function setState(values, heldArr, yawArr) {
         if (anim || gather) return;
+        tsUntil = 0;
         for (let i = 0; i < 5; i++) {
           const d = D[i];
           d.held = !!(heldArr && heldArr[i]);
@@ -13964,6 +14388,7 @@
           pair[1].forEach((m) => { m.envMap = env; if (!env) m.metalness = Math.min(m.metalness, 0.25); m.needsUpdate = true; });
         });
       }
+      canvas.addEventListener('webglcontextlost', () => { tsUntil = 0; tsVis = 0; });
       canvas.addEventListener('webglcontextrestored', () => {
         const sets = [];
         Object.keys(designMats).forEach((id) => designMats[id].forEach((arr) => sets.push([id, arr])));
@@ -14118,6 +14543,9 @@
         yachtEnd,
         // juice core: ms of freeze, camera spring kick {x,y,z,trauma,fov}, emissive blink of one die
         hitstop: (ms) => hitstop((ms || 0) / 1000),
+        // 시간 정지: a long freeze of the dice (cap 2500 ms), and its early end
+        timeStop,
+        timeGo,
         kick,
         jolt: (amp) => D.forEach((d) => joltDie(d, amp || 0.5, -2, null)), // every resting die hops and lands again
         pulse: (i, hex, amt) => flashDie(D[i], amt || 0.6, hex),
