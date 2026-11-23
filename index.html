@@ -216,7 +216,7 @@
   /* Shared device: while the slam window is open, every other player holding a 쾅 gets a ruby button at the right
      end of their own chip row (updateSeatSlams). Only this button slams, never the card around it. The status
      pills keep the room it leaves and step aside (.st-off) when there is none; on the narrowest cards the button
-     stands in for the 책상 쾅 chip (.slam-clip). It is never taller than the chips, so the rail keeps its height. */
+     stands in for the 샷건 chip (.slam-clip). It is never taller than the chips, so the rail keeps its height. */
   .seat-slam {
     position: relative; z-index: 2; flex: none; height: 22px; padding: 0 8px; border-radius: 11px;
     display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer;
@@ -4507,7 +4507,7 @@
         { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
         { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
         { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 항상 같은 눈으로 나옵니다.', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
-        { id: 'slam', tier: 1, cat: 'hand', name: '책상 쾅', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
+        { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
         { id: 'rewind', tier: 2, cat: 'hand', name: '되감기', desc: '방금 굴림을 되돌립니다. 연속으로는 못 씁니다.', ch: { rewind: 2 }, ev: 12 },
@@ -4544,7 +4544,7 @@
         { id: 'timeThief', tier: 3, cat: 'time', name: '시간 도둑', desc: '1등 상대의 다음 턴을 빼앗습니다. 그 턴은 0점입니다.', ev: 18 },
         { id: 'twofer', tier: 3, cat: 'time', name: '일석이조', desc: '한 번에 두 칸에 점수를 냅니다. 다 채우면 남은 턴은 쉽니다.', ch: { twofer: 2 }, ev: 20 },
         { id: 'tableFlip', tier: 3, cat: 'time', name: '밥상 엎기', desc: '굴리기 전에 모두의 마지막 기록을 지웁니다. 게임이 1라운드 늘어납니다.', ch: { tableFlip: 1 }, ev: 17 },
-        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true },
+        { id: 'amend', tier: 1, cat: 'meta', name: '개헌', desc: '새 규칙 하나를 통과시킵니다. 모두에게 적용됩니다.', ev: 4, fixed: true, act: true },
         { id: 'mimic', tier: 2, cat: 'meta', name: '모방', desc: '상대가 이번에 고른 증강 하나를 베낍니다. 없으면 새로 뽑습니다.', ev: 12 },
         { id: 'boxUp', tier: 2, cat: 'meta', name: '상자 업그레이드', desc: '다음 증강 선택의 등급이 한 단계 오릅니다.', ev: 9 }
       ];
@@ -5050,11 +5050,14 @@
         if (a.id === 'lateBloom' && lastRound < 10) return false;
         return true;
       }
+      // cards the player acts with (a key to press, a rule to choose) are dealt three times as often as plain bonuses
+      const ACT_W = 3;
+      function augWeight(a) { return a.ch || a.act ? ACT_W : 1; }
       function drawCards(p, tier, roundNo, avoid) {
         const usable = function (a) { return !augHas(p, a.id) && augAllowed(a, roundNo) && augFits(p, a.id); };
+        // a weighted draw without replacement: the order of -ln(U) / w gives each card odds in proportion to its weight
         const shuffle = function (arr) {
-          for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
-          return arr;
+          return arr.map(function (a) { return { a: a, k: -Math.log(1 - Math.random()) / augWeight(a) }; }).sort(function (x, y) { return x.k - y.k; }).map(function (x) { return x.a; });
         };
         // fresh cards of the tier first, then (on a thin pool) the previous hand, then other tiers
         let pool = shuffle(AUG_LIST.filter(function (a) { return a.tier === tier && usable(a) && avoid.indexOf(a.id) === -1; }));
@@ -7166,7 +7169,7 @@
       // rewind: undo the last roll · seal: lock the next opponent's best box · swap: trade a box with an opponent
       // overwrite / joker / allin: toggles that change the next record
       const POWER_DEFS = {
-        slam: { label: '쾅', chip: '쾅!', kind: 'live' },
+        slam: { label: '샷건', chip: '샷건', kind: 'live' },
         flip: { label: '뒤집기', chip: 'FLIP', kind: 'target' },
         reroll: { label: '다시', chip: 'REROLL', kind: 'target' },
         psychic: { label: '염력', chip: '염력', kind: 'target' },
@@ -7301,14 +7304,14 @@
       function slamFx(pIdx) {
         sfxSlam(); impact(4, { soft: true }); // the 3D camera carries most of this hit
         const st = stagePt();
-        wordFx(st, '쾅!');
+        wordFx(st, '샷건');
         ringFx(st, '#ffd77a', 6);
         ringFx(st, '#ffffff', 4.5, 120);
         decalFx(st, 'impact', 'rgba(255,225,180,0.5)', 280, 1100);
         decalFx(st, 'ring_soft', 'rgba(255,240,210,0.55)', 360, 650);
         if (st) burst({ x: st.x, y: st.r.bottom - 24 }, { shape: 'dust', count: 14, angle: -Math.PI / 2, spread: Math.PI, dist: 100, color: 'rgba(235,222,196,0.7)', dur: 1100, spin: 120 });
         const p = players[pIdx];
-        if (p && pIdx !== powerOwnerIdx()) showChip(p.name + ' 쾅!', 'gold');
+        if (p && pIdx !== powerOwnerIdx()) showChip(p.name + ' 샷건', 'gold');
         if (p) pingChip(pIdx, augIdForPower(p, 'slam'));
       }
       // ---------- 밥상 엎기 ----------
@@ -8039,7 +8042,7 @@
       function hotSeat() { return !isOnlineMatch && matchMode !== 'ai' && players.length > 1; }
       // Shared device: the power bar belongs to whoever is rolling, so every other player holding a 쾅 gets a
       // button on their own card while the slam window is open (canSlam). It lives in the card's chip row, is
-      // fitted against the chips (tighter, then standing in for the 책상 쾅 chip), and the status pills take
+      // fitted against the chips (tighter, then standing in for the 샷건 chip), and the status pills take
       // what is left (renderStatus). Runs from renderPowers, which already follows the window opening and closing.
       function updateSeatSlams() {
         const hs = hotSeat(), owner = hs ? powerOwnerIdx() : -1;
@@ -8064,10 +8067,10 @@
             b.setAttribute('role', 'button');
             if (FINE_POINTER) b.tabIndex = 0;
             b.dataset.idx = String(idx);
-            b.innerHTML = '쾅!<b></b>';
+            b.innerHTML = '샷건<b></b>';
             row.appendChild(b);
           }
-          const n = String(charges(p, 'slam')), label = p.name + ' 쾅 ' + n + '회';
+          const n = String(charges(p, 'slam')), label = p.name + ' 샷건 ' + n + '회';
           if (b.lastChild.textContent !== n) b.lastChild.textContent = n;
           if (b.getAttribute('aria-label') !== label) b.setAttribute('aria-label', label);
           b.classList.toggle('is-live', isRolling);
