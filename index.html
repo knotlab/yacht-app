@@ -641,6 +641,11 @@
   .pw-btn.is-arm:disabled .pw-ico { filter: none; }
   .pw-btn.is-arm:disabled .pw-n { background: var(--ink); color: var(--ivory); }
   @keyframes pwArm { from { filter: brightness(1); } to { filter: brightness(1.14); } }
+  /* a switch (쌍둥이): the badge reads ON / OFF, mint while on; off also greys the icon */
+  .pw-sw { padding: 0 6px; font-size: 10px; letter-spacing: 0.04em; background: #6d675b; color: #f1ead9; }
+  .pw-btn.is-on .pw-sw, .pw-btn.is-on:disabled .pw-sw { background: var(--mint); color: #06281d; }
+  .pw-btn.is-sw:not(.is-on) .pw-ico { filter: saturate(0.25) brightness(0.8); }
+  .pw-btn.is-sw:not(.is-on):disabled .pw-sw { background: rgba(255, 255, 255, 0.14); color: #d8d2c4; }
   /* shared device: the coin of the player these powers belong to leads the bar */
   .pw-owner {
     --pc: #4fd1ff;
@@ -2891,7 +2896,7 @@
       function drawYaw(heldSnap) {
         const live = yawLive(), roller = players[currentPlayerIdx];
         const ny = yaw.map(function (y, i) { return heldSnap[i] ? y : (live ? Math.floor(Math.random() * 4) : 0); });
-        if (live && roller && augHas(roller, 'twins')) { if (!heldSnap[1]) ny[1] = ny[0]; else if (!heldSnap[0]) ny[0] = ny[1]; } // mirrors applyTwins: the copy turns like its source
+        if (live && roller && twinsOn(roller)) { if (!heldSnap[1]) ny[1] = ny[0]; else if (!heldSnap[0]) ny[0] = ny[1]; } // mirrors applyTwins: the copy turns like its source
         return ny;
       }
 
@@ -4452,7 +4457,7 @@
               sealed: p.sealed || 0, skip: p.skip || 0, prophecy: p.prophecy || null,
               hatch: p.hatch || 0, hatched: p.hatched || 0, rise: p.rise || 0, wake: p.wake || 0,
               glue: p.glue || 0, glueBy: p.glueBy != null ? p.glueBy : -1, bomb: p.bomb != null ? p.bomb : -1, bombT: p.bombT != null ? p.bombT : -1, mim: p.mim || null,
-              last: p.last || null, law: p.law || null
+              last: p.last || null, law: p.law || null, twinOff: p.twinOff ? 1 : 0
             };
           }),
           augMode: matchAug, draft: draft, rollsMax: rollsMax, seq: rollSeq, riseTurn: riseTurn,
@@ -4671,7 +4676,7 @@
         let next, notes = null;
         if (luck) {
           next = YachtAI.luckyRoll(aiScores(roller), CAT_IDS, dice, heldSnap, rollsLeft, luck, aiTurnMods(roller), matchAug ? [0, 1, 2, 3, 4].map(function (i) { return faceList(roller, i); }) : null);
-          if (augHas(roller, 'twins')) applyTwins(next, heldSnap);
+          if (twinsOn(roller)) applyTwins(next, heldSnap);
         } else { next = rollValues(roller, dice, heldSnap, first); notes = lastRollNotes; }
         if (matchAug && rollsLeft === 0) {
           if (augHas(roller, 'fourth') && rollsMax >= 4) fx('aug', { id: 'fourth', p: currentPlayerIdx });
@@ -4841,7 +4846,7 @@
         { id: 'golden', tier: 2, cat: 'dice', name: '황금 주사위', desc: '3번 주사위의 눈을 2배로 더합니다.', ev: 14, art: { zoom: 0.78, dice: [{ v: 6, skin: 'gold', ry: 0.7 }] } },
         { id: 'pupa', tier: 1, cat: 'dice', name: '번데기', desc: '5번 주사위가 남은 라운드 전반엔 1~3, 후반엔 4~6만 나옵니다.', ev: 7, art: { zoom: 0.78, glyph: 1, dice: [{ v: 2, skin: 'cocoon', ry: 0.6, tx: 0.25 }] } },
         { id: 'wildOne', tier: 3, cat: 'dice', name: '만능 1', desc: '1을 3개 모아 기록하면 깨어납니다. 족보 조건에선 1이 만능입니다.', ev: 22, art: { zoom: 0.8, glyph: 1, dice: [{ v: 1, skin: 'wild', y: 0.6, ry: 0.5, tx: 0.35 }] } },
-        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 항상 같은 눈으로 나옵니다.', ev: 16, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
+        { id: 'twins', tier: 2, cat: 'dice', name: '쌍둥이', desc: '1·2번 주사위가 같은 눈으로 나옵니다. 내 턴에 켜고 끕니다.', ch: { twins: 1 }, ev: 24, art: { zoom: 0.95, dice: [{ v: 5, skin: 'twin', x: -0.68, ry: 0.35 }, { v: 5, skin: 'twin', x: 0.68, ry: 0.35 }] } },
         { id: 'slam', tier: 1, cat: 'hand', name: '샷건', desc: '책상에 샷건을 때립니다. 상대 차례에도 됩니다.', ch: { slam: 2 }, ev: 9, show: true, art: { zoom: 1, glyph: 1, dice: [{ v: 3, x: -0.8, y: 1.0, ry: 0.4, tx: 0.6, tz: 0.3 }, { v: 5, x: 0.75, y: 0.5, ry: -0.5, tx: -0.4, tz: 0.7 }] } },
         { id: 'flip', tier: 1, cat: 'hand', name: '뒤집기', desc: '주사위 하나를 반대 면으로 뒤집습니다.', ch: { flip: 2 }, ev: 8, art: { zoom: 0.8, glyph: 1, dice: [{ v: 2, y: 0.5, ry: 0.5, tz: 0.9 }] } },
         { id: 'reroll', tier: 1, cat: 'hand', name: '다시 굴려', desc: '주사위 하나만 공짜로 다시 굴립니다.', ch: { reroll: 3 }, ev: 9, art: { zoom: 0.8, glyph: 1, dice: [{ v: 4, y: 0.55, ry: 0.6, tx: 0.7 }] } },
@@ -4850,7 +4855,7 @@
         { id: 'ride', tier: 3, cat: 'hand', name: '편승', desc: '앞 사람이 기록한 주사위를 첫 굴림으로 씁니다.', ch: { ride: 2 }, ev: 22 },
         { id: 'aceRebel', tier: 1, cat: 'score', name: '에이스 반란', desc: '에이스 칸에서 1을 6점으로 셉니다.', ev: 10 },
         { id: 'overwrite', tier: 1, cat: 'score', name: '덮어쓰기', desc: '채운 칸을 더 높게 덮어씁니다. 빈칸 하나가 0점으로 남습니다.', ch: { overwrite: 1 }, ev: 10 },
-        { id: 'yachtClub', tier: 2, cat: 'score', name: '황금 스니치', desc: '야트가 150점입니다.', ev: 36, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
+        { id: 'yachtClub', tier: 2, cat: 'score', name: '황금 스니치', desc: '야트가 150점입니다.', ev: 33, art: { zoom: 1.3, glyph: 1, dice: [{ v: 6, x: -1.3, z: 0.1, ry: 0.2 }, { v: 6, x: 0, z: -0.6, ry: -0.3 }, { v: 6, x: 1.3, z: 0.1, ry: 0.5 }, { v: 6, x: -0.65, z: 1.15, ry: -0.6 }, { v: 6, x: 0.65, z: 1.15, ry: 0.1 }] } },
         { id: 'blackjack', tier: 2, cat: 'score', name: '블랙잭', desc: '주사위 합이 21이면 어느 칸에 기록해도 +21점입니다.', ev: 13 },
         { id: 'prophecy', tier: 2, cat: 'score', name: '예언', desc: '매 턴 빈칸 하나를 예언합니다. 그 칸에 점수를 내면 +' + PROPHECY_PTS + '점입니다.', ev: 12 },
         { id: 'joker', tier: 3, cat: 'score', name: '조커', desc: '켠 채 기록하면 족보 조건을 무시합니다.', ch: { joker: 1 }, ev: 30 },
@@ -5035,7 +5040,7 @@
       function cursedBy(p) { return matchAug && players.some(function (q) { return q !== p && augHas(q, 'curse'); }); }
       function freshAugState(p) {
         p.aug = []; p.ch = {}; p.extra = 0; p.shake = 0; p.boxUp = 0; p.sealed = 0; p.skip = 0; p.prophecy = null;
-        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null; p.last = null; p.law = null;
+        p.hatch = 0; p.hatched = 0; p.rise = 0; p.wake = 0; p.glue = 0; p.glueBy = -1; p.bomb = -1; p.bombT = -1; p.mim = null; p.last = null; p.law = null; p.twinOff = 0;
       }
       function charges(p, k) { return matchAug && p && p.ch ? (p.ch[k] || 0) : 0; }
       function signed(n) { return (n > 0 ? '+' : '') + n; }
@@ -5088,6 +5093,9 @@
           // refills when its owner's turn starts, so the count only means something during that turn
           if (mine) { st.n = String(charges(p, 'fuse')); st.tip = '이번 턴 남은 횟수 ' + b(st.n); }
           else st.tip = '매 턴 ' + b(a.ch.fuse) + '번';
+        } else if (id === 'twins') {
+          if (p.twinOff) { st.cls = 'is-spent'; st.tip = '꺼져 있습니다.'; }
+          else st.tip = '켜져 있습니다.';
         } else if (id === 'bomb' && p.bomb >= 0) {
           st.cls = 'is-hot'; st.tip = '폭탄 든 사람 ' + who(p.bomb);
         } else if (id === 'tableFlip') {
@@ -5318,6 +5326,8 @@
         }
         return v;
       }
+      // the card in force: held and not switched off (the holder flips p.twinOff on their own turn)
+      function twinsOn(p) { return augHas(p, 'twins') && !p.twinOff; }
       function applyTwins(next, heldSnap) {
         if (!heldSnap[1]) next[1] = next[0];
         else if (!heldSnap[0]) next[0] = next[1];
@@ -5326,7 +5336,7 @@
       function rollValues(p, cur, heldSnap, first) {
         rollNotes = {};
         const next = cur.map(function (v, i) { return heldSnap[i] ? v : rollOne(p, i); });
-        if (augHas(p, 'twins') && (!heldSnap[0] || !heldSnap[1])) { applyTwins(next, heldSnap); rollNotes.twins = true; }
+        if (twinsOn(p) && (!heldSnap[0] || !heldSnap[1])) { applyTwins(next, heldSnap); rollNotes.twins = true; }
         if (augHas(p, 'wildOne') && p.wake && next.some(function (v, i) { return v === 1 && !heldSnap[i]; })) rollNotes.wildOne = true;
         lastRollNotes = rollNotes;
         rollNotes = null;
@@ -5337,7 +5347,7 @@
         const m = [[], [], [], [], []];
         const p = players[currentPlayerIdx];
         if (!matchAug || !p || !gameActive) return m;
-        if (augHas(p, 'twins')) { m[0].push('twins'); m[1].push('twins'); }
+        if (twinsOn(p)) { m[0].push('twins'); m[1].push('twins'); }
         if (augHas(p, 'loaded')) m[0].push('loaded');
         if (augHas(p, 'golden')) m[2].push('golden');
         if (augHas(p, 'pupa')) m[4].push('pupa');
@@ -5361,7 +5371,7 @@
         const s = [null, null, null, null, null];
         const p = players[currentPlayerIdx];
         if (!matchAug || !p || !gameActive) return s;
-        if (augHas(p, 'twins')) { s[0] = 'twin'; s[1] = 'twin'; }
+        if (twinsOn(p)) { s[0] = 'twin'; s[1] = 'twin'; }
         if (augHas(p, 'loaded')) s[0] = 'lead';
         if (augHas(p, 'golden')) s[2] = 'gold';
         if (augHas(p, 'pupa')) s[4] = round >= (p.hatch || 99) ? 'wing' : 'cocoon';
@@ -5867,7 +5877,7 @@
       }
       // use count for the card tag ("2회"); 도화선 refills every turn, so its text carries the number instead
       function usesTxt(a) {
-        if (!a || !a.ch || a.id === 'fuse') return '';
+        if (!a || !a.ch || a.id === 'fuse' || a.id === 'twins') return ''; // 쌍둥이's key is a switch, not a count
         return a.ch[Object.keys(a.ch)[0]] + '회';
       }
       function tagTxt(a) { const u = usesTxt(a); return TIER_NAME[a.tier] + ' · ' + AUG_CATS[a.cat].ko + (u ? ' · ' + u : ''); }
@@ -6074,6 +6084,7 @@
         const uses = function (n) { return '<b class="num">' + n + '</b><small>회</small>'; };
         if (has('is-spent')) {
           if (has('is-risk')) return out('risk', esc(st.n || '실패'));
+          if (id === 'twins') return out('ko dim', '꺼짐', '꺼져 있습니다.');
           if (AUG[id].ch) return out('dim', uses(0), '사용 완료');
           const word = id === 'grandSlam' ? '실패' : id === 'lateBloom' ? '무효' : '완료';
           return out('ko dim', word, word === '완료' ? '사용 완료' : word);
@@ -7528,9 +7539,10 @@
         twofer: { label: '일석이조', chip: '일석이조', kind: 'toggle' },
         overwrite: { label: '덮어쓰기', chip: '덮어쓰기', kind: 'toggle' },
         joker: { label: '조커', chip: 'JOKER', kind: 'toggle' },
-        allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' }
+        allin: { label: '올인', chip: 'ALL IN', kind: 'toggle' },
+        twins: { label: '쌍둥이', chip: '쌍둥이', kind: 'switch' } // 켜짐 / 꺼짐: never spent
       };
-      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer'];
+      const POWER_KEYS = ['slam', 'ride', 'tableFlip', 'flip', 'reroll', 'psychic', 'rewind', 'fuse', 'seal', 'glue', 'bomb', 'swap', 'gauntlet', 'overwrite', 'joker', 'allin', 'twofer', 'twins'];
       let armedPower = null; // a die-target / tile power waiting for a tap
       let lastSlamTap = 0;
       let psychicDie = -1;   // die chosen for 염력, waiting for a face
@@ -7576,6 +7588,7 @@
         if (!matchAug || !def || def.kind === 'live' || !gameActive || draft || !cur || charges(cur, kind) <= 0) return false;
         if (tableHeld()) return false; // a pending pick or a live cup holds the table
         if (isRolling || isScoring || turnLost || fuseBust || twoferPend || restTurn) return false;
+        if (kind === 'twins') return augHas(cur, 'twins') && rollsLeft > 0; // before or between rolls, on the holder's own turn; no roll left = nothing to switch
         if (kind === 'seal') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].sealed > 0) && !encoreTurn; }
         if (kind === 'swap') return !encoreTurn && !duel && CATEGORIES.some(function (c) { return !!swapInfo(currentPlayerIdx, c.id); });
         if (kind === 'glue') { const t = nextOpponent(currentPlayerIdx); return t >= 0 && !(players[t].glue > 0) && !encoreTurn; }
@@ -7721,6 +7734,7 @@
         if (!canUsePower(kind)) return false;
         const cur = players[currentPlayerIdx];
         if (kind === 'allin') return toggleAllin();
+        if (kind === 'twins') return doTwins();
         if (POWER_DEFS[kind].kind === 'toggle') return false; // toggles (joker / overwrite / twofer) apply when recording
         if (kind === 'rewind') return doRewind(onComplete);
         if (kind === 'seal') return doSeal(onComplete);
@@ -7806,6 +7820,16 @@
         broadcastState();
         renderAll();
         if (typeof onComplete === 'function') setTimeout(onComplete, 450);
+        return true;
+      }
+      // 쌍둥이: flips how the NEXT roll is made; the dice on the table stay as they are
+      function doTwins() {
+        const cur = players[currentPlayerIdx];
+        if (!cur || !augHas(cur, 'twins')) return false;
+        cur.twinOff = cur.twinOff ? 0 : 1;
+        sfxTick();
+        broadcastState();
+        renderAll();
         return true;
       }
       function doSeal(onComplete) {
@@ -8353,7 +8377,7 @@
             b.setAttribute('aria-label', POWER_DEFS[k].label);
             const cat = AUG[augFor(k)] ? AUG_CATS[AUG[augFor(k)].cat] : null;
             if (cat) { b.style.setProperty('--cat', cat.color); b.style.setProperty('--fg', cat.fg); }
-            b.innerHTML = '<span class="pw-ico">' + glyphSvg(k) + '</span><span class="pw-lb">' + POWER_DEFS[k].label + '</span><b class="pw-n"></b>';
+            b.innerHTML = '<span class="pw-ico">' + glyphSvg(k) + '</span><span class="pw-lb">' + POWER_DEFS[k].label + '</span>' + (POWER_DEFS[k].kind === 'switch' ? '<b class="pw-n pw-sw"></b>' : '<b class="pw-n"></b>');
             b.addEventListener('click', function () { handlePowerInput(k); });
             bar.appendChild(b);
           });
@@ -8366,6 +8390,15 @@
           if (b.disabled && ok && b.dataset.seen) restartAnim(b, 'pw-wake'); // it just became usable: one pop
           b.dataset.seen = '1';
           b.disabled = !ok;
+          if (POWER_DEFS[k].kind === 'switch') { // a switch: its badge says ON / OFF, there is no count
+            const on = twinsOn(owner), sw = b.querySelector('.pw-sw'), word = on ? 'ON' : 'OFF';
+            b.classList.add('is-sw');
+            b.classList.toggle('is-on', on);
+            if (sw && sw.textContent !== word) sw.textContent = word;
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            b.setAttribute('aria-label', POWER_DEFS[k].label);
+            return;
+          }
           b.classList.toggle('is-live', k === 'slam' && ok && isRolling);
           b.classList.toggle('is-arm', armedPower === k || (k === 'allin' ? allinTurn && me === currentPlayerIdx : !!armed[k]));
           b.setAttribute('aria-label', POWER_DEFS[k].label + ' ' + n + '회' + (k === 'tableFlip' && armedPower === k ? '. 한 번 더 누르면 엎습니다.' : ''));
@@ -8495,6 +8528,11 @@
           usePower('allin');
           return;
         }
+        if (def.kind === 'switch') {
+          if (isOnlineMatch && onlineRole === 'guest') { sfxTick(); sendAction({ action: 'power', kind: kind }); return; }
+          usePower(kind);
+          return;
+        }
         if (def.kind === 'toggle') {
           armed[kind] = !armed[kind];
           sfxTick();
@@ -8555,7 +8593,7 @@
 
       // ---------- AI with augments ----------
       // expected extra a still-open category brings under an augment (approximate, from optimal-play averages)
-      const AUG_BOOST = { aceRebel: [[0, 10]], yachtClub: [[11, 36]], deepWell: [[0, 1], [1, 1.4], [2, 1.8], [3, 2.2], [4, 2.5], [5, 2.8]] };
+      const AUG_BOOST = { aceRebel: [[0, 10]], yachtClub: [[11, 26]], deepWell: [[0, 1], [1, 1.4], [2, 1.8], [3, 2.2], [4, 2.5], [5, 2.8]] };
       let ONES_OF = null; // number of 1s in each dice multiset (YachtAI indexing)
       function onesOf() { if (!ONES_OF) ONES_OF = YachtAI.buildSC(function (ci, d) { return ci ? 0 : d.filter(function (v) { return v === 1; }).length; }); return ONES_OF; }
       const modsCache = {};
@@ -8708,7 +8746,7 @@
         let topOther = -1e9;
         players.forEach(function (q, j) { if (j !== pi) topOther = Math.max(topOther, getPlayerTotals(q).total); });
         let v = a.ev;
-        if (!a.ch && !a.fixed && ['thief', 'encore', 'timeThief', 'earlyEnd', 'debt', 'comeback', 'deepWell', 'pupa', 'grandSlam', 'mimic'].indexOf(id) === -1) v *= left;
+        if ((!a.ch || id === 'twins') && !a.fixed && ['thief', 'encore', 'timeThief', 'earlyEnd', 'debt', 'comeback', 'deepWell', 'pupa', 'grandSlam', 'mimic'].indexOf(id) === -1) v *= left;
         if (id === 'deepWell') {
           const t = getPlayerTotals(p);
           let par = t.upper;
@@ -9635,6 +9673,22 @@
         const packed = ($('aiTable') && $('aiTable').textContent || '').trim();
         YachtAI.load(packed).catch(function () {});
       } catch (e) {}
+      // 쌍둥이 bot: before a roll, weigh where the dice land with the pair on against off (same draws for both, value of the
+      // landing from the solved table with the rolls that remain), and keep the better side
+      function aiTwinsPick(p) {
+        if (!augHas(p, 'twins')) return;
+        if (held[0] && held[1] || rollsLeft <= 0 || !YachtAI.ready()) return;
+        const sc = aiScores(p), mods = aiTurnMods(p);
+        let on = 0, off = 0;
+        for (let k = 0; k < 40; k++) {
+          const a = dice.map(function (v, i) { return held[i] ? v : rollOne(p, i); });
+          const b = a.slice();
+          applyTwins(b, held);
+          off += YachtAI.rollStats(sc, CAT_IDS, a, held, rollsLeft - 1, mods).outcome;
+          on += YachtAI.rollStats(sc, CAT_IDS, b, held, rollsLeft - 1, mods).outcome;
+        }
+        p.twinOff = on >= off ? 0 : 1;
+      }
       const AI_AIM_MS = 460; // the bot marks its box this long before it records it
       function runAITurn() {
         if (!gameActive || draft || !players[currentPlayerIdx].isAI) return;
@@ -9680,6 +9734,7 @@
         const cur0 = players[currentPlayerIdx];
         const step = function () {
           if (!alive()) return;
+          aiTwinsPick(cur0);
           rollDice(afterRoll);
         };
         aiResume = function () { clearTimeout(aiTimer); if (alive()) aiTimer = setTimeout(function () { afterRoll(); }, 600); };
@@ -10094,6 +10149,7 @@
               q.last = { cat: String(L.cat), prev: pv === null ? null : Math.floor(pv), val: Math.floor(lv) };
             }
           }
+          q.twinOff = p.twinOff === 1 || p.twinOff === true ? 1 : 0; // 쌍둥이 switch: only a plain 1 / true turns it off
           q.law = lawIdOk(p.law) ? p.law : null; // 개헌: an own key of LAW, else nothing (Firebase drops a null)
           return q;
         });
